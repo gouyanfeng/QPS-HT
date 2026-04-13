@@ -1,10 +1,16 @@
 name: Docker Build and Push
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Image version'
+        required: false
+        default: 'latest'
+      platform:
+        description: 'Build platform'
+        required: false
+        default: 'linux/amd64'
 
 jobs:
   build:
