@@ -1,0 +1,32 @@
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using QPS.Application.Features.Orders;
+using QPS.Application.Contracts.Orders;
+
+namespace QPS.WebAPI.Controllers.App;
+
+[ApiController]
+[Route("api/app/booking")]
+public class BookingController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public BookingController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    [HttpPost("create-order")]
+    public async Task<ActionResult<Guid>> CreateOrder([FromBody] CreateOrderRequest request)
+    {
+        var orderId = await _mediator.Send(new CreateOrderCommand { Request = request });
+        return Ok(orderId);
+    }
+
+    [HttpPost("settle-order")]
+    public async Task<ActionResult<bool>> SettleOrder([FromBody] SettleOrderRequest request)
+    {
+        var result = await _mediator.Send(new SettleOrderCommand { Request = request });
+        return Ok(result);
+    }
+}

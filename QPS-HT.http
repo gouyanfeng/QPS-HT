@@ -1,6 +1,0 @@
-@QPS_HT_HostAddress = http://localhost:5220
-
-GET {{QPS_HT_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

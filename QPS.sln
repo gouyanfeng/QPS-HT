@@ -1,0 +1,54 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32002.261
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QPS.Domain", "src\1.QPS.Domain\QPS.Domain.csproj", "{E2A8E851-6F3E-4C3A-9143-745E228E0C81}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QPS.Application", "src\2.QPS.Application\QPS.Application.csproj", "{F8B4F3A0-6E9A-4C5D-8F0E-7A2D7B3F5E11}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QPS.Infrastructure", "src\3.QPS.Infrastructure\QPS.Infrastructure.csproj", "{C5B9A7D8-7B8A-4C8B-9C9E-9E1E1E1E1E1E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QPS.WebAPI", "src\4.QPS.WebAPI\QPS.WebAPI.csproj", "{D6E8F2A0-8E9A-4D5D-9F0E-7B2D7C3F5F11}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QPS.UnitTests", "tests\QPS.UnitTests\QPS.UnitTests.csproj", "{A1B2C3D4-E5F6-G7H8-I9J0-K1L2M3N4O5P6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QPS.IntegrationTests", "tests\QPS.IntegrationTests\QPS.IntegrationTests.csproj", "{B2C3D4E5-F6G7-H8I9-J0K1-L2M3N4O5P6Q7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E2A8E851-6F3E-4C3A-9143-745E228E0C81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2A8E851-6F3E-4C3A-9143-745E228E0C81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2A8E851-6F3E-4C3A-9143-745E228E0C81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2A8E851-6F3E-4C3A-9143-745E228E0C81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8B4F3A0-6E9A-4C5D-8F0E-7A2D7B3F5E11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8B4F3A0-6E9A-4C5D-8F0E-7A2D7B3F5E11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8B4F3A0-6E9A-4C5D-8F0E-7A2D7B3F5E11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8B4F3A0-6E9A-4C5D-8F0E-7A2D7B3F5E11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5B9A7D8-7B8A-4C8B-9C9E-9E1E1E1E1E1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5B9A7D8-7B8A-4C8B-9C9E-9E1E1E1E1E1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5B9A7D8-7B8A-4C8B-9C9E-9E1E1E1E1E1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5B9A7D8-7B8A-4C8B-9C9E-9E1E1E1E1E1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6E8F2A0-8E9A-4D5D-9F0E-7B2D7C3F5F11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6E8F2A0-8E9A-4D5D-9F0E-7B2D7C3F5F11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6E8F2A0-8E9A-4D5D-9F0E-7B2D7C3F5F11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6E8F2A0-8E9A-4D5D-9F0E-7B2D7C3F5F11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-G7H8-I9J0-K1L2M3N4O5P6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-G7H8-I9J0-K1L2M3N4O5P6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-G7H8-I9J0-K1L2M3N4O5P6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-G7H8-I9J0-K1L2M3N4O5P6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2C3D4E5-F6G7-H8I9-J0K1-L2M3N4O5P6Q7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2C3D4E5-F6G7-H8I9-J0K1-L2M3N4O5P6Q7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2C3D4E5-F6G7-H8I9-J0K1-L2M3N4O5P6Q7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2C3D4E5-F6G7-H8I9-J0K1-L2M3N4O5P6Q7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {00000000-0000-0000-0000-000000000000}
+	EndGlobalSection
+EndGlobal

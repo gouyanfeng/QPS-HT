@@ -1,2 +1,38 @@
-/bin
-/obj
+# Visual Studio generated files and folders
+.vs/
+bin/
+obj/
+*.suo
+*.user
+*.csproj.user
+*.cache
+*.orig.*
+
+# Build outputs
+*/bin/*
+*/obj/*
+
+# NuGet packages
+packages/
+*.nupkg
+.nuget/
+
+# Logs
+*.log
+
+# Test coverage
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+appsettings.local.json
