@@ -27,6 +27,22 @@ public abstract class Entity
     {
         _domainEvents.Clear();
     }
+
+    public override bool Equals(object obj)
+    {
+        if (obj == null || !(obj is Entity))
+            return false;
+
+        if (ReferenceEquals(this, obj))
+            return true;
+
+        return Id == ((Entity)obj).Id;
+    }
+
+    public override int GetHashCode()
+    {
+        return Id.GetHashCode();
+    }
 }
 
 public abstract class DomainEvent

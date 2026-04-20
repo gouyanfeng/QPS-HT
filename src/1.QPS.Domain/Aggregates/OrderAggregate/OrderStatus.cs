@@ -3,8 +3,7 @@ namespace QPS.Domain.Aggregates.OrderAggregate;
 public enum OrderStatus
 {
     Pending,
-    Paid,
-    Using,
+    Active,
     Completed,
     Cancelled
 }

@@ -1,16 +1,13 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Rooms;
 using QPS.Application.Interfaces;
 using QPS.Domain.Aggregates.RoomAggregate;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace QPS.Application.Features.Rooms;
 
-public class GetRoomsQuery : IRequest<List<RoomDto>> { }
+public class GetRoomsQuery : IRequest<List<RoomDto>>
+{}
 
 public class GetRoomsHandler : IRequestHandler<GetRoomsQuery, List<RoomDto>>
 {
@@ -28,14 +25,17 @@ public class GetRoomsHandler : IRequestHandler<GetRoomsQuery, List<RoomDto>>
         var tenantId = _tenantService.GetCurrentTenantId();
         var rooms = await _dbContext.Rooms
             .Where(r => r.MerchantId == tenantId)
+            .Select(r => new RoomDto
+            {
+                Id = r.Id,
+                RoomNumber = r.Name,
+                Status = r.Status.ToString(),
+                MqttTopic = r.MqttTopic,
+                ShopId = r.ShopId,
+                DeviceSn = r.DeviceSn
+            })
             .ToListAsync(cancellationToken);
 
-        return rooms.Select(r => new RoomDto
-        {
-            Id = r.Id,
-            RoomNumber = r.RoomNumber,
-            Status = r.Status.ToString(),
-            MqttTopic = r.DeviceConfig.MqttTopic
-        }).ToList();
+        return rooms;
     }
 }

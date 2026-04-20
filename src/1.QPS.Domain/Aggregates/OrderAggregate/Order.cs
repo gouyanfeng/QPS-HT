@@ -1,44 +1,49 @@
 using QPS.Domain.Common;
-using QPS.Domain.Events;
 
 namespace QPS.Domain.Aggregates.OrderAggregate;
 
 public class Order : AggregateRoot
 {
-    public string OrderNumber { get; private set; }
-    public Guid RoomId { get; private set; }
+    public string OrderNo { get; private set; }
     public Guid MerchantId { get; private set; }
+    public Guid ShopId { get; private set; }
+    public Guid RoomId { get; private set; }
+    public Guid? CustomerId { get; private set; }
     public OrderStatus Status { get; private set; }
-    public decimal Amount { get; private set; }
+    public decimal OriginAmount { get; private set; }
+    public decimal DiscountAmount { get; private set; }
+    public decimal ActualAmount { get; private set; }
     public DateTime StartTime { get; private set; }
     public DateTime? EndTime { get; private set; }
-    public PricingStrategy PricingStrategy { get; private set; }
+    public string? PaymentMethod { get; private set; }
+    public DateTime? PaidAt { get; private set; }
 
     protected Order() { }
 
-    public Order(string orderNumber, Guid roomId, Guid merchantId, PricingStrategy pricingStrategy)
+    public Order(string orderNo, Guid merchantId, Guid shopId, Guid roomId, Guid? customerId)
     {
-        OrderNumber = orderNumber;
-        RoomId = roomId;
+        OrderNo = orderNo;
         MerchantId = merchantId;
+        ShopId = shopId;
+        RoomId = roomId;
+        CustomerId = customerId;
         Status = OrderStatus.Pending;
-        PricingStrategy = pricingStrategy;
-    }
-
-    public void Pay(decimal amount)
-    {
-        Amount = amount;
-        Status = OrderStatus.Paid;
         StartTime = DateTime.UtcNow;
-        AddDomainEvent(new OrderPaidEvent(this.Id));
+        OriginAmount = 0;
+        DiscountAmount = 0;
+        ActualAmount = 0;
     }
 
-    public void StartUsing() { Status = OrderStatus.Using; }
-    public void Complete() 
+    public void Start() { Status = OrderStatus.Active; }
+    public void Complete(decimal originAmount, decimal discountAmount, decimal actualAmount, string paymentMethod)
     {
         Status = OrderStatus.Completed;
         EndTime = DateTime.UtcNow;
-        AddDomainEvent(new SessionExpiredEvent(this.Id));
+        OriginAmount = originAmount;
+        DiscountAmount = discountAmount;
+        ActualAmount = actualAmount;
+        PaymentMethod = paymentMethod;
+        PaidAt = DateTime.UtcNow;
     }
     public void Cancel() { Status = OrderStatus.Cancelled; }
 }

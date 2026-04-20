@@ -10,14 +10,9 @@ public class MerchantConfig : IEntityTypeConfiguration<Merchant>
     {
         builder.HasKey(m => m.Id);
         builder.Property(m => m.Name).IsRequired().HasMaxLength(100);
-        builder.Property(m => m.PhoneNumber).IsRequired().HasMaxLength(20);
-
-        // 配置 StoreSettings 作为值对象
-        builder.OwnsOne(m => m.StoreSettings, ss =>
-        {
-            ss.Property(s => s.PowerOffDelayMinutes).IsRequired();
-            ss.Property(s => s.OpeningTime).IsRequired();
-            ss.Property(s => s.ClosingTime).IsRequired();
-        });
+        builder.Property(m => m.Phone).IsRequired().HasMaxLength(20);
+        builder.Property(m => m.ExpiryDate);
+        builder.Property(m => m.IsActive).IsRequired();
+        builder.Property(m => m.CreatedAt).IsRequired();
     }
 }

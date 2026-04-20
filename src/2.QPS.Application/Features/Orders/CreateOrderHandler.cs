@@ -71,18 +71,15 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, Guid>
         // 生成订单号
         var orderNumber = GenerateOrderNumber();
         
-        // 创建价格策略
-        var pricingStrategy = new PricingStrategy(10, 8, 2, 100); // 示例值
-        
         // 创建订单
-        var order = new Order(orderNumber, room.Id, tenantId, pricingStrategy);
-        order.Pay(request.Request.Amount);
+        var order = new Order(orderNumber, room.MerchantId, room.ShopId, room.Id, null);
+        order.Start();
 
         // 更新房间状态为占用
         room.Occupy();
 
         // 发送MQTT命令开启设备
-        await _mqttService.SendCommandAsync(room.DeviceConfig.MqttTopic, room.DeviceConfig.PowerOnCommand);
+        await _mqttService.SendCommandAsync(room.MqttTopic, "POWER_ON");
 
         // 保存到数据库
         _dbContext.Orders.Add(order);
@@ -97,6 +94,6 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, Guid>
     /// <returns>订单号</returns>
     private string GenerateOrderNumber()
     {
-        return $"ORD{DateTime.Now:yyyyMMddHHmmss}{Guid.NewGuid():N[0..4]}";
+        return $"ORD{DateTime.Now:yyyyMMddHHmmss}{Guid.NewGuid().ToString("N").Substring(0, 4)}";
     }
 }

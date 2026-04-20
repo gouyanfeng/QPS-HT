@@ -29,10 +29,10 @@ public class GetMerchantsHandler : IRequestHandler<GetMerchantsQuery, List<Merch
         {
             Id = m.Id,
             Name = m.Name,
-            PhoneNumber = m.PhoneNumber,
-            PowerOffDelayMinutes = m.StoreSettings.PowerOffDelayMinutes,
-            OpeningTime = m.StoreSettings.OpeningTime,
-            ClosingTime = m.StoreSettings.ClosingTime
+            PhoneNumber = m.Phone,
+            ExpiryDate = m.ExpiryDate,
+            IsActive = m.IsActive,
+            CreatedAt = m.CreatedAt
         }).ToList();
     }
 }

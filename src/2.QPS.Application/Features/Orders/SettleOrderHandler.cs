@@ -54,7 +54,7 @@ public class SettleOrderHandler : IRequestHandler<SettleOrderCommand, bool>
         if (order == null || order.MerchantId != tenantId) return false;
 
         // 完成订单
-        order.Complete();
+        order.Complete(0, 0, 0, "CASH"); // 示例值，实际应从请求中获取
 
         // 获取对应的房间
         var room = await _dbContext.Rooms.FindAsync(order.RoomId, cancellationToken);
@@ -64,7 +64,7 @@ public class SettleOrderHandler : IRequestHandler<SettleOrderCommand, bool>
             room.SetToIdle();
 
             // 发送MQTT命令关闭设备
-            await _mqttService.SendCommandAsync(room.DeviceConfig.MqttTopic, room.DeviceConfig.PowerOffCommand);
+            await _mqttService.SendCommandAsync(room.MqttTopic, "POWER_OFF");
         }
 
         // 保存到数据库

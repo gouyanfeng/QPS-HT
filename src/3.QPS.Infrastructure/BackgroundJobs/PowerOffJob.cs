@@ -25,7 +25,7 @@ public class PowerOffJob
         var room = await _dbContext.Rooms.FindAsync(order.RoomId);
         if (room == null) return;
 
-        await _mqttService.SendCommandAsync(room.DeviceConfig.MqttTopic, room.DeviceConfig.PowerOffCommand);
+        await _mqttService.SendCommandAsync(room.MqttTopic, "POWER_OFF");
         room.SetToIdle();
         await _dbContext.SaveChangesAsync();
     }
