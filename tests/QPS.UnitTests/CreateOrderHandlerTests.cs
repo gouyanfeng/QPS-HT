@@ -4,8 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using QPS.Application.Features.Orders;
 using QPS.Application.Contracts.Orders;
 using QPS.Application.Interfaces;
-using QPS.Domain.Aggregates.OrderAggregate;
-using QPS.Domain.Aggregates.RoomAggregate;
+using QPS.Domain.Entities;
 using QPS.Domain.Exceptions;
 using System;
 using System.Threading;
@@ -16,16 +15,16 @@ namespace QPS.UnitTests.Application;
 public class CreateOrderHandlerTests
 {
     private readonly Mock<IDbContext> _mockDbContext;
-    private readonly Mock<ITenantService> _mockTenantService;
+    private readonly Mock<ICurrentUserService> _mockCurrentUserService;
     private readonly Mock<IMqttService> _mockMqttService;
     private readonly CreateOrderHandler _handler;
 
     public CreateOrderHandlerTests()
     {
         _mockDbContext = new Mock<IDbContext>();
-        _mockTenantService = new Mock<ITenantService>();
+        _mockCurrentUserService = new Mock<ICurrentUserService>();
         _mockMqttService = new Mock<IMqttService>();
-        _handler = new CreateOrderHandler(_mockDbContext.Object, _mockTenantService.Object, _mockMqttService.Object);
+        _handler = new CreateOrderHandler(_mockDbContext.Object, _mockCurrentUserService.Object, _mockMqttService.Object);
     }
 
     [Fact]
@@ -37,11 +36,11 @@ public class CreateOrderHandlerTests
         var merchantId = tenantId;
         var shopId = Guid.NewGuid();
         
-        var room = new Room(merchantId, shopId, "测试房间", "DEVICE123", "room/merchant/shop/room1", 30m);
+        var room = Room.Create(shopId, "测试房间", "DEVICE123", "room/merchant/shop/room1", 30m);
         
         var mockOrdersDbSet = new Mock<DbSet<Order>>();
         
-        _mockTenantService.Setup(t => t.GetCurrentTenantId()).Returns(tenantId);
+        _mockCurrentUserService.Setup(c => c.MerchantId).Returns(tenantId);
         _mockDbContext.Setup(d => d.Rooms.FindAsync(roomId, It.IsAny<CancellationToken>())).ReturnsAsync(room);
         _mockDbContext.Setup(d => d.Orders).Returns(mockOrdersDbSet.Object);
         _mockMqttService.Setup(m => m.SendCommandAsync(room.MqttTopic, "POWER_ON")).Returns(Task.CompletedTask);
@@ -70,7 +69,7 @@ public class CreateOrderHandlerTests
         var tenantId = Guid.NewGuid();
         var roomId = Guid.NewGuid();
         
-        _mockTenantService.Setup(t => t.GetCurrentTenantId()).Returns(tenantId);
+        _mockCurrentUserService.Setup(c => c.MerchantId).Returns(tenantId);
         _mockDbContext.Setup(d => d.Rooms.FindAsync(roomId, It.IsAny<CancellationToken>())).ReturnsAsync((Room)null);
 
         var command = new CreateOrderCommand
@@ -91,10 +90,10 @@ public class CreateOrderHandlerTests
         var merchantId = tenantId;
         var shopId = Guid.NewGuid();
         
-        var room = new Room(merchantId, shopId, "测试房间", "DEVICE123", "room/merchant/shop/room1", 30m);
+        var room = Room.Create(shopId, "测试房间", "DEVICE123", "room/merchant/shop/room1", 30m);
         room.Occupy(); // 使房间处于占用状态
         
-        _mockTenantService.Setup(t => t.GetCurrentTenantId()).Returns(tenantId);
+        _mockCurrentUserService.Setup(c => c.MerchantId).Returns(tenantId);
         _mockDbContext.Setup(d => d.Rooms.FindAsync(roomId, It.IsAny<CancellationToken>())).ReturnsAsync(room);
 
         var command = new CreateOrderCommand
@@ -115,9 +114,9 @@ public class CreateOrderHandlerTests
         var differentMerchantId = Guid.NewGuid();
         var shopId = Guid.NewGuid();
         
-        var room = new Room(differentMerchantId, shopId, "测试房间", "DEVICE123", "room/merchant/shop/room1", 30m);
+        var room = Room.Create(shopId, "测试房间", "DEVICE123", "room/merchant/shop/room1", 30m);
         
-        _mockTenantService.Setup(t => t.GetCurrentTenantId()).Returns(tenantId);
+        _mockCurrentUserService.Setup(c => c.MerchantId).Returns(tenantId);
         _mockDbContext.Setup(d => d.Rooms.FindAsync(roomId, It.IsAny<CancellationToken>())).ReturnsAsync(room);
 
         var command = new CreateOrderCommand

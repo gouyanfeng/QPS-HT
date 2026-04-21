@@ -3,12 +3,12 @@ using System.Collections.Generic;
 
 namespace QPS.Domain.Common;
 
-public abstract class Entity
+public abstract class BaseEntity
 {
     public Guid Id { get; protected set; }
     private readonly List<DomainEvent> _domainEvents = new();
 
-    protected Entity()
+    protected BaseEntity()
     {
         Id = Guid.NewGuid();
     }
@@ -30,13 +30,13 @@ public abstract class Entity
 
     public override bool Equals(object obj)
     {
-        if (obj == null || !(obj is Entity))
+        if (obj == null || !(obj is BaseEntity))
             return false;
 
         if (ReferenceEquals(this, obj))
             return true;
 
-        return Id == ((Entity)obj).Id;
+        return Id == ((BaseEntity)obj).Id;
     }
 
     public override int GetHashCode()

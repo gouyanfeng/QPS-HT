@@ -7,7 +7,7 @@ using QPS.Application.Behaviours;
 using QPS.Application.Interfaces;
 using QPS.Infrastructure.IoT;
 using QPS.Infrastructure.Identity;
-using QPS.Infrastructure.Persistence;
+using QPS.Infrastructure.Database;
 using QPS.WebAPI.Data;
 using QPS.WebAPI.Middleware;
 using System.Text;
@@ -60,12 +60,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Register application services
 builder.Services.AddScoped<IDbContext, AppDbContext>();
 builder.Services.AddScoped<IMqttService, MqttClientService>();
-builder.Services.AddScoped<ITenantService, TenantService>();
-builder.Services.AddScoped<JwtGenerator>(_ => new JwtGenerator(
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IJwtGenerator>(_ => new JwtGenerator(
     builder.Configuration["Jwt:SecretKey"],
     builder.Configuration["Jwt:Issuer"],
     builder.Configuration["Jwt:Audience"]
 ));
+
+// Services are now directly implemented in handlers
 
 // Register MediatR and behaviors
 builder.Services.AddMediatR(cfg =>
@@ -83,8 +86,7 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.EnsureCreated();
 
-    // Initialize test data
-    TestDataInitializer.Initialize(dbContext);
+    // Test data initialization is disabled
 }
 
 // Configure the HTTP request pipeline.
@@ -97,7 +99,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Use custom middleware
-app.UseTenantIdentification();
 app.UseGlobalExceptionHandler();
 
 app.MapControllers();

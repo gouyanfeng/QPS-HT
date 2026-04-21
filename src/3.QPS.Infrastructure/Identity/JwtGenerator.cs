@@ -2,10 +2,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using QPS.Application.Interfaces;
 
 namespace QPS.Infrastructure.Identity;
 
-public class JwtGenerator
+public class JwtGenerator : IJwtGenerator
 {
     private readonly string _secretKey;
     private readonly string _issuer;
@@ -13,19 +14,24 @@ public class JwtGenerator
 
     public JwtGenerator(string secretKey, string issuer, string audience)
     {
-        _secretKey = secretKey;
-        _issuer = issuer;
-        _audience = audience;
+        _secretKey = secretKey ?? throw new ArgumentNullException(nameof(secretKey));
+        _issuer = issuer ?? throw new ArgumentNullException(nameof(issuer));
+        _audience = audience ?? throw new ArgumentNullException(nameof(audience));
     }
 
-    public string GenerateToken(Guid userId, Guid merchantId, string role)
+    public string GenerateToken(Guid userId, Guid merchantId, string role, Guid? shopId = null)
     {
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim("sub", userId.ToString()),
             new Claim("merchantId", merchantId.ToString()),
             new Claim(ClaimTypes.Role, role)
         };
+
+        if (shopId.HasValue)
+        {
+            claims.Add(new Claim("shopId", shopId.Value.ToString()));
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

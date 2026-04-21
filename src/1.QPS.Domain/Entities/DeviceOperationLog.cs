@@ -1,0 +1,21 @@
+using QPS.Domain.Common;
+
+namespace QPS.Domain.Entities;
+
+public class DeviceOperationLog : BaseEntity
+{
+    public Guid RoomId { get; private set; }
+    public string Action { get; private set; }
+    public string Operator { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+
+    protected DeviceOperationLog() { }
+
+    public DeviceOperationLog(Guid roomId, string action, string @operator)
+    {
+        RoomId = roomId;
+        Action = action;
+        Operator = @operator;
+        CreatedAt = DateTime.UtcNow;
+    }
+}

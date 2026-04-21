@@ -1,6 +1,6 @@
 using MediatR;
 using QPS.Application.Interfaces;
-using QPS.Domain.Aggregates.RoomAggregate;
+using QPS.Domain.Entities;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

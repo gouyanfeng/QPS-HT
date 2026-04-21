@@ -1,13 +1,9 @@
-using System;
-
 namespace QPS.Application.Contracts.Merchants;
 
-public class MerchantDto
+public class MerchantUpdateRequest
 {
-    public Guid Id { get; set; }
     public string Name { get; set; }
     public string Phone { get; set; }
     public DateTime? ExpiryDate { get; set; }
     public bool IsActive { get; set; }
-    public DateTime CreatedAt { get; set; }
 }

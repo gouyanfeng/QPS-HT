@@ -1,7 +1,7 @@
 using MediatR;
 using QPS.Application.Contracts.Rooms;
 using QPS.Application.Interfaces;
-using QPS.Domain.Aggregates.RoomAggregate;
+using QPS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace QPS.Application.Features.Rooms;
@@ -12,19 +12,19 @@ public class GetRoomsQuery : IRequest<List<RoomDto>>
 public class GetRoomsHandler : IRequestHandler<GetRoomsQuery, List<RoomDto>>
 {
     private readonly IDbContext _dbContext;
-    private readonly ITenantService _tenantService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetRoomsHandler(IDbContext dbContext, ITenantService tenantService)
+    public GetRoomsHandler(IDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
-        _tenantService = tenantService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<List<RoomDto>> Handle(GetRoomsQuery request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
+        var merchantId = _currentUserService.MerchantId;
         var rooms = await _dbContext.Rooms
-            .Where(r => r.MerchantId == tenantId)
+            .Where(r => r.MerchantId == merchantId)
             .Select(r => new RoomDto
             {
                 Id = r.Id,
