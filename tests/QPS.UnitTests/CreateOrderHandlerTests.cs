@@ -31,9 +31,8 @@ public class CreateOrderHandlerTests
     public async Task Handle_ShouldCreateOrder_WhenRoomIsAvailable()
     {
         // Arrange
-        var tenantId = Guid.NewGuid();
+        var tenantId = Guid.Empty;
         var roomId = Guid.NewGuid();
-        var merchantId = tenantId;
         var shopId = Guid.NewGuid();
         
         var room = Room.Create(shopId, "测试房间", "DEVICE123", "room/merchant/shop/room1", 30m);

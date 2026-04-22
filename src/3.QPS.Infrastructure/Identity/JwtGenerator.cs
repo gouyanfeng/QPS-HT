@@ -23,9 +23,9 @@ public class JwtGenerator : IJwtGenerator
     {
         var claims = new List<Claim>
         {
-            new Claim("sub", userId.ToString()),
+            new Claim("userId", userId.ToString()),
             new Claim("merchantId", merchantId.ToString()),
-            new Claim(ClaimTypes.Role, role)
+            new Claim("role", role)
         };
 
         if (shopId.HasValue)

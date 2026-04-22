@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\1.QPS.Domain\QPS.Domain.csproj" />
     <ProjectReference Include="..\..\src\2.QPS.Application\QPS.Application.csproj" />
+    <ProjectReference Include="..\..\src\3.QPS.Infrastructure\QPS.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,6 +19,7 @@
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" />
     <PackageReference Include="Moq" Version="4.20.69" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QPS.Application.Features.Rooms;
 using QPS.Application.Contracts.Rooms;
@@ -7,6 +8,7 @@ namespace QPS.WebAPI.Controllers.Admin;
 
 [ApiController]
 [Route("api/admin/rooms")]
+[Authorize]
 public class RoomController : ControllerBase
 {
     private readonly IMediator _mediator;

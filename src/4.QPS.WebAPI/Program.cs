@@ -86,7 +86,8 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.EnsureCreated();
 
-    // Test data initialization is disabled
+    // Initialize test data
+    TestDataInitializer.Initialize(dbContext);
 }
 
 // Configure the HTTP request pipeline.

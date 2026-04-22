@@ -3,6 +3,7 @@ using QPS.Application.Contracts.Auth;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace QPS.Application.Features.Auth;
 
@@ -45,10 +46,10 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         // 验证用户名和密码
-        var user = ValidateUser(
-            request.Request.MerchantId,
+        var user = await ValidateUserAsync(
             request.Request.Username,
-            request.Request.Password
+            request.Request.Password,
+            cancellationToken
         );
 
         // 生成JWT令牌
@@ -61,22 +62,23 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
             UserId = user.Id,
             Username = user.Username,
             RealName = user.RealName,
-            Role = "Admin"
+            Role = "Admin",
+            MerchantId = user.MerchantId
         };
     }
 
     /// <summary>
     /// 验证用户
     /// </summary>
-    /// <param name="merchantId">商户ID</param>
     /// <param name="username">用户名</param>
     /// <param name="password">密码</param>
+    /// <param name="cancellationToken">取消令牌</param>
     /// <returns>验证通过的用户</returns>
-    private User ValidateUser(Guid merchantId, string username, string password)
+    private async Task<User> ValidateUserAsync(string username, string password, CancellationToken cancellationToken)
     {
-        var user = _dbContext.Users
-            .Where(u => u.MerchantId == merchantId && u.Username == username)
-            .FirstOrDefault();
+        var user = await _dbContext.Users
+            .Where(u => u.Username == username)
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (user == null || !VerifyPassword(password, user.PasswordHash))
         {
