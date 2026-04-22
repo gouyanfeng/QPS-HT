@@ -112,7 +112,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Use custom middleware
-app.UseGlobalExceptionHandler();
+app.UseMiddleware<ResponseWrapperMiddleware>();
 
 app.MapControllers();
 

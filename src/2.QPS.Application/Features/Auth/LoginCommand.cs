@@ -82,12 +82,12 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
 
         if (user == null || !VerifyPassword(password, user.PasswordHash))
         {
-            throw new Exception("用户名或密码错误");
+            throw new ArgumentException("用户名或密码错误");
         }
 
         if (!user.IsActive)
         {
-            throw new Exception("用户已被禁用");
+            throw new ArgumentException("用户已被禁用");
         }
 
         return user;
