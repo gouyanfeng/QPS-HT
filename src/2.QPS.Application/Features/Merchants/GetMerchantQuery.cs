@@ -46,7 +46,7 @@ public class GetMerchantHandler : IRequestHandler<GetMerchantQuery, MerchantDto>
 
         if (merchant == null)
         {
-            throw new DomainException("商户不存在");
+            throw new BusinessException(404, "商户不存在");
         }
 
         // 转换为DTO

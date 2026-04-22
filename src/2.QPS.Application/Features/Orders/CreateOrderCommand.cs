@@ -55,17 +55,17 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, Guid>
         var room = await _dbContext.Rooms.FindAsync(request.Request.RoomId, cancellationToken);
         if (room == null)
         {
-            throw new DomainException("房间不存在");
+            throw new BusinessException(404, "房间不存在");
         }
         if (room.MerchantId != merchantId)
         {
-            throw new DomainException("无权操作此房间");
+            throw new BusinessException(403, "无权操作此房间");
         }
 
         // 检查房间是否可用
         if (room.Status != RoomStatus.Idle)
         {
-            throw new DomainException("房间当前不可用");
+            throw new BusinessException(400, "房间当前不可用");
         }
 
         // 创建订单

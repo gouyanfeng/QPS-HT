@@ -51,12 +51,12 @@ public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, UserDto>
 
         if (user == null)
         {
-            throw new DomainException("用户不存在");
+            throw new BusinessException(404, "用户不存在");
         }
 
         // 更新用户信息
         user.Update(request.Request.RealName);
-        
+
         // 更新密码（如果提供了新密码）
         if (!string.IsNullOrEmpty(request.Request.Password))
         {

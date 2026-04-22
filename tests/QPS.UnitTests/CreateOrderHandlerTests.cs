@@ -34,11 +34,11 @@ public class CreateOrderHandlerTests
         var tenantId = Guid.Empty;
         var roomId = Guid.NewGuid();
         var shopId = Guid.NewGuid();
-        
+
         var room = Room.Create(shopId, "测试房间", "DEVICE123", "room/merchant/shop/room1", 30m);
-        
+
         var mockOrdersDbSet = new Mock<DbSet<Order>>();
-        
+
         _mockCurrentUserService.Setup(c => c.MerchantId).Returns(tenantId);
         _mockDbContext.Setup(d => d.Rooms.FindAsync(roomId, It.IsAny<CancellationToken>())).ReturnsAsync(room);
         _mockDbContext.Setup(d => d.Orders).Returns(mockOrdersDbSet.Object);
@@ -67,7 +67,7 @@ public class CreateOrderHandlerTests
         // Arrange
         var tenantId = Guid.NewGuid();
         var roomId = Guid.NewGuid();
-        
+
         _mockCurrentUserService.Setup(c => c.MerchantId).Returns(tenantId);
         _mockDbContext.Setup(d => d.Rooms.FindAsync(roomId, It.IsAny<CancellationToken>())).ReturnsAsync((Room)null);
 
@@ -77,7 +77,7 @@ public class CreateOrderHandlerTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<DomainException>(() => _handler.Handle(command, CancellationToken.None));
+        await Assert.ThrowsAsync<BusinessException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
     [Fact]
@@ -88,10 +88,10 @@ public class CreateOrderHandlerTests
         var roomId = Guid.NewGuid();
         var merchantId = tenantId;
         var shopId = Guid.NewGuid();
-        
+
         var room = Room.Create(shopId, "测试房间", "DEVICE123", "room/merchant/shop/room1", 30m);
         room.Occupy(); // 使房间处于占用状态
-        
+
         _mockCurrentUserService.Setup(c => c.MerchantId).Returns(tenantId);
         _mockDbContext.Setup(d => d.Rooms.FindAsync(roomId, It.IsAny<CancellationToken>())).ReturnsAsync(room);
 
@@ -101,7 +101,7 @@ public class CreateOrderHandlerTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<DomainException>(() => _handler.Handle(command, CancellationToken.None));
+        await Assert.ThrowsAsync<BusinessException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
     [Fact]
@@ -112,9 +112,9 @@ public class CreateOrderHandlerTests
         var roomId = Guid.NewGuid();
         var differentMerchantId = Guid.NewGuid();
         var shopId = Guid.NewGuid();
-        
+
         var room = Room.Create(shopId, "测试房间", "DEVICE123", "room/merchant/shop/room1", 30m);
-        
+
         _mockCurrentUserService.Setup(c => c.MerchantId).Returns(tenantId);
         _mockDbContext.Setup(d => d.Rooms.FindAsync(roomId, It.IsAny<CancellationToken>())).ReturnsAsync(room);
 
@@ -124,6 +124,6 @@ public class CreateOrderHandlerTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<DomainException>(() => _handler.Handle(command, CancellationToken.None));
+        await Assert.ThrowsAsync<BusinessException>(() => _handler.Handle(command, CancellationToken.None));
     }
 }

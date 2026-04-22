@@ -2,6 +2,7 @@ using MediatR;
 using QPS.Application.Contracts.Auth;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities;
+using QPS.Domain.Exceptions;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 
@@ -82,12 +83,12 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
 
         if (user == null || !VerifyPassword(password, user.PasswordHash))
         {
-            throw new ArgumentException("用户名或密码错误");
+            throw new BusinessException(401, "用户名或密码错误");
         }
 
         if (!user.IsActive)
         {
-            throw new ArgumentException("用户已被禁用");
+            throw new BusinessException(403, "用户已被禁用");
         }
 
         return user;

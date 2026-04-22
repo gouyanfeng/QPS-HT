@@ -51,12 +51,12 @@ public class UpdateMerchantHandler : IRequestHandler<UpdateMerchantCommand, Merc
 
         if (merchant == null)
         {
-            throw new DomainException("商户不存在");
+            throw new BusinessException(404, "商户不存在");
         }
 
         // 更新商户信息
         merchant.Update(request.Request.Name, request.Request.Phone, request.Request.ExpiryDate);
-        
+
         // 更新商户状态
         if (request.Request.IsActive)
         {

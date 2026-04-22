@@ -9,13 +9,23 @@ using QPS.Infrastructure.IoT;
 using QPS.Infrastructure.Identity;
 using QPS.Infrastructure.Database;
 using QPS.WebAPI.Data;
-using QPS.WebAPI.Middleware;
+using QPS.WebAPI.Filters;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    // 注册响应包装过滤器
+    options.Filters.Add<ResponseWrapperFilter>();
+})
+.AddJsonOptions(options =>
+{
+    // 配置 JSON 序列化选项，使用驼峰命名
+    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+});
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -107,13 +117,49 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseCors("AllowAll");
+// 提取异常处理逻辑为方法
+app.UseExceptionHandler(HandleException);
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Use custom middleware
-app.UseMiddleware<ResponseWrapperMiddleware>();
+// Response wrapper is now handled by ResponseWrapperFilter
 
 app.MapControllers();
 
 app.Run();
+
+// 异常处理方法
+static void HandleException(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async context =>
+    {
+
+        Console.WriteLine($"HandleException:");
+
+        var exceptionPayload = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        var exception = exceptionPayload?.Error;
+
+        context.Response.StatusCode = 200; // 依然返回 200，让前端 Axios 走成功回调
+        context.Response.ContentType = "application/json";
+
+        // 逻辑：根据异常类型决定 code
+        int errorCode = 500;
+        string message = "服务器内部错误";
+
+        // 如果是你自定义的业务异常，可以提取具体的错误码和消息
+        if (exception is QPS.Domain.Exceptions.BusinessException bizEx)
+        {
+            errorCode = bizEx.ErrorCode;
+            message = bizEx.Message;
+        }
+
+        var response = QPS.Application.Common.ApiResponse<object>.Fail(errorCode, message);
+
+        await context.Response.WriteAsJsonAsync(response, new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        });
+    });
+}

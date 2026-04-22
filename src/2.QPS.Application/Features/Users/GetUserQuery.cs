@@ -46,7 +46,7 @@ public class GetUserHandler : IRequestHandler<GetUserQuery, UserDto>
 
         if (user == null)
         {
-            throw new DomainException("用户不存在");
+            throw new BusinessException(404, "用户不存在");
         }
 
         // 转换为DTO

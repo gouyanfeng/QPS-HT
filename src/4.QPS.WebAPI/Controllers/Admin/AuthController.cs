@@ -20,31 +20,17 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
     {
-        try
-        {
-            var command = new LoginCommand { Request = request };
-            var response = await _mediator.Send(command);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return Unauthorized(ex.Message);
-        }
+        var command = new LoginCommand { Request = request };
+        var response = await _mediator.Send(command);
+        return Ok(response);
     }
 
     [HttpPost("logout")]
     [Authorize]
     public async Task<ActionResult<LogoutResponse>> Logout([FromBody] LogoutRequest request)
     {
-        try
-        {
-            var command = new LogoutCommand { Request = request };
-            var response = await _mediator.Send(command);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        var command = new LogoutCommand { Request = request };
+        var response = await _mediator.Send(command);
+        return Ok(response);
     }
 }
