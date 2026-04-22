@@ -75,7 +75,7 @@ public class ResponseWrapperMiddleware
         
         // 直接包装所有响应，不再检查是否已经是 ApiResponse 格式
         var wrappedResponse = WrapResponse(originalStatusCode, responseContent);
-        return JsonSerializer.Serialize(wrappedResponse);
+        return JsonSerializer.Serialize(wrappedResponse,new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
     }
 
     /// <summary>
@@ -99,7 +99,7 @@ public class ResponseWrapperMiddleware
         
         try
         {
-            var data = JsonSerializer.Deserialize<object>(responseContent);
+            var data = JsonSerializer.Deserialize<object>(responseContent );
             return new ApiResponse<object> { Data = data, Code = statusCode, Msg = "操作成功" };
         }
         catch
