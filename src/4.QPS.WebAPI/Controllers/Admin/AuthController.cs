@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using QPS.Application.Contracts.Auth;
@@ -28,6 +29,22 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             return Unauthorized(ex.Message);
+        }
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<ActionResult<LogoutResponse>> Logout([FromBody] LogoutRequest request)
+    {
+        try
+        {
+            var command = new LogoutCommand { Request = request };
+            var response = await _mediator.Send(command);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
         }
     }
 }
