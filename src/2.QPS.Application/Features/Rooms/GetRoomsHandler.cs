@@ -20,9 +20,9 @@ public class GetRoomsQuery : PaginationRequest, IRequest<PaginationResponse<Room
     public string? Status { get; set; }
 
     /// <summary>
-    /// 设备序列号
+    /// 是否启用
     /// </summary>
-    public string? DeviceSn { get; set; }
+    public bool? IsEnabled { get; set; }
 }
 
 public class GetRoomsHandler : IRequestHandler<GetRoomsQuery, PaginationResponse<RoomDto>>
@@ -52,9 +52,9 @@ public class GetRoomsHandler : IRequestHandler<GetRoomsQuery, PaginationResponse
             query = query.Where(r => r.Status.ToString().Contains(request.Status));
         }
 
-        if (!string.IsNullOrEmpty(request.DeviceSn))
+        if (request.IsEnabled.HasValue)
         {
-            query = query.Where(r => r.DeviceSn.Contains(request.DeviceSn));
+            query = query.Where(r => r.IsEnabled == request.IsEnabled.Value);
         }
 
         // 转换为DTO
@@ -63,9 +63,8 @@ public class GetRoomsHandler : IRequestHandler<GetRoomsQuery, PaginationResponse
             Id = r.Id,
             RoomNumber = r.Name,
             Status = r.Status.ToString(),
-            MqttTopic = r.MqttTopic,
             ShopId = r.ShopId,
-            DeviceSn = r.DeviceSn
+            IsEnabled = r.IsEnabled
         });
 
         // 执行分页查询

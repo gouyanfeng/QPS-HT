@@ -10,11 +10,8 @@ public class User : AggregateRoot
     public string RealName { get; private set; }
     public bool IsActive { get; private set; }
 
-    protected User() { }
-
     private User(string username, string passwordHash, string realName)
     {
-        MerchantId = Guid.Empty;
         Username = username;
         PasswordHash = passwordHash;
         RealName = realName;

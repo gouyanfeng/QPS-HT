@@ -5,7 +5,6 @@ public class RoomDto
     public Guid Id { get; set; }
     public string RoomNumber { get; set; }
     public string Status { get; set; }
-    public string MqttTopic { get; set; }
     public Guid ShopId { get; set; }
-    public string DeviceSn { get; set; }
+    public bool IsEnabled { get; set; }
 }

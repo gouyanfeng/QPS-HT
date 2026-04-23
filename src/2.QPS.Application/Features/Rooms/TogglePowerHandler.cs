@@ -29,8 +29,8 @@ public class TogglePowerHandler : IRequestHandler<TogglePowerCommand, bool>
         var room = await _dbContext.Rooms.FindAsync(request.RoomId, cancellationToken);
         if (room == null) return false;
 
-        var command = request.PowerOn ? "POWER_ON" : "POWER_OFF";
-        await _mqttService.SendCommandAsync(room.MqttTopic, command);
+        // 由于移除了 MqttTopic 字段，不再发送 MQTT 命令
+        // 可以根据实际需求添加其他逻辑
         return true;
     }
 }

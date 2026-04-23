@@ -27,7 +27,7 @@ public class RoomController : ControllerBase
         [FromQuery] string sortDirection = "Ascending",
         [FromQuery] string? roomNumber = null,
         [FromQuery] string? status = null,
-        [FromQuery] string? deviceSn = null)
+        [FromQuery] bool? isEnabled = null)
     {
         var query = new GetRoomsQuery
         {
@@ -37,7 +37,7 @@ public class RoomController : ControllerBase
             SortDirection = sortDirection,
             RoomNumber = roomNumber,
             Status = status,
-            DeviceSn = deviceSn
+            IsEnabled = isEnabled
         };
         var rooms = await _mediator.Send(query);
         return Ok(rooms);

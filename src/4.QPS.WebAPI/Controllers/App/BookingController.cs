@@ -18,14 +18,14 @@ public class BookingController : ControllerBase
         _mediator = mediator;
     }
 
-    [HttpPost("create-order")]
+    [HttpPost("createOrder")]
     public async Task<ActionResult<Guid>> CreateOrder([FromBody] CreateOrderRequest request)
     {
         var orderId = await _mediator.Send(new CreateOrderCommand { Request = request });
         return Ok(orderId);
     }
 
-    [HttpPost("settle-order")]
+    [HttpPost("settleOrder")]
     public async Task<ActionResult<bool>> SettleOrder([FromBody] SettleOrderRequest request)
     {
         var result = await _mediator.Send(new SettleOrderCommand { Request = request });

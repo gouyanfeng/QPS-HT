@@ -8,26 +8,22 @@ public class Room : AggregateRoot
     public Guid ShopId { get; private set; }
     public string Name { get; private set; }
     public RoomStatus Status { get; private set; }
-    public string DeviceSn { get; private set; }
-    public string MqttTopic { get; private set; }
     public decimal UnitPrice { get; private set; } // 单价
+    public bool IsEnabled { get; private set; } // 是否启用
 
-    protected Room() { }
-
-    private Room(Guid shopId, string name, string deviceSn, string mqttTopic, decimal unitPrice)
+    private Room(Guid shopId, string name, decimal unitPrice, bool isEnabled = true)
     {
         MerchantId = Guid.Empty;
         ShopId = shopId;
         Name = name;
         Status = RoomStatus.Idle;
-        DeviceSn = deviceSn;
-        MqttTopic = mqttTopic;
         UnitPrice = unitPrice;
+        IsEnabled = isEnabled;
     }
 
-    public static Room Create(Guid shopId, string name, string deviceSn, string mqttTopic, decimal unitPrice)
+    public static Room Create(Guid shopId, string name, decimal unitPrice, bool isEnabled = true)
     {
-        return new Room(shopId, name, deviceSn, mqttTopic, unitPrice);
+        return new Room(shopId, name, unitPrice, isEnabled);
     }
 
     public void Occupy() { Status = RoomStatus.Occupied; }
@@ -35,11 +31,13 @@ public class Room : AggregateRoot
     public void MarkAsFault() { Status = RoomStatus.Fault; }
     public void SetToIdle() { Status = RoomStatus.Idle; }
 
-    public void Update(string name, string deviceSn, string mqttTopic, decimal unitPrice)
+    public void Update(string name, decimal unitPrice, bool isEnabled)
     {
         Name = name;
-        DeviceSn = deviceSn;
-        MqttTopic = mqttTopic;
         UnitPrice = unitPrice;
+        IsEnabled = isEnabled;
     }
+
+    public void Enable() { IsEnabled = true; }
+    public void Disable() { IsEnabled = false; }
 }

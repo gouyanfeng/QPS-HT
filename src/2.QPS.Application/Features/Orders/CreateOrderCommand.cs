@@ -76,8 +76,8 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, Guid>
         // 更新房间状态为占用
         room.Occupy();
 
-        // 发送MQTT命令开启设备
-        await _mqttService.SendCommandAsync(room.MqttTopic, "POWER_ON");
+        // 由于移除了 MqttTopic 字段，不再发送 MQTT 命令
+        // 可以根据实际需求添加其他逻辑
 
         // 保存到数据库
         _dbContext.Orders.Add(order);

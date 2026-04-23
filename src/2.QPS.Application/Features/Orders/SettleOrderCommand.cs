@@ -63,8 +63,8 @@ public class SettleOrderHandler : IRequestHandler<SettleOrderCommand, bool>
             // 更新房间状态为空闲
             room.SetToIdle();
 
-            // 发送MQTT命令关闭设备
-            await _mqttService.SendCommandAsync(room.MqttTopic, "POWER_OFF");
+            // 由于移除了 MqttTopic 字段，不再发送 MQTT 命令
+            // 可以根据实际需求添加其他逻辑
         }
 
         // 保存到数据库
