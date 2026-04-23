@@ -27,16 +27,6 @@ public class GetUsersQuery : PaginationRequest, IRequest<PaginationResponse<User
     /// 是否激活
     /// </summary>
     public bool? IsActive { get; set; }
-
-    /// <summary>
-    /// 开始日期
-    /// </summary>
-    public DateTime? StartDate { get; set; }
-
-    /// <summary>
-    /// 结束日期
-    /// </summary>
-    public DateTime? EndDate { get; set; }
 }
 
 /// <summary>
@@ -82,15 +72,7 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginationResponse
             query = query.Where(u => u.IsActive == request.IsActive.Value);
         }
 
-        if (request.StartDate.HasValue)
-        {
-            query = query.Where(u => u.CreatedAt >= request.StartDate.Value);
-        }
 
-        if (request.EndDate.HasValue)
-        {
-            query = query.Where(u => u.CreatedAt <= request.EndDate.Value);
-        }
 
         // 转换为DTO
         var dtoQuery = query.Select(u => new UserDto
