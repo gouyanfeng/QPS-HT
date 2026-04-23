@@ -18,7 +18,7 @@ public class CurrentUserService : ICurrentUserService
         {
             // 从JWT Token中获取用户ID
             // 这里假设用户ID存储在Claims中
-            return _httpContextAccessor.HttpContext?.User?.FindFirst("sub")?.Value;
+            return _httpContextAccessor.HttpContext?.User?.FindFirst("userId")?.Value;
         }
     }
 
@@ -32,7 +32,7 @@ public class CurrentUserService : ICurrentUserService
             {
                 return merchantId;
             }
-            
+
             // 如果请求头中没有，从JWT Token中获取
             // 这里假设商户ID存储在Claims中
             if (_httpContextAccessor.HttpContext?.User?.FindFirst("merchantId")?.Value is string merchantIdClaim &&
@@ -40,7 +40,7 @@ public class CurrentUserService : ICurrentUserService
             {
                 return merchantIdFromClaim;
             }
-            
+
             return Guid.Empty;
         }
     }
@@ -55,7 +55,7 @@ public class CurrentUserService : ICurrentUserService
             {
                 return shopId;
             }
-            
+
             // 如果请求头中没有，从JWT Token中获取
             // 这里假设店铺ID存储在Claims中
             if (_httpContextAccessor.HttpContext?.User?.FindFirst("shopId")?.Value is string shopIdClaim &&
@@ -63,7 +63,7 @@ public class CurrentUserService : ICurrentUserService
             {
                 return shopIdFromClaim;
             }
-            
+
             return null;
         }
     }
