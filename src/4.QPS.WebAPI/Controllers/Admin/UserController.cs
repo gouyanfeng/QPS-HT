@@ -25,14 +25,24 @@ public class UserController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string sortField = "Username",
-        [FromQuery] string sortDirection = "Ascending")
+        [FromQuery] string sortDirection = "Ascending",
+        [FromQuery] string? username = null,
+        [FromQuery] string? realName = null,
+        [FromQuery] bool? isActive = null,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null)
     {
         var query = new GetUsersQuery
         {
             Page = page,
             PageSize = pageSize,
             SortField = sortField,
-            SortDirection = sortDirection
+            SortDirection = sortDirection,
+            Username = username,
+            RealName = realName,
+            IsActive = isActive,
+            StartDate = startDate,
+            EndDate = endDate
         };
         var users = await _mediator.Send(query);
         return Ok(users);

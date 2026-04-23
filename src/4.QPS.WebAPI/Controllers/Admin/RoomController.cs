@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QPS.Application.Features.Rooms;
 using QPS.Application.Contracts.Rooms;
+using QPS.Application.Pagination;
 
 namespace QPS.WebAPI.Controllers.Admin;
 
@@ -19,9 +20,26 @@ public class RoomController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<RoomDto>>> GetRooms()
+    public async Task<ActionResult<PaginationResponse<RoomDto>>> GetRooms(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string sortField = "Name",
+        [FromQuery] string sortDirection = "Ascending",
+        [FromQuery] string? roomNumber = null,
+        [FromQuery] string? status = null,
+        [FromQuery] string? deviceSn = null)
     {
-        var rooms = await _mediator.Send(new GetRoomsQuery());
+        var query = new GetRoomsQuery
+        {
+            Page = page,
+            PageSize = pageSize,
+            SortField = sortField,
+            SortDirection = sortDirection,
+            RoomNumber = roomNumber,
+            Status = status,
+            DeviceSn = deviceSn
+        };
+        var rooms = await _mediator.Send(query);
         return Ok(rooms);
     }
 

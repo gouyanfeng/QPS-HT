@@ -13,6 +13,30 @@ namespace QPS.Application.Features.Merchants;
 /// </summary>
 public class GetMerchantsQuery : PaginationRequest, IRequest<PaginationResponse<MerchantDto>>
 {
+    /// <summary>
+    /// 商户名称
+    /// </summary>
+    public string? Name { get; set; }
+
+    /// <summary>
+    /// 商户电话
+    /// </summary>
+    public string? Phone { get; set; }
+
+    /// <summary>
+    /// 是否激活
+    /// </summary>
+    public bool? IsActive { get; set; }
+
+    /// <summary>
+    /// 开始日期
+    /// </summary>
+    public DateTime? StartDate { get; set; }
+
+    /// <summary>
+    /// 结束日期
+    /// </summary>
+    public DateTime? EndDate { get; set; }
 }
 
 /// <summary>
@@ -41,6 +65,32 @@ public class GetMerchantsHandler : IRequestHandler<GetMerchantsQuery, Pagination
     {
         // 构建查询
         var query = _dbContext.Merchants.AsQueryable();
+
+        // 应用查询条件
+        if (!string.IsNullOrEmpty(request.Name))
+        {
+            query = query.Where(m => m.Name.Contains(request.Name));
+        }
+
+        if (!string.IsNullOrEmpty(request.Phone))
+        {
+            query = query.Where(m => m.Phone.Contains(request.Phone));
+        }
+
+        if (request.IsActive.HasValue)
+        {
+            query = query.Where(m => m.IsActive == request.IsActive.Value);
+        }
+
+        if (request.StartDate.HasValue)
+        {
+            query = query.Where(m => m.CreatedAt >= request.StartDate.Value);
+        }
+
+        if (request.EndDate.HasValue)
+        {
+            query = query.Where(m => m.CreatedAt <= request.EndDate.Value);
+        }
 
         // 转换为DTO
         var dtoQuery = query.Select(m => new MerchantDto

@@ -22,22 +22,31 @@ public class MerchantController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<PaginationResponse<MerchantDto>>> GetMerchants(
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10,
-        [FromQuery] string sortField = "CreatedAt",
-        [FromQuery] string sortDirection = "Descending")
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10,
+    [FromQuery] string sortField = "CreatedAt",
+    [FromQuery] string sortDirection = "Descending",
+    [FromQuery] string? name = null,
+    [FromQuery] string? phone = null,
+    [FromQuery] bool? isActive = null,
+    [FromQuery] DateTime? startDate = null,
+    [FromQuery] DateTime? endDate = null)
     {
         var query = new GetMerchantsQuery
         {
             Page = page,
             PageSize = pageSize,
             SortField = sortField,
-            SortDirection = sortDirection
+            SortDirection = sortDirection,
+            Name = name,
+            Phone = phone,
+            IsActive = isActive,
+            StartDate = startDate,
+            EndDate = endDate
         };
         var merchants = await _mediator.Send(query);
         return Ok(merchants);
     }
-
     [HttpGet("{id}")]
     public async Task<ActionResult<MerchantDto>> GetMerchant(Guid id)
     {
