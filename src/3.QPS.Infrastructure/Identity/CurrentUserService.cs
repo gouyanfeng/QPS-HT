@@ -67,4 +67,14 @@ public class CurrentUserService : ICurrentUserService
             return null;
         }
     }
+
+    public string? Username
+    {
+        get
+        {
+            // 从JWT Token中获取用户名
+            // 这里假设用户名存储在Claims中
+            return _httpContextAccessor.HttpContext?.User?.FindFirst("username")?.Value;
+        }
+    }
 }

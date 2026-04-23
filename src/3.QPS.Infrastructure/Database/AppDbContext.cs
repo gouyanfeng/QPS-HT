@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Interfaces;
+using QPS.Domain.Common;
 using QPS.Domain.Entities;
 
 namespace QPS.Infrastructure.Database;
@@ -64,14 +65,39 @@ public class AppDbContext : DbContext, IDbContext
 
     public override int SaveChanges()
     {
+        SetAuditFields();
         SetMerchantIdForNewEntities();
         return base.SaveChanges();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        SetAuditFields();
         SetMerchantIdForNewEntities();
         return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void SetAuditFields()
+    {
+        var currentUser = _currentUserService.Username ?? "System";
+        var now = DateTime.UtcNow;
+
+        var entries = ChangeTracker.Entries()
+            .Where(e => e.Entity is BaseEntity && (e.State == EntityState.Added || e.State == EntityState.Modified));
+
+        foreach (var entry in entries)
+        {
+            var entity = (BaseEntity)entry.Entity;
+
+            if (entry.State == EntityState.Added)
+            {
+                entity.CreatedAt = now;
+                entity.CreatedBy = currentUser;
+            }
+
+            entity.UpdatedAt = now;
+            entity.UpdatedBy = currentUser;
+        }
     }
 
     private void SetMerchantIdForNewEntities()

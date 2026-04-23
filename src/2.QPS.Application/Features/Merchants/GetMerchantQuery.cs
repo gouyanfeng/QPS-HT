@@ -41,6 +41,7 @@ public class GetMerchantHandler : IRequestHandler<GetMerchantQuery, MerchantDto>
     /// <returns>商户DTO</returns>
     public async Task<MerchantDto> Handle(GetMerchantQuery request, CancellationToken cancellationToken)
     {
+
         // 查询商户
         var merchant = await _dbContext.Merchants.FindAsync(request.Id, cancellationToken);
 
