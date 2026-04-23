@@ -51,17 +51,11 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, Guid>
     /// <returns>订单ID</returns>
     public async Task<Guid> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
-        var merchantId = _currentUserService.MerchantId;
         var room = await _dbContext.Rooms.FindAsync(request.Request.RoomId, cancellationToken);
         if (room == null)
         {
             throw new BusinessException(404, "房间不存在");
         }
-        if (room.MerchantId != merchantId)
-        {
-            throw new BusinessException(403, "无权操作此房间");
-        }
-
         // 检查房间是否可用
         if (room.Status != RoomStatus.Idle)
         {
