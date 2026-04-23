@@ -13,7 +13,7 @@ public static class TestDataInitializer
         // 初始化管理员用户
         if (!dbContext.Users.Any())
         {
-            var adminUser = User.Create("admin", "123456", "Admin");
+            var adminUser = User.Create("admin", "123456", "Admin", Guid.Empty);
             dbContext.Users.Add(adminUser);
             dbContext.SaveChanges();
         }

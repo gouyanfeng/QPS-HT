@@ -14,6 +14,7 @@ public interface IDbContext
     DbSet<Order> Orders { get; }
     DbSet<Merchant> Merchants { get; }
     DbSet<User> Users { get; }
+    DbSet<Role> Roles { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -55,7 +55,7 @@ public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, UserDto>
         }
 
         // 更新用户信息
-        user.Update(request.Request.RealName);
+        user.Update(request.Request.RealName, request.Request.RoleId);
 
         // 更新密码（如果提供了新密码）
         if (!string.IsNullOrEmpty(request.Request.Password))
@@ -82,6 +82,7 @@ public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, UserDto>
         {
             Id = user.Id,
             MerchantId = user.MerchantId,
+            RoleId = user.RoleId,
             Username = user.Username,
             RealName = user.RealName,
             IsActive = user.IsActive

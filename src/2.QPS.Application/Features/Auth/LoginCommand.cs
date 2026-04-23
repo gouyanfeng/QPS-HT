@@ -64,7 +64,8 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
             Username = user.Username,
             RealName = user.RealName,
             Role = "Admin",
-            MerchantId = user.MerchantId
+            MerchantId = user.MerchantId,
+            RoleId = user.RoleId
         };
     }
 

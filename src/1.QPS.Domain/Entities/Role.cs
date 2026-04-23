@@ -8,8 +8,6 @@ public class Role : BaseEntity
     public string Name { get; private set; }
     public string Code { get; private set; }
 
-    protected Role() { }
-
     public Role(Guid merchantId, string name, string code)
     {
         MerchantId = merchantId;

@@ -43,14 +43,12 @@ public class CreateUserHandler : IRequestHandler<CreateUserCommand, UserDto>
     /// <returns>用户DTO</returns>
     public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
-        // 从当前用户服务获取当前商户ID
-
         // 创建用户（注意：这里应该对密码进行哈希处理，为了测试方便，暂时直接使用明文）
         var user = User.Create(
             request.Request.Username,
             request.Request.Password,
-            request.Request.RealName
-
+            request.Request.RealName,
+            request.Request.RoleId
         );
 
         // 保存到数据库
@@ -62,6 +60,7 @@ public class CreateUserHandler : IRequestHandler<CreateUserCommand, UserDto>
         {
             Id = user.Id,
             MerchantId = user.MerchantId,
+            RoleId = user.RoleId,
             Username = user.Username,
             RealName = user.RealName,
             IsActive = user.IsActive

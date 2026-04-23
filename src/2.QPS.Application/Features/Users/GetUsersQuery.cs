@@ -54,7 +54,19 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginationResponse
     public async Task<PaginationResponse<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
         // 构建查询，全局查询过滤器会自动过滤MerchantId
-        var query = _dbContext.Users.AsQueryable();
+        var query = from a in _dbContext.Users.AsNoTracking()
+                    join b in _dbContext.Roles.AsNoTracking() on a.RoleId equals b.Id into ab
+                    from b in ab.DefaultIfEmpty()
+                    select new
+                    {
+                        Id = a.Id,
+                        MerchantId = a.MerchantId,
+                        RoleId = a.RoleId,
+                        Username = a.Username,
+                        RealName = a.RealName,
+                        IsActive = a.IsActive,
+                        RoleName = b != null ? b.Name : null
+                    };
 
         // 应用查询条件
         if (!string.IsNullOrEmpty(request.Username))
@@ -72,16 +84,16 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginationResponse
             query = query.Where(u => u.IsActive == request.IsActive.Value);
         }
 
-
-
         // 转换为DTO
         var dtoQuery = query.Select(u => new UserDto
         {
             Id = u.Id,
             MerchantId = u.MerchantId,
+            RoleId = u.RoleId,
             Username = u.Username,
             RealName = u.RealName,
-            IsActive = u.IsActive
+            IsActive = u.IsActive,
+            RoleName = u.RoleName
         });
 
         // 执行分页查询
