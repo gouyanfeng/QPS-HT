@@ -89,7 +89,6 @@ builder.Services.AddScoped<IJwtGenerator>(_ => new JwtGenerator(
     builder.Configuration["Jwt:Audience"]
 ));
 
-// Services are now directly implemented in handlers
 
 // Register MediatR and behaviors
 builder.Services.AddMediatR(cfg =>
@@ -123,7 +122,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Response wrapper is now handled by ResponseWrapperFilter
 
 app.MapControllers();
 

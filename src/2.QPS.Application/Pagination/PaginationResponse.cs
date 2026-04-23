@@ -11,7 +11,7 @@ public class PaginationResponse<T>
     /// <summary>
     /// 数据列表
     /// </summary>
-    public List<T> Data { get; set; }
+    public List<T> List { get; set; }
 
     /// <summary>
     /// 总记录数
@@ -42,7 +42,7 @@ public class PaginationResponse<T>
     /// <param name="pageSize">每页大小</param>
     public PaginationResponse(List<T> data, int totalCount, int currentPage, int pageSize)
     {
-        Data = data;
+        List = data;
         TotalCount = totalCount;
         CurrentPage = currentPage;
         PageSize = pageSize;
