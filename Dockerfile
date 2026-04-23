@@ -1,36 +1,20 @@
-# 使用 .NET 8.0 SDK 作为构建镜像
+# --- 构建阶段不变 (SDK 通常比较大，没关系，只在构建时用) ---
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-
-# 设置工作目录
 WORKDIR /app
-
-# 复制项目文件
 COPY . .
-
-# 恢复依赖
 RUN dotnet restore
-
-# 构建项目
 RUN dotnet build --configuration Release --no-restore
-
-# 发布项目
 RUN dotnet publish src/4.QPS.WebAPI --configuration Release --output /app/publish --no-build
 
-# 使用 .NET 8.0 ASP.NET Core Runtime 作为运行镜像
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-
-# 设置工作目录
+# --- 运行阶段：换成 Alpine ---
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app
-
-# 从构建镜像复制发布文件
 COPY --from=build /app/publish .
 
-# 暴露端口
+# Alpine 镜像默认不包含 ICU (国际化库)，如果你的程序涉及特殊的时间格式或货币转换，需要加上这行：
+RUN apk add --no-cache icu-libs
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+
 EXPOSE 80
-EXPOSE 443
-
-# 设置环境变量
 ENV ASPNETCORE_URLS=http://+:80
-
-# 启动应用
 ENTRYPOINT ["dotnet", "QPS.WebAPI.dll"]
