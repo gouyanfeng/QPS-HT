@@ -77,9 +77,9 @@ public class PaginationExtensionsTests
         Assert.Equal(2, result.CurrentPage);
         Assert.Equal(2, result.PageSize);
         Assert.Equal(3, result.TotalPages);
-        Assert.Equal(2, result.Data.Count);
-        Assert.Equal(3, result.Data[0].Id);
-        Assert.Equal(4, result.Data[1].Id);
+        Assert.Equal(2, result.List.Count);
+        Assert.Equal(3, result.List[0].Id);
+        Assert.Equal(4, result.List[1].Id);
     }
 
     private class TestItem
