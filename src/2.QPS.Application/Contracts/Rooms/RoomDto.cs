@@ -6,5 +6,6 @@ public class RoomDto
     public string RoomNumber { get; set; }
     public string Status { get; set; }
     public Guid ShopId { get; set; }
+    public decimal UnitPrice { get; set; }
     public bool IsEnabled { get; set; }
 }

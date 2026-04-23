@@ -38,8 +38,7 @@ public class GetRoomsHandler : IRequestHandler<GetRoomsQuery, PaginationResponse
 
     public async Task<PaginationResponse<RoomDto>> Handle(GetRoomsQuery request, CancellationToken cancellationToken)
     {
-        var merchantId = _currentUserService.MerchantId;
-        var query = _dbContext.Rooms.Where(r => r.MerchantId == merchantId);
+        var query = _dbContext.Rooms.AsNoTracking();
 
         // 应用查询条件
         if (!string.IsNullOrEmpty(request.RoomNumber))
@@ -64,6 +63,7 @@ public class GetRoomsHandler : IRequestHandler<GetRoomsQuery, PaginationResponse
             RoomNumber = r.Name,
             Status = r.Status.ToString(),
             ShopId = r.ShopId,
+            UnitPrice = r.UnitPrice,
             IsEnabled = r.IsEnabled
         });
 
