@@ -26,7 +26,6 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("logout")]
-    [Authorize]
     public async Task<ActionResult<LogoutResponse>> Logout([FromBody] LogoutRequest request)
     {
         var command = new LogoutCommand { Request = request };

@@ -49,4 +49,36 @@ public class RoomController : ControllerBase
         var result = await _mediator.Send(command);
         return Ok(result);
     }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<RoomDto>> GetRoom(Guid id)
+    {
+        var query = new GetRoomQuery { Id = id };
+        var room = await _mediator.Send(query);
+        return Ok(room);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<RoomDto>> CreateRoom([FromBody] RoomCreateRequest request)
+    {
+        var command = new CreateRoomCommand { Request = request };
+        var room = await _mediator.Send(command);
+        return CreatedAtAction(nameof(GetRoom), new { id = room.Id }, room);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult<RoomDto>> UpdateRoom(Guid id, [FromBody] RoomUpdateRequest request)
+    {
+        var command = new UpdateRoomCommand { Id = id, Request = request };
+        var room = await _mediator.Send(command);
+        return Ok(room);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<bool>> DeleteRoom(Guid id)
+    {
+        var command = new DeleteRoomCommand { Id = id };
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
 }

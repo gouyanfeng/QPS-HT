@@ -22,17 +22,14 @@ public class CreateRoleCommand : IRequest<RoleDto>
 public class CreateRoleHandler : IRequestHandler<CreateRoleCommand, RoleDto>
 {
     private readonly IDbContext _dbContext;
-    private readonly ICurrentUserService _currentUserService;
 
     /// <summary>
     /// 构造函数
     /// </summary>
     /// <param name="dbContext">数据库上下文</param>
-    /// <param name="currentUserService">当前用户服务</param>
-    public CreateRoleHandler(IDbContext dbContext, ICurrentUserService currentUserService)
+    public CreateRoleHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
-        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -43,11 +40,8 @@ public class CreateRoleHandler : IRequestHandler<CreateRoleCommand, RoleDto>
     /// <returns>角色DTO</returns>
     public async Task<RoleDto> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
-        // 从当前用户服务获取当前商户ID
-        var merchantId = _currentUserService.MerchantId;
-
-        // 创建角色
-        var role = new Role(merchantId, request.Request.Name, request.Request.Code);
+        // 创建角色，不传递merchantId，底层会自动处理
+        var role = new Role(Guid.Empty, request.Request.Name, request.Request.Code);
 
         // 保存到数据库
         _dbContext.Roles.Add(role);
