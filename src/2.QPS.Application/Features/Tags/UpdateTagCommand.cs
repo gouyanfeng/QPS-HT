@@ -30,18 +30,14 @@ public class UpdateTagHandler : IRequestHandler<UpdateTagCommand, TagDto>
             throw new BusinessException(404, "标签不存在");
         }
 
-        tag.Update(
-            request.Request.TagName,
-            request.Request.Category
-        );
+        tag.Update(request.Request.TagName);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return new TagDto
         {
             Id = tag.Id,
-            TagName = tag.TagName,
-            Category = tag.Category
+            TagName = tag.TagName
         };
     }
 }

@@ -25,9 +25,11 @@ public class OrderConfig : IEntityTypeConfiguration<Order>
         builder.Property(o => o.PaymentMethod).HasMaxLength(50).IsRequired(false);
         builder.Property(o => o.PaidAt).IsRequired(false);
 
-        // 索引
         builder.HasIndex(o => o.OrderNo).IsUnique();
 
-     
+        builder.HasMany(o => o.OrderItems)
+            .WithOne()
+            .HasForeignKey(oi => oi.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

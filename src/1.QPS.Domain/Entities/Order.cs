@@ -13,6 +13,7 @@ public class Order : BaseEntity
     public virtual Shop Shop { get; set; }
     public virtual Room Room { get; set; }
     public virtual Customer? Customer { get; set; }
+    public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     public decimal OriginAmount { get; private set; }
     public decimal DiscountAmount { get; private set; }
     public decimal ActualAmount { get; private set; }

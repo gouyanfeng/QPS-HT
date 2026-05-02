@@ -19,4 +19,5 @@ public class OrderDto
     public string? PaymentMethod { get; set; }
     public DateTime? PaidAt { get; set; }
     public DateTime CreatedAt { get; set; }
+    public List<OrderItemDto> OrderItems { get; set; } = new List<OrderItemDto>();
 }

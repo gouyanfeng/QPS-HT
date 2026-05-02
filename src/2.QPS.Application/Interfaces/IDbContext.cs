@@ -16,6 +16,8 @@ public interface IDbContext
     DbSet<Customer> Customers { get; }
     DbSet<Plan> Plans { get; }
     DbSet<RoomImage> RoomImages { get; }
+    DbSet<RoomTag> RoomTags { get; }
+    DbSet<RoomPlan> RoomPlans { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

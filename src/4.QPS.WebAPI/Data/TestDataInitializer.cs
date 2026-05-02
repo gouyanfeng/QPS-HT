@@ -21,11 +21,13 @@ public static class TestDataInitializer
         InitializeUsers(dbContext, merchant, roles);
         var tags = InitializeTags(dbContext, merchant);
         var rooms = InitializeRooms(dbContext, shops, merchant);
-        InitializeRoomImages(dbContext, rooms);
-        InitializePlans(dbContext, merchant);
+        InitializeRoomImages(dbContext, rooms, merchant);
+        var plans = InitializePlans(dbContext, merchant);
+        InitializeRoomTags(dbContext, rooms, tags, merchant);
+        InitializeRoomPlans(dbContext, rooms, plans, merchant);
         InitializeCoupons(dbContext, merchant);
-        var customers = InitializeCustomers(dbContext);
-        InitializeOrders(dbContext, shops, rooms, customers);
+        var customers = InitializeCustomers(dbContext, merchant);
+        InitializeOrders(dbContext, shops, rooms, customers, merchant);
     }
 
     private static Merchant InitializeMerchant(AppDbContext dbContext)
@@ -133,11 +135,11 @@ public static class TestDataInitializer
 
         var tags = new List<Tag>
         {
-            new Tag("VIP", "等级"),
-            new Tag("特惠", "促销"),
-            new Tag("热门", "推荐"),
-            new Tag("安静", "环境"),
-            new Tag("宽敞", "环境")
+            new Tag("VIP"),
+            new Tag("特惠"),
+            new Tag("热门"),
+            new Tag("安静"),
+            new Tag("宽敞")
         };
 
         foreach (var tag in tags)
@@ -175,7 +177,7 @@ public static class TestDataInitializer
         return rooms;
     }
 
-    private static void InitializeRoomImages(AppDbContext dbContext, List<Room> rooms)
+    private static void InitializeRoomImages(AppDbContext dbContext, List<Room> rooms, Merchant merchant)
     {
         if (dbContext.RoomImages.Any())
             return;
@@ -184,20 +186,29 @@ public static class TestDataInitializer
 
         foreach (var room in rooms.Take(5))
         {
-            images.Add(new RoomImage(room.Id, $"https://example.com/images/room/{room.Id}-1.jpg", true, 1));
-            images.Add(new RoomImage(room.Id, $"https://example.com/images/room/{room.Id}-2.jpg", false, 2));
-            images.Add(new RoomImage(room.Id, $"https://example.com/images/room/{room.Id}-3.jpg", false, 3));
+            var image1 = new RoomImage(room.Id, $"https://example.com/images/room/{room.Id}-1.jpg", true, 1);
+            image1.GetType().GetProperty("MerchantId")?.SetValue(image1, merchant.Id);
+
+            var image2 = new RoomImage(room.Id, $"https://example.com/images/room/{room.Id}-2.jpg", false, 2);
+            image2.GetType().GetProperty("MerchantId")?.SetValue(image2, merchant.Id);
+
+            var image3 = new RoomImage(room.Id, $"https://example.com/images/room/{room.Id}-3.jpg", false, 3);
+            image3.GetType().GetProperty("MerchantId")?.SetValue(image3, merchant.Id);
+
+            images.Add(image1);
+            images.Add(image2);
+            images.Add(image3);
         }
 
         dbContext.RoomImages.AddRange(images);
         dbContext.SaveChanges();
     }
 
-    private static void InitializePlans(AppDbContext dbContext, Merchant merchant)
+    private static List<Plan> InitializePlans(AppDbContext dbContext, Merchant merchant)
     {
         var existingPlans = dbContext.Plans.IgnoreQueryFilters().Where(p => p.MerchantId == merchant.Id).ToList();
         if (existingPlans.Any())
-            return;
+            return existingPlans;
 
         var plans = new List<Plan>
         {
@@ -214,6 +225,7 @@ public static class TestDataInitializer
 
         dbContext.Plans.AddRange(plans);
         dbContext.SaveChanges();
+        return plans;
     }
 
     private static void InitializeCoupons(AppDbContext dbContext, Merchant merchant)
@@ -238,7 +250,7 @@ public static class TestDataInitializer
         dbContext.SaveChanges();
     }
 
-    private static List<Customer> InitializeCustomers(AppDbContext dbContext)
+    private static List<Customer> InitializeCustomers(AppDbContext dbContext, Merchant merchant)
     {
         if (dbContext.Customers.Any())
             return dbContext.Customers.ToList();
@@ -252,12 +264,17 @@ public static class TestDataInitializer
             new Customer("openid_005", "13900139005", "钱七", "https://example.com/avatar/5.jpg")
         };
 
+        foreach (var customer in customers)
+        {
+            customer.GetType().GetProperty("MerchantId")?.SetValue(customer, merchant.Id);
+        }
+
         dbContext.Customers.AddRange(customers);
         dbContext.SaveChanges();
         return customers;
     }
 
-    private static void InitializeOrders(AppDbContext dbContext, List<Shop> shops, List<Room> rooms, List<Customer> customers)
+    private static void InitializeOrders(AppDbContext dbContext, List<Shop> shops, List<Room> rooms, List<Customer> customers, Merchant merchant)
     {
         if (dbContext.Orders.Any())
             return;
@@ -272,6 +289,7 @@ public static class TestDataInitializer
             var customer = customers[random.Next(customers.Count)];
 
             var order = Order.Create(shop.Id, room.Id, customer.Id);
+            order.GetType().GetProperty("MerchantId")?.SetValue(order, merchant.Id);
             orders.Add(order);
         }
 
@@ -290,14 +308,66 @@ public static class TestDataInitializer
 
         foreach (var order in orders)
         {
-            var items = new List<OrderItem>
-            {
-                new OrderItem(order.Id, "基础服务", order.OriginAmount * 0.8m, 1),
-                new OrderItem(order.Id, "附加服务", order.OriginAmount * 0.2m, 1)
-            };
-            dbContext.OrderItems.AddRange(items);
+            var item1 = new OrderItem(order.Id, "基础服务", order.OriginAmount * 0.8m, 1);
+            item1.GetType().GetProperty("MerchantId")?.SetValue(item1, merchant.Id);
+
+            var item2 = new OrderItem(order.Id, "附加服务", order.OriginAmount * 0.2m, 1);
+            item2.GetType().GetProperty("MerchantId")?.SetValue(item2, merchant.Id);
+
+            dbContext.OrderItems.Add(item1);
+            dbContext.OrderItems.Add(item2);
         }
 
+        dbContext.SaveChanges();
+    }
+
+    private static void InitializeRoomTags(AppDbContext dbContext, List<Room> rooms, List<Tag> tags, Merchant merchant)
+    {
+        if (dbContext.RoomTags.Any())
+            return;
+
+        var roomTags = new List<RoomTag>();
+        var random = new Random();
+
+        foreach (var room in rooms)
+        {
+            var tagCount = random.Next(1, 4);
+            var selectedTags = tags.OrderBy(t => Guid.NewGuid()).Take(tagCount).ToList();
+
+            foreach (var tag in selectedTags)
+            {
+                var roomTag = new RoomTag(room.Id, tag.Id);
+                roomTag.GetType().GetProperty("MerchantId")?.SetValue(roomTag, merchant.Id);
+                roomTags.Add(roomTag);
+            }
+        }
+
+        dbContext.RoomTags.AddRange(roomTags);
+        dbContext.SaveChanges();
+    }
+
+    private static void InitializeRoomPlans(AppDbContext dbContext, List<Room> rooms, List<Plan> plans, Merchant merchant)
+    {
+        if (dbContext.RoomPlans.Any())
+            return;
+
+        var roomPlans = new List<RoomPlan>();
+        var random = new Random();
+
+        foreach (var room in rooms)
+        {
+            var planCount = random.Next(1, 3);
+            var selectedPlans = plans.OrderBy(p => Guid.NewGuid()).Take(planCount).ToList();
+
+            foreach (var plan in selectedPlans)
+            {
+                var roomPlan = new RoomPlan(room.Id, plan.Id);
+                roomPlan.GetType().GetProperty("MerchantId")?.SetValue(roomPlan, merchant.Id);
+                roomPlans.Add(roomPlan);
+            }
+        }
+
+        dbContext.RoomPlans.AddRange(roomPlans);
         dbContext.SaveChanges();
     }
 }

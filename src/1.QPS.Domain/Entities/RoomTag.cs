@@ -2,14 +2,17 @@ using QPS.Domain.Common;
 
 namespace QPS.Domain.Entities;
 
-public class RoomTagMapping : BaseEntity
+public class RoomTag : BaseEntity
 {
     public Guid RoomId { get; private set; }
     public Guid TagId { get; private set; }
 
-    protected RoomTagMapping() { }
+    public Room Room { get; private set; }
+    public Tag Tag { get; private set; }
 
-    public RoomTagMapping(Guid roomId, Guid tagId)
+    protected RoomTag() { }
+
+    public RoomTag(Guid roomId, Guid tagId)
     {
         RoomId = roomId;
         TagId = tagId;

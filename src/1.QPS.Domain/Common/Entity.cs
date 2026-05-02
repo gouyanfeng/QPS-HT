@@ -11,6 +11,7 @@ public abstract class BaseEntity
     public string CreatedBy { get; set; }
     public DateTime UpdatedAt { get; set; }
     public string UpdatedBy { get; set; }
+    public bool IsDeleted { get; set; }
     private readonly List<DomainEvent> _domainEvents = new();
 
     protected BaseEntity()
@@ -18,6 +19,7 @@ public abstract class BaseEntity
         Id = Guid.NewGuid();
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
+        IsDeleted = false;
     }
 
     protected void AddDomainEvent(DomainEvent domainEvent)

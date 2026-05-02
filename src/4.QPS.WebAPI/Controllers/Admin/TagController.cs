@@ -25,8 +25,7 @@ public class TagController : ControllerBase
         [FromQuery] int pageSize = 10,
         [FromQuery] string sortField = "TagName",
         [FromQuery] string sortDirection = "Ascending",
-        [FromQuery] string? tagName = null,
-        [FromQuery] string? category = null)
+        [FromQuery] string? tagName = null)
     {
         var query = new GetTagsQuery
         {
@@ -34,8 +33,7 @@ public class TagController : ControllerBase
             PageSize = pageSize,
             SortField = sortField,
             SortDirection = sortDirection,
-            TagName = tagName,
-            Category = category
+            TagName = tagName
         };
         var tags = await _mediator.Send(query);
         return Ok(tags);

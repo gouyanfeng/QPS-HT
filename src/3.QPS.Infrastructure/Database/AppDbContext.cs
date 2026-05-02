@@ -24,7 +24,8 @@ public class AppDbContext : DbContext, IDbContext
     public DbSet<Room> Rooms { get; set; }
     public DbSet<RoomImage> RoomImages { get; set; }
     public DbSet<Tag> Tags { get; set; }
-    public DbSet<RoomTagMapping> RoomTagMappings { get; set; }
+    public DbSet<RoomTag> RoomTags { get; set; }
+    public DbSet<RoomPlan> RoomPlans { get; set; }
 
     // 计费优惠
     public DbSet<Plan> Plans { get; set; }

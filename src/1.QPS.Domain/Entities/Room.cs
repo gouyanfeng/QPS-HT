@@ -1,4 +1,5 @@
 using QPS.Domain.Common;
+using System.Collections.Generic;
 
 namespace QPS.Domain.Entities;
 
@@ -7,8 +8,13 @@ public class Room : AggregateRoot
     public Guid ShopId { get; private set; }
     public string Name { get; private set; }
     public RoomStatus Status { get; private set; }
-    public decimal UnitPrice { get; private set; } // 单价
-    public bool IsEnabled { get; private set; } // 是否启用
+    public decimal UnitPrice { get; private set; }
+    public bool IsEnabled { get; private set; }
+
+    public Shop Shop { get; private set; }
+    public ICollection<RoomTag> RoomTags { get; private set; } = new List<RoomTag>();
+    public ICollection<RoomImage> RoomImages { get; private set; } = new List<RoomImage>();
+    public ICollection<RoomPlan> RoomPlans { get; private set; } = new List<RoomPlan>();
 
     private Room(Guid shopId, string name, decimal unitPrice, bool isEnabled = true)
     {

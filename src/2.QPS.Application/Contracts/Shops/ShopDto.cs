@@ -8,4 +8,5 @@ public class ShopDto
     public TimeSpan OpeningTime { get; set; }
     public TimeSpan ClosingTime { get; set; }
     public int AutoPowerOffDelay { get; set; }
+    public List<RoomSummaryDto> Rooms { get; set; } = new List<RoomSummaryDto>();
 }

@@ -32,8 +32,7 @@ public class GetTagHandler : IRequestHandler<GetTagQuery, TagDto>
         return new TagDto
         {
             Id = tag.Id,
-            TagName = tag.TagName,
-            Category = tag.Category
+            TagName = tag.TagName
         };
     }
 }

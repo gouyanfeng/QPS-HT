@@ -9,6 +9,8 @@ public class RoomImage : BaseEntity
     public bool IsMain { get; private set; }
     public int SortOrder { get; private set; }
 
+    public Room Room { get; private set; }
+
     protected RoomImage() { }
 
     public RoomImage(Guid roomId, string imageUrl, bool isMain, int sortOrder)

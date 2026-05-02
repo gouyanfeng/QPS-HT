@@ -23,42 +23,46 @@ public class GetOrderHandler : IRequestHandler<GetOrderQuery, OrderDto>
 
     public async Task<OrderDto> Handle(GetOrderQuery request, CancellationToken cancellationToken)
     {
-        var query = from o in _dbContext.Orders
-                    join s in _dbContext.Shops on o.ShopId equals s.Id into shopJoin
-                    from shop in shopJoin.DefaultIfEmpty()
-                    join r in _dbContext.Rooms on o.RoomId equals r.Id into roomJoin
-                    from room in roomJoin.DefaultIfEmpty()
-                    join c in _dbContext.Customers on o.CustomerId equals c.Id into customerJoin
-                    from customer in customerJoin.DefaultIfEmpty()
-                    where o.Id == request.OrderId
-                    select new OrderDto
-                    {
-                        Id = o.Id,
-                        OrderNo = o.OrderNo,
-                        ShopId = o.ShopId,
-                        ShopName = shop != null ? shop.Name : null,
-                        RoomId = o.RoomId,
-                        RoomNumber = room != null ? room.Name : null,
-                        CustomerId = o.CustomerId,
-                        CustomerName = customer != null ? customer.Nickname : null,
-                        Status = o.Status.ToString(),
-                        OriginAmount = o.OriginAmount,
-                        DiscountAmount = o.DiscountAmount,
-                        ActualAmount = o.ActualAmount,
-                        StartTime = o.StartTime,
-                        EndTime = o.EndTime,
-                        PaymentMethod = o.PaymentMethod,
-                        PaidAt = o.PaidAt,
-                        CreatedAt = o.CreatedAt
-                    };
-
-        var order = await query.FirstOrDefaultAsync(cancellationToken);
+        var order = await _dbContext.Orders.AsNoTracking()
+            .Include(o => o.Shop)
+            .Include(o => o.Room)
+            .Include(o => o.Customer)
+            .Include(o => o.OrderItems)
+            .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);
 
         if (order == null)
         {
             throw new BusinessException(404, "订单不存在");
         }
 
-        return order;
+        return new OrderDto
+        {
+            Id = order.Id,
+            OrderNo = order.OrderNo,
+            ShopId = order.ShopId,
+            ShopName = order.Shop != null ? order.Shop.Name : null,
+            RoomId = order.RoomId,
+            RoomNumber = order.Room != null ? order.Room.Name : null,
+            CustomerId = order.CustomerId,
+            CustomerName = order.Customer != null ? order.Customer.Nickname : null,
+            Status = order.Status.ToString(),
+            OriginAmount = order.OriginAmount,
+            DiscountAmount = order.DiscountAmount,
+            ActualAmount = order.ActualAmount,
+            StartTime = order.StartTime,
+            EndTime = order.EndTime,
+            PaymentMethod = order.PaymentMethod,
+            PaidAt = order.PaidAt,
+            CreatedAt = order.CreatedAt,
+            OrderItems = order.OrderItems.Select(oi => new OrderItemDto
+            {
+                Id = oi.Id,
+                OrderId = oi.OrderId,
+                ItemName = oi.ItemName,
+                UnitPrice = oi.UnitPrice,
+                Quantity = oi.Quantity,
+                Amount = oi.Amount
+            }).ToList()
+        };
     }
 }

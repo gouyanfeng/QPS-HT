@@ -1,4 +1,5 @@
 using QPS.Domain.Common;
+using System.Collections.Generic;
 
 namespace QPS.Domain.Entities;
 
@@ -8,7 +9,9 @@ public class Shop : BaseEntity
     public string Address { get; private set; }
     public TimeSpan OpeningTime { get; private set; }
     public TimeSpan ClosingTime { get; private set; }
-    public int AutoPowerOffDelay { get; private set; } // 自动关机延迟（分钟）
+    public int AutoPowerOffDelay { get; private set; }
+
+    public ICollection<Room> Rooms { get; private set; } = new List<Room>();
 
     protected Shop() { }
 
