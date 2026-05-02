@@ -41,6 +41,7 @@ public class CurrentUserService : ICurrentUserService
                 return merchantIdFromClaim;
             }
 
+            Console.WriteLine("MerchantId not found in request headers or JWT claims. Returning Guid.Empty.");
             return Guid.Empty;
         }
     }

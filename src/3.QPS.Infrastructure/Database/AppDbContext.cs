@@ -49,18 +49,16 @@ public class AppDbContext : DbContext, IDbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
         // 添加全局查询过滤器，根据当前租户ID过滤数据
-        var merchantId = _currentUserService.MerchantId;
-
-        // 为包含MerchantId属性的实体添加全局查询过滤器
-        modelBuilder.Entity<Shop>().HasQueryFilter(s => s.MerchantId == merchantId);
-        modelBuilder.Entity<User>().HasQueryFilter(u => u.MerchantId == merchantId);
-        modelBuilder.Entity<Role>().HasQueryFilter(r => r.MerchantId == merchantId);
-        modelBuilder.Entity<Room>().HasQueryFilter(r => r.MerchantId == merchantId);
-        modelBuilder.Entity<Tag>().HasQueryFilter(t => t.MerchantId == merchantId);
-        modelBuilder.Entity<Plan>().HasQueryFilter(p => p.MerchantId == merchantId);
-        modelBuilder.Entity<Coupon>().HasQueryFilter(c => c.MerchantId == merchantId);
-        modelBuilder.Entity<Discount>().HasQueryFilter(d => d.MerchantId == merchantId);
-        modelBuilder.Entity<Order>().HasQueryFilter(o => o.MerchantId == merchantId);
+        // 使用延迟求值，让MerchantId在每次查询时动态获取
+        modelBuilder.Entity<Shop>().HasQueryFilter(s => s.MerchantId == _currentUserService.MerchantId);
+        modelBuilder.Entity<User>().HasQueryFilter(u => u.MerchantId == _currentUserService.MerchantId);
+        modelBuilder.Entity<Role>().HasQueryFilter(r => r.MerchantId == _currentUserService.MerchantId);
+        modelBuilder.Entity<Room>().HasQueryFilter(r => r.MerchantId == _currentUserService.MerchantId);
+        modelBuilder.Entity<Tag>().HasQueryFilter(t => t.MerchantId == _currentUserService.MerchantId);
+        modelBuilder.Entity<Plan>().HasQueryFilter(p => p.MerchantId == _currentUserService.MerchantId);
+        modelBuilder.Entity<Coupon>().HasQueryFilter(c => c.MerchantId == _currentUserService.MerchantId);
+        modelBuilder.Entity<Discount>().HasQueryFilter(d => d.MerchantId == _currentUserService.MerchantId);
+        modelBuilder.Entity<Order>().HasQueryFilter(o => o.MerchantId == _currentUserService.MerchantId);
     }
 
     public override int SaveChanges()

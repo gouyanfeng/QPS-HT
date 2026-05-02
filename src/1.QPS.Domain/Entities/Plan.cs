@@ -4,18 +4,16 @@ namespace QPS.Domain.Entities;
 
 public class Plan : AggregateRoot
 {
-    public Guid MerchantId { get; private set; }
     public string Name { get; private set; }
     public string Description { get; private set; }
     public decimal Price { get; private set; }
-    public int DurationMinutes { get; private set; } // 套餐时长（分钟）
+    public int DurationMinutes { get; private set; }
     public bool IsActive { get; private set; }
 
     protected Plan() { }
 
-    public Plan(Guid merchantId, string name, string description, decimal price, int durationMinutes)
+    public Plan(string name, string description, decimal price, int durationMinutes)
     {
-        MerchantId = merchantId;
         Name = name;
         Description = description;
         Price = price;

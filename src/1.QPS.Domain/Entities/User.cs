@@ -4,7 +4,6 @@ namespace QPS.Domain.Entities;
 
 public class User : AggregateRoot
 {
-    public Guid MerchantId { get; private set; }
     public Guid RoleId { get; private set; }
     public string Username { get; private set; }
     public string PasswordHash { get; private set; }
@@ -13,7 +12,6 @@ public class User : AggregateRoot
 
     private User(string username, string passwordHash, string realName, Guid roleId)
     {
-        MerchantId = Guid.Empty;
         RoleId = roleId;
         Username = username;
         PasswordHash = passwordHash;

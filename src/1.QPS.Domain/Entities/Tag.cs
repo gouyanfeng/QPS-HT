@@ -4,15 +4,13 @@ namespace QPS.Domain.Entities;
 
 public class Tag : BaseEntity
 {
-    public Guid MerchantId { get; private set; }
     public string TagName { get; private set; }
     public string Category { get; private set; }
 
     protected Tag() { }
 
-    public Tag(Guid merchantId, string tagName, string category)
+    public Tag(string tagName, string category)
     {
-        MerchantId = merchantId;
         TagName = tagName;
         Category = category;
     }

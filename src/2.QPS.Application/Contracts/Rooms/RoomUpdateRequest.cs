@@ -8,11 +8,6 @@ public class RoomUpdateRequest
     public string RoomNumber { get; set; }
 
     /// <summary>
-    /// 店铺ID
-    /// </summary>
-    public Guid ShopId { get; set; }
-
-    /// <summary>
     /// 单价
     /// </summary>
     public decimal UnitPrice { get; set; }

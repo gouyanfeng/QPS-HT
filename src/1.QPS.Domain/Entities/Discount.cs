@@ -4,7 +4,6 @@ namespace QPS.Domain.Entities;
 
 public class Discount : BaseEntity
 {
-    public Guid MerchantId { get; private set; }
     public string Name { get; private set; }
     public decimal Rate { get; private set; }
     public DateTime StartTime { get; private set; }
@@ -12,9 +11,8 @@ public class Discount : BaseEntity
 
     protected Discount() { }
 
-    public Discount(Guid merchantId, string name, decimal rate, DateTime startTime, DateTime endTime)
+    public Discount(string name, decimal rate, DateTime startTime, DateTime endTime)
     {
-        MerchantId = merchantId;
         Name = name;
         Rate = rate;
         StartTime = startTime;

@@ -41,7 +41,7 @@ public class CreateRoleHandler : IRequestHandler<CreateRoleCommand, RoleDto>
     public async Task<RoleDto> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
         // 创建角色，不传递merchantId，底层会自动处理
-        var role = new Role(Guid.Empty, request.Request.Name, request.Request.Code);
+        var role = new Role(request.Request.Name, request.Request.Code);
 
         // 保存到数据库
         _dbContext.Roles.Add(role);

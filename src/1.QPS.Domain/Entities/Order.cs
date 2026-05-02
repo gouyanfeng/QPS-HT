@@ -2,14 +2,17 @@ using QPS.Domain.Common;
 
 namespace QPS.Domain.Entities;
 
-public class Order : AggregateRoot
+public class Order : BaseEntity
 {
     public string OrderNo { get; private set; }
-    public Guid MerchantId { get; private set; }
     public Guid ShopId { get; private set; }
     public Guid RoomId { get; private set; }
     public Guid? CustomerId { get; private set; }
     public OrderStatus Status { get; private set; }
+
+    public virtual Shop Shop { get; set; }
+    public virtual Room Room { get; set; }
+    public virtual Customer? Customer { get; set; }
     public decimal OriginAmount { get; private set; }
     public decimal DiscountAmount { get; private set; }
     public decimal ActualAmount { get; private set; }
@@ -23,7 +26,6 @@ public class Order : AggregateRoot
     public Order(string orderNo, Guid shopId, Guid roomId, Guid? customerId)
     {
         OrderNo = orderNo;
-        MerchantId = Guid.Empty;
         ShopId = shopId;
         RoomId = roomId;
         CustomerId = customerId;
@@ -36,7 +38,6 @@ public class Order : AggregateRoot
 
     public static Order Create(Guid shopId, Guid roomId, Guid? customerId)
     {
-        // 生成订单号：年月日时分秒 + 6位随机数
         var orderNo = DateTime.Now.ToString("yyyyMMddHHmmss") + new Random().Next(100000, 999999).ToString();
         return new Order(orderNo, shopId, roomId, customerId);
     }

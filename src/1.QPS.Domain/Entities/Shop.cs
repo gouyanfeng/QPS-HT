@@ -4,7 +4,6 @@ namespace QPS.Domain.Entities;
 
 public class Shop : BaseEntity
 {
-    public Guid MerchantId { get; private set; }
     public string Name { get; private set; }
     public string Address { get; private set; }
     public TimeSpan OpeningTime { get; private set; }
@@ -15,7 +14,6 @@ public class Shop : BaseEntity
 
     private Shop(string name, string address, TimeSpan openingTime, TimeSpan closingTime, int autoPowerOffDelay)
     {
-        MerchantId = Guid.Empty;
         Name = name;
         Address = address;
         OpeningTime = openingTime;

@@ -1,145 +1,172 @@
 # QPS 项目
 
-## 项目结构
+QPS 是一个基于 .NET 8 的棋牌室管理系统后端服务，提供房间管理、订单处理、会员管理等核心功能。
+
+## 技术栈
+
+| 分类 | 技术 | 说明 |
+|------|------|------|
+| 框架 | ASP.NET Core 8.0 | Web 开发框架 |
+| 语言 | C# 12 | 编程语言 |
+| ORM | Entity Framework Core 8 | 数据访问 |
+| 数据库 | SQLite | 轻量级嵌入式数据库 |
+| 消息模式 | MediatR | 中介者模式（CQRS） |
+| 身份认证 | JWT | JSON Web Token |
+| 验证 | FluentValidation | 数据验证框架 |
+| API 文档 | Swagger | 交互式 API 文档 |
+| IoT 通信 | MQTTnet | MQTT 客户端库 |
+
+## 项目架构
+
+采用经典的分层架构，各层职责清晰：
 
 ```
 QPS/
 ├── src/
-│   ├── 1.QPS.Domain/             # 领域层 - 核心业务逻辑
-│   │   ├── Aggregates/           # 聚合根 - 业务实体的组合
-│   │   │   ├── MerchantAggregate/ # 商户聚合 - 商户信息管理
-│   │   │   ├── OrderAggregate/    # 订单聚合 - 订单生命周期管理
-│   │   │   └── RoomAggregate/     # 房间聚合 - 房间状态和设备管理
-│   │   ├── Common/               # 通用基类 - 基础类和接口
-│   │   ├── Events/               # 领域事件 - 业务事件定义
-│   │   └── Exceptions/           # 领域异常 - 业务异常定义
-│   ├── 2.QPS.Application/        # 应用层 - 业务用例实现
-│   │   ├── Behaviours/           # 行为 - 管道行为（验证、事务）
-│   │   ├── Contracts/            # 数据传输对象 - API 请求/响应模型
-│   │   ├── Features/             # 功能模块 - 具体业务用例实现
-│   │   └── Interfaces/           # 接口 - 服务接口定义
+│   ├── 1.QPS.Domain/             # 领域层 - 核心业务逻辑和实体
+│   ├── 2.QPS.Application/        # 应用层 - 业务用例和 DTO
 │   ├── 3.QPS.Infrastructure/     # 基础设施层 - 技术实现
-│   │   ├── BackgroundJobs/       # 后台任务 - 定时任务和延迟任务
-│   │   ├── Identity/             # 身份认证 - JWT 令牌管理
-│   │   ├── IoT/                  # 物联网 - MQTT 设备通信
-│   │   └── Persistence/          # 持久化 - 数据库访问
 │   └── 4.QPS.WebAPI/             # 表现层 - API 接口
-│       ├── Controllers/          # 控制器 - API 端点实现
-│       ├── Middleware/           # 中间件 - 请求处理管道
-│       └── Program.cs            # 应用入口 - 服务配置和启动
-├── tests/                        # 测试
-│   ├── QPS.UnitTests/            # 单元测试 - 测试单个组件
-│   └── QPS.IntegrationTests/     # 集成测试 - 测试组件协作
-└── QPS.sln                       # 解决方案文件 - 项目组织
+├── tests/
+│   ├── QPS.UnitTests/            # 单元测试
+│   └── QPS.IntegrationTests/     # 集成测试
+└── QPS.sln                       # 解决方案文件
 ```
-
-## 项目结构详细说明
 
 ### 1. QPS.Domain (领域层)
 
-**作用**：定义核心业务逻辑和领域模型，是整个应用的核心。
+**核心实体**：
+- `Merchant` - 商户信息
+- `Shop` - 店铺信息
+- `Room` - 房间实体（含状态管理）
+- `RoomImage` - 房间图片
+- `Order` - 订单实体（含生命周期）
+- `OrderItem` - 订单项
+- `Customer` - 客户信息
+- `Coupon` - 优惠券
+- `Plan` - 套餐方案
+- `Tag` - 标签
+- `User` / `Role` / `Permission` - RBAC 权限系统
 
-**业务场景**：
-- **MerchantAggregate**：管理商户信息，包括店铺设置、联系信息等
-- **OrderAggregate**：处理订单的创建、支付、完成等生命周期
-- **RoomAggregate**：管理房间状态、设备配置和设备控制
-- **Common**：提供基础类如 Entity、AggregateRoot、ValueObject 等
-- **Events**：定义领域事件如 OrderPaidEvent、SessionExpiredEvent 等
-- **Exceptions**：定义业务异常如 DomainException 等
+**公共组件**：
+- `BaseEntity` - 实体基类（含 MerchantId）
+- `AggregateRoot` - 聚合根基类
+- `DomainEvent` - 领域事件基类
+- `BusinessException` - 业务异常
 
 ### 2. QPS.Application (应用层)
 
-**作用**：实现业务用例，协调领域对象完成业务逻辑。
+**设计模式**：采用 CQRS（命令查询职责分离）模式
 
-**业务场景**：
-- **Behaviours**：实现管道行为，如请求验证、事务管理
-- **Contracts**：定义 API 请求和响应的数据结构
-- **Features**：
-  - **Rooms**：处理房间相关业务，如获取房间列表、控制房间电源
-  - **Orders**：处理订单相关业务，如创建订单、结算订单
-  - **Tenants**：处理租户相关业务，如设置店铺信息
-- **Interfaces**：定义服务接口，如 IDbContext、IMqttService、ITenantService 等
+**功能模块**：
+| 模块 | 功能 |
+|------|------|
+| Auth | 用户登录、退出 |
+| Roles | 角色管理（增删改查） |
+| Users | 用户管理（增删改查） |
+| Shops | 店铺管理（增删改查） |
+| Rooms | 房间管理（状态控制、电源管理） |
+| RoomImages | 房间图片管理 |
+| Orders | 订单创建、结算 |
+| Plans | 套餐管理 |
+| Coupons | 优惠券管理 |
+| Customers | 客户管理 |
+| Tags | 标签管理 |
+
+**管道行为**：
+- `ValidationBehaviour` - 请求参数验证
+- `TransactionBehaviour` - 事务管理
 
 ### 3. QPS.Infrastructure (基础设施层)
 
-**作用**：提供技术实现，如数据库访问、消息通信、身份认证等。
-
-**业务场景**：
-- **BackgroundJobs**：实现后台任务，如定时关闭设备电源
-- **Identity**：实现身份认证，如 JWT 令牌生成和验证
-- **IoT**：实现设备通信，如 MQTT 消息发送和接收
-- **Persistence**：实现数据持久化，如数据库连接、实体配置
+**组件**：
+- **Database** - 数据库上下文和实体配置
+- **Identity** - JWT 令牌生成和当前用户服务
+- **IoT** - MQTT 设备通信服务
 
 ### 4. QPS.WebAPI (表现层)
 
-**作用**：提供 API 接口，处理 HTTP 请求和响应。
+**控制器**：
+- `AuthController` - 认证接口
+- `RoleController` - 角色管理接口
+- `UserController` - 用户管理接口
+- `ShopController` - 店铺管理接口
+- `RoomController` - 房间管理接口
+- `PlanController` - 套餐管理接口
+- `CouponController` - 优惠券管理接口
+- `CustomerController` - 客户管理接口
 
-**业务场景**：
-- **Controllers**：
-  - **Admin**：管理后台接口，如房间管理
-  - **App**：客户端应用接口，如订单管理
-  - **Auth**：认证相关接口，如登录
-- **Middleware**：
-  - **TenantIdentification**：租户识别中间件
-  - **GlobalExceptionHandler**：全局异常处理中间件
-- **Program.cs**：配置服务和启动应用
+**特性**：
+- 统一响应格式包装
+- 全局异常处理
+- 自动租户过滤
 
-### 5. 测试项目
+## 核心特性
 
-**作用**：确保代码质量和功能正确性。
+### 1. 多租户架构
+- 基于 `MerchantId` 的数据隔离
+- 全局查询过滤器自动过滤租户数据
+- 支持多店铺管理
 
-**业务场景**：
-- **QPS.UnitTests**：测试单个组件的功能
-- **QPS.IntegrationTests**：测试组件之间的协作
+### 2. 房间状态管理
+```csharp
+// 房间状态流转
+Idle → Occupied → Cleaning → Idle
+     ↘ Fault → (维修) → Idle
+```
 
-## 技术栈
+### 3. 订单生命周期
+```csharp
+// 订单状态流转
+Pending → Active → Completed
+       ↘ Cancelled
+```
 
-### 核心技术
-- **.NET 8.0** - 主要开发框架
-- **C#** - 编程语言
+### 4. 权限系统 (RBAC)
+- 角色：管理员、店长、收银员
+- 基于 JWT 的身份认证
+- 请求级别权限控制
 
-### 数据访问
-- **Entity Framework Core** - ORM 框架
-- **SQL Server** - 数据库
+## 开发规范
 
-### 消息传递
-- **MediatR** - 中介者模式实现
-- **MQTTnet** - MQTT 客户端库
+### 命名规范
+- 命令类：`CreateXXXCommand`、`UpdateXXXCommand`、`DeleteXXXCommand`
+- 查询类：`GetXXXQuery`、`GetXXXsQuery`
+- DTO 类：`XXXDto`、`XXXCreateRequest`、`XXXUpdateRequest`
 
-### 身份认证
-- **JWT** - JSON Web Token
+### 代码风格
+- 遵循 .NET 官方编码规范
+- 使用记录类型（Record）作为 DTO
+- 异步优先原则
 
+## 目录结构详解
 
+```
+src/
+├── 1.QPS.Domain/
+│   ├── Common/          # 基类和通用组件
+│   ├── Entities/        # 领域实体
+│   ├── Events/          # 领域事件
+│   └── Exceptions/      # 业务异常
+├── 2.QPS.Application/
+│   ├── Behaviours/      # 管道行为
+│   ├── Common/          # 通用响应包装
+│   ├── Contracts/       # DTO 定义
+│   ├── Features/        # 功能实现（Command/Query）
+│   ├── Interfaces/      # 服务接口
+│   ├── Pagination/      # 分页支持
+│   └── Validators/      # 验证器
+├── 3.QPS.Infrastructure/
+│   ├── Database/        # EF Core 配置
+│   ├── Identity/        # 认证实现
+│   └── IoT/             # MQTT 服务
+└── 4.QPS.WebAPI/
+    ├── Controllers/     # API 控制器
+    ├── Filters/         # 过滤器
+    ├── Data/            # 测试数据初始化
+    └── Program.cs       # 应用入口
+```
 
-### API 文档
-- **Swagger** - API 文档生成
+## License
 
-### 验证
-- **FluentValidation** - 数据验证
-
-### 其他
-- **ASP.NET Core** - Web 框架
-- **Dependency Injection** - 依赖注入
-
-## 运行项目
-
-1. **构建解决方案**
-   ```bash
-   dotnet build
-   ```
-
-2. **运行 WebAPI 项目**
-   ```bash
-   dotnet run --project src/4.QPS.WebAPI
-   ```
-
-3. **访问 API 文档**
-   - 打开浏览器，访问 `http://localhost:5000/swagger`
-
-## 主要功能
-
-- **房间管理** - 查看房间列表、控制房间电源
-- **订单管理** - 创建订单、结算订单
-- **租户管理** - 设置店铺信息
-- **认证** - JWT 令牌认证
-- **IoT 集成** - MQTT 协议控制设备
+MIT License

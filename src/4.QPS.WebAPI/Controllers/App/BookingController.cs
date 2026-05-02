@@ -28,7 +28,7 @@ public class BookingController : ControllerBase
     [HttpPost("settleOrder")]
     public async Task<ActionResult<bool>> SettleOrder([FromBody] SettleOrderRequest request)
     {
-        var result = await _mediator.Send(new SettleOrderCommand { Request = request });
+        var result = await _mediator.Send(new SettleOrderCommand { OrderId = request.OrderId });
         return Ok(result);
     }
 }

@@ -4,13 +4,11 @@ namespace QPS.Domain.Entities;
 
 public class Role : BaseEntity
 {
-    public Guid MerchantId { get; private set; }
     public string Name { get; private set; }
     public string Code { get; private set; }
 
-    public Role(Guid merchantId, string name, string code)
+    public Role(string name, string code)
     {
-        MerchantId = merchantId;
         Name = name;
         Code = code;
     }

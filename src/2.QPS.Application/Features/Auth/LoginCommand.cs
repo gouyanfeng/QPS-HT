@@ -78,7 +78,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
     /// <returns>验证通过的用户</returns>
     private async Task<User> ValidateUserAsync(string username, string password, CancellationToken cancellationToken)
     {
-        var user = await _dbContext.Users
+        var user = await _dbContext.Users.IgnoreQueryFilters()
             .Where(u => u.Username == username)
             .FirstOrDefaultAsync(cancellationToken);
 

@@ -14,9 +14,9 @@ namespace QPS.Application.Features.Orders;
 public class SettleOrderCommand : IRequest<bool>
 {
     /// <summary>
-    /// 结算订单请求
+    /// 订单ID
     /// </summary>
-    public SettleOrderRequest Request { get; set; }
+    public Guid OrderId { get; set; }
 }
 
 /// <summary>
@@ -50,7 +50,7 @@ public class SettleOrderHandler : IRequestHandler<SettleOrderCommand, bool>
     public async Task<bool> Handle(SettleOrderCommand request, CancellationToken cancellationToken)
     {
         var merchantId = _currentUserService.MerchantId;
-        var order = await _dbContext.Orders.FindAsync(request.Request.OrderId, cancellationToken);
+        var order = await _dbContext.Orders.FindAsync(request.OrderId, cancellationToken);
         if (order == null || order.MerchantId != merchantId) return false;
 
         // 完成订单

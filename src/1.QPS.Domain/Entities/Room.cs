@@ -4,7 +4,6 @@ namespace QPS.Domain.Entities;
 
 public class Room : AggregateRoot
 {
-    public Guid MerchantId { get; private set; }
     public Guid ShopId { get; private set; }
     public string Name { get; private set; }
     public RoomStatus Status { get; private set; }
@@ -13,7 +12,6 @@ public class Room : AggregateRoot
 
     private Room(Guid shopId, string name, decimal unitPrice, bool isEnabled = true)
     {
-        MerchantId = Guid.Empty;
         ShopId = shopId;
         Name = name;
         Status = RoomStatus.Idle;
