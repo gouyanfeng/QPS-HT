@@ -1,5 +1,6 @@
 using MediatR;
 using QPS.Application.Contracts.Rooms;
+using QPS.Application.Extensions;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
 using QPS.Domain.Entities;
@@ -36,7 +37,7 @@ public class GetRoomHandler : IRequestHandler<GetRoomQuery, RoomDto>
         {
             Id = room.Id,
             RoomNumber = room.Name,
-            Status = room.Status.ToString(),
+            Status = room.Status.ToChinese(),
             ShopId = room.ShopId,
             UnitPrice = room.UnitPrice,
             IsEnabled = room.IsEnabled

@@ -1,8 +1,9 @@
 using MediatR;
 using QPS.Application.Contracts.Orders;
+using QPS.Application.Extensions;
 using QPS.Application.Interfaces;
-using QPS.Domain.Entities;
 using QPS.Domain.Exceptions;
+using QPS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace QPS.Application.Features.Orders;
@@ -45,7 +46,7 @@ public class GetOrderHandler : IRequestHandler<GetOrderQuery, OrderDto>
             RoomNumber = order.Room != null ? order.Room.Name : null,
             CustomerId = order.CustomerId,
             CustomerName = order.Customer != null ? order.Customer.Nickname : null,
-            Status = order.Status.ToString(),
+            Status = order.Status.ToChinese(),
             OriginAmount = order.OriginAmount,
             DiscountAmount = order.DiscountAmount,
             ActualAmount = order.ActualAmount,

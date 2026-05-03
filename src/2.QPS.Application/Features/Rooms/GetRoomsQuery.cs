@@ -1,5 +1,6 @@
 using MediatR;
 using QPS.Application.Contracts.Rooms;
+using QPS.Application.Extensions;
 using QPS.Application.Interfaces;
 using QPS.Application.Pagination;
 using QPS.Domain.Entities;
@@ -55,7 +56,7 @@ public class GetRoomsHandler : IRequestHandler<GetRoomsQuery, PaginationResponse
             {
                 Id = r.Id,
                 RoomNumber = r.Name,
-                Status = r.Status.ToString(),
+                Status = r.Status.ToChinese(),
                 ShopId = r.ShopId,
                 ShopName = r.Shop.Name,
                 ShopAddress = r.Shop.Address,

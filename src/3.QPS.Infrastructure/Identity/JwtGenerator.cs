@@ -41,7 +41,7 @@ public class JwtGenerator : IJwtGenerator
             _issuer,
             _audience,
             claims,
-            expires: DateTime.Now.AddHours(24),
+            expires: DateTime.Now.AddDays(10),
             signingCredentials: credentials
         );
 

@@ -37,7 +37,9 @@ public class UpdateTagHandler : IRequestHandler<UpdateTagCommand, TagDto>
         return new TagDto
         {
             Id = tag.Id,
-            TagName = tag.TagName
+            TagName = tag.TagName,
+            CreatedAt = tag.CreatedAt,
+            UpdatedAt = tag.UpdatedAt
         };
     }
 }

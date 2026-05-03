@@ -4,3 +4,14 @@
 业务代码不用处理MerchantId，底层会自动处理。
 
 每次run项目时，先杀掉原来的 5000 端口，再启动项目。
+
+
+# 测试用的token
+authorization
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiOWZlYjg4Mi05NDgwLTRjNWItOWUxYS05MjUxODU0YzUzZmEiLCJtZXJjaGFudElkIjoiN2I0NDc4ODYtNTM5Yi00MWQxLWJjNzEtZWMxNTljYmU5ZmUwIiwicm9sZSI6IkFkbWluIiwiZXhwIjoxNzc4NjY0ODc1LCJpc3MiOiJRUFMuQVBJIiwiYXVkIjoiUVBTLkNsaWVudCJ9.1v1lq72YwspuK3QqlI1Hbd7kpBcLfHN74qU0NxTRfh0
+
+# 测试用的数据库
+4.QPS.WebAPI/QPSChessRoom.db
+
+# 测试用的swagger
+http://localhost:5000/swagger/v1/swagger.json

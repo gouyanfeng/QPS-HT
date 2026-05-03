@@ -56,7 +56,10 @@ public static class TestDataInitializer
         {
             Shop.Create("旗舰店", "北京市朝阳区xxx路1号", new TimeSpan(9, 0, 0), new TimeSpan(22, 0, 0), 30),
             Shop.Create("分店A", "北京市海淀区xxx路2号", new TimeSpan(10, 0, 0), new TimeSpan(21, 0, 0), 20),
-            Shop.Create("分店B", "北京市西城区xxx路3号", new TimeSpan(8, 0, 0), new TimeSpan(23, 0, 0), 45)
+            Shop.Create("分店B", "北京市西城区xxx路3号", new TimeSpan(8, 0, 0), new TimeSpan(23, 0, 0), 45),
+            Shop.Create("分店C", "北京市东城区xxx路4号", new TimeSpan(9, 0, 0), new TimeSpan(22, 0, 0), 35),
+            Shop.Create("分店D", "北京市丰台区xxx路5号", new TimeSpan(8, 30, 0), new TimeSpan(21, 30, 0), 25),
+            Shop.Create("分店E", "北京市石景山区xxx路6号", new TimeSpan(10, 0, 0), new TimeSpan(20, 0, 0), 40)
         };
 
         foreach (var shop in shops)
@@ -159,17 +162,26 @@ public static class TestDataInitializer
             return existingRooms;
 
         var rooms = new List<Room>();
-        var roomNumbers = new[] { "A001", "A002", "A003", "B001", "B002", "C001", "C002", "C003", "C004", "D001" };
+        var random = new Random();
+        var statuses = new[] { "Idle", "Occupied", "Cleaning", "Fault" };
+        var roomCount = 30; // 增加到30个房间
 
-        for (int i = 0; i < roomNumbers.Length; i++)
+        for (int i = 0; i < roomCount; i++)
         {
             var shop = shops[i % shops.Count];
-            rooms.Add(Room.Create(shop.Id, roomNumbers[i], 68.00m + i * 10, i % 3 == 0 ? false : true));
-        }
+            var floor = (char)('A' + (i / 5));
+            var roomNumber = $"{floor}{(i % 5 + 1).ToString("00")}";
+            var price = 68.00m + random.Next(0, 8) * 15;
+            var isEnabled = random.Next(0, 10) != 0; // 90%启用
 
-        foreach (var room in rooms)
-        {
+            var room = Room.Create(shop.Id, roomNumber, price, isEnabled);
+
+            // 设置不同状态，覆盖所有状态
+            var statusIndex = i % statuses.Length;
+            room.GetType().GetProperty("Status")?.SetValue(room, Enum.Parse(typeof(Domain.Entities.RoomStatus), statuses[statusIndex]));
+
             room.GetType().GetProperty("MerchantId")?.SetValue(room, merchant.Id);
+            rooms.Add(room);
         }
 
         dbContext.Rooms.AddRange(rooms);
@@ -282,7 +294,7 @@ public static class TestDataInitializer
         var orders = new List<Order>();
         var random = new Random();
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 500; i++) // 增加订单数量到500
         {
             var room = rooms[random.Next(rooms.Count)];
             var shop = shops.First(s => s.Id == room.ShopId);
@@ -290,16 +302,18 @@ public static class TestDataInitializer
 
             var order = Order.Create(shop.Id, room.Id, customer.Id);
             order.GetType().GetProperty("MerchantId")?.SetValue(order, merchant.Id);
+
             orders.Add(order);
         }
 
         dbContext.Orders.AddRange(orders);
         dbContext.SaveChanges();
 
-        var completedOrders = orders.Take(5).ToList();
+        // 完成80%的订单
+        var completedOrders = orders.Take((int)(orders.Count * 0.8)).ToList();
         foreach (var order in completedOrders)
         {
-            var amount = 68.00m + random.Next(0, 5) * 20;
+            var amount = 68.00m + random.Next(0, 10) * 15;
             order.Start();
             order.Complete(amount, amount * 0.1m, amount * 0.9m, "wechat");
         }
@@ -316,6 +330,31 @@ public static class TestDataInitializer
 
             dbContext.OrderItems.Add(item1);
             dbContext.OrderItems.Add(item2);
+        }
+
+        dbContext.SaveChanges();
+
+        // 在最后一个 SaveChanges 之后设置订单时间，时间跨度3个月
+        var today = DateTime.UtcNow.Date;
+        var threeMonthsAgo = today.AddMonths(-3);
+        foreach (var order in orders)
+        {
+            // 设置创建时间在3个月内随机分布
+            var daysBetween = (today - threeMonthsAgo).Days;
+            var randomDays = random.Next(daysBetween + 1);
+            var createdAt = threeMonthsAgo.AddDays(randomDays);
+            createdAt = createdAt.AddHours(random.Next(24)).AddMinutes(random.Next(60));
+            dbContext.Entry(order).Property("CreatedAt").CurrentValue = createdAt;
+
+            if (order.Status == OrderStatus.Completed)
+            {
+                // 设置支付时间在创建时间之后，最多7天内
+                var paidDaysAfter = random.Next(0, 8);
+                var paidAt = createdAt.AddDays(paidDaysAfter);
+                if (paidAt > DateTime.UtcNow)
+                    paidAt = DateTime.UtcNow;
+                dbContext.Entry(order).Property("PaidAt").CurrentValue = paidAt;
+            }
         }
 
         dbContext.SaveChanges();

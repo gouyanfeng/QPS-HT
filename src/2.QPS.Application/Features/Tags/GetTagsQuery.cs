@@ -33,7 +33,9 @@ public class GetTagsHandler : IRequestHandler<GetTagsQuery, PaginationResponse<T
         var dtoQuery = query.Select(t => new TagDto
         {
             Id = t.Id,
-            TagName = t.TagName
+            TagName = t.TagName,
+            CreatedAt = t.CreatedAt,
+            UpdatedAt = t.UpdatedAt
         });
 
         return await dtoQuery.ToPaginationResponseAsync(request);

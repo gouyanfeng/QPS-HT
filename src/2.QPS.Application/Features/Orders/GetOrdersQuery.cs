@@ -1,5 +1,6 @@
 using MediatR;
 using QPS.Application.Contracts.Orders;
+using QPS.Application.Extensions;
 using QPS.Application.Interfaces;
 using QPS.Application.Pagination;
 using QPS.Domain.Entities;
@@ -81,7 +82,7 @@ public class GetOrdersHandler : IRequestHandler<GetOrdersQuery, PaginationRespon
                 RoomNumber = o.Room != null ? o.Room.Name : null,
                 CustomerId = o.CustomerId,
                 CustomerName = o.Customer != null ? o.Customer.Nickname : null,
-                Status = o.Status.ToString(),
+                Status = o.Status.ToChinese(),
                 OriginAmount = o.OriginAmount,
                 DiscountAmount = o.DiscountAmount,
                 ActualAmount = o.ActualAmount,
