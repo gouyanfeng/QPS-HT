@@ -10,6 +10,8 @@ public class Room : AggregateRoot
     public RoomStatus Status { get; private set; }
     public decimal UnitPrice { get; private set; }
     public bool IsEnabled { get; private set; }
+    public decimal Rating { get; private set; }
+    public int RatingCount { get; private set; }
 
     public Shop Shop { get; private set; }
     public ICollection<RoomTag> RoomTags { get; private set; } = new List<RoomTag>();
@@ -23,11 +25,44 @@ public class Room : AggregateRoot
         Status = RoomStatus.Idle;
         UnitPrice = unitPrice;
         IsEnabled = isEnabled;
+        Rating = 0;
+        RatingCount = 0;
     }
 
     public static Room Create(Guid shopId, string name, decimal unitPrice, bool isEnabled = true)
     {
         return new Room(shopId, name, unitPrice, isEnabled);
+    }
+
+    public void AddRating(decimal ratingValue)
+    {
+        Rating = (Rating * RatingCount + ratingValue) / (RatingCount + 1);
+        RatingCount++;
+    }
+
+    public void UpdateRating(decimal oldScore, decimal newScore)
+    {
+        if (RatingCount > 0)
+        {
+            Rating = (Rating * RatingCount - oldScore + newScore) / RatingCount;
+        }
+    }
+
+    public void RemoveRating(decimal score)
+    {
+        if (RatingCount > 0)
+        {
+            if (RatingCount == 1)
+            {
+                Rating = 0;
+                RatingCount = 0;
+            }
+            else
+            {
+                Rating = (Rating * RatingCount - score) / (RatingCount - 1);
+                RatingCount--;
+            }
+        }
     }
 
     public void Occupy() { Status = RoomStatus.Occupied; }

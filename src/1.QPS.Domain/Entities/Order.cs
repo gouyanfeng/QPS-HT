@@ -30,7 +30,7 @@ public class Order : BaseEntity
         ShopId = shopId;
         RoomId = roomId;
         CustomerId = customerId;
-        Status = OrderStatus.Pending;
+        Status = OrderStatus.WaitingPayment;
         StartTime = DateTime.UtcNow;
         OriginAmount = 0;
         DiscountAmount = 0;
@@ -43,16 +43,32 @@ public class Order : BaseEntity
         return new Order(orderNo, shopId, roomId, customerId);
     }
 
-    public void Start() { Status = OrderStatus.Active; }
+    public void Start() { Status = OrderStatus.WaitingPayment; }
     public void Complete(decimal originAmount, decimal discountAmount, decimal actualAmount, string paymentMethod)
     {
-        Status = OrderStatus.Completed;
+        Status = OrderStatus.WaitingPayment;
         EndTime = DateTime.UtcNow;
         OriginAmount = originAmount;
         DiscountAmount = discountAmount;
         ActualAmount = actualAmount;
         PaymentMethod = paymentMethod;
+    }
+    public void Pay()
+    {
+        if (Status != OrderStatus.WaitingPayment) throw new InvalidOperationException("只能支付待支付的订单");
+        Status = OrderStatus.Paid;
         PaidAt = DateTime.UtcNow;
+    }
+    public void Refund()
+    {
+        if (Status != OrderStatus.Paid) throw new InvalidOperationException("只能退款已支付的订单");
+        Status = OrderStatus.Refunded;
+        // 全额退款，不支持部分
+    }
+    public void Timeout()
+    {
+        if (Status != OrderStatus.WaitingPayment) throw new InvalidOperationException("只能超时期待支付的订单");
+        Status = OrderStatus.Timeout;
     }
     public void Cancel() { Status = OrderStatus.Cancelled; }
 }

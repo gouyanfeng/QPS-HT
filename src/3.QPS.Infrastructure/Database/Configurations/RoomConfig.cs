@@ -12,6 +12,8 @@ public class RoomConfig : IEntityTypeConfiguration<Room>
         builder.Property(r => r.Name).IsRequired().HasMaxLength(50);
         builder.Property(r => r.Status).IsRequired();
         builder.Property(r => r.IsEnabled).IsRequired();
+        builder.Property(r => r.Rating).HasColumnType("decimal(3,2)").HasDefaultValue(0);
+        builder.Property(r => r.RatingCount).IsRequired().HasDefaultValue(0);
 
         builder.HasOne(r => r.Shop)
             .WithMany(s => s.Rooms)

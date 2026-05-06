@@ -23,10 +23,13 @@ public static class OrderStatusExtensions
     {
         return status switch
         {
-            OrderStatus.Pending => "待处理",
-            OrderStatus.Active => "进行中",
             OrderStatus.Completed => "已完成",
+            OrderStatus.WaitingPayment => "待支付",
+            OrderStatus.Paid => "已支付",
+            OrderStatus.Refunding => "退款中",
+            OrderStatus.Refunded => "已退款",
             OrderStatus.Cancelled => "已取消",
+            OrderStatus.Timeout => "已超时",
             _ => status.ToString()
         };
     }

@@ -37,6 +37,7 @@ public class AppDbContext : DbContext, IDbContext
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Review> Reviews { get; set; }
     // 运维审计
     public DbSet<DeviceOperationLog> DeviceOperationLogs { get; set; }
 

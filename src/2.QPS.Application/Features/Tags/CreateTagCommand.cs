@@ -21,7 +21,7 @@ public class CreateTagHandler : IRequestHandler<CreateTagCommand, TagDto>
 
     public async Task<TagDto> Handle(CreateTagCommand request, CancellationToken cancellationToken)
     {
-        var tag = new Tag(request.Request.TagName);
+        var tag = new Tag(request.Request.TagName, request.Request.Category);
 
         _dbContext.Tags.Add(tag);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -30,6 +30,7 @@ public class CreateTagHandler : IRequestHandler<CreateTagCommand, TagDto>
         {
             Id = tag.Id,
             TagName = tag.TagName,
+            Category = tag.Category,
             CreatedAt = tag.CreatedAt,
             UpdatedAt = tag.UpdatedAt
         };

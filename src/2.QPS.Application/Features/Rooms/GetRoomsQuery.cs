@@ -62,6 +62,8 @@ public class GetRoomsHandler : IRequestHandler<GetRoomsQuery, PaginationResponse
                 ShopAddress = r.Shop.Address,
                 UnitPrice = r.UnitPrice,
                 IsEnabled = r.IsEnabled,
+                Rating = r.Rating,
+                RatingCount = r.RatingCount,
                 Images = r.RoomImages.Select(ri => new RoomImageItemDto
                 {
                     Id = ri.Id,

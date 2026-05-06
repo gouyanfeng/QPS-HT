@@ -33,6 +33,7 @@ public class UpdateShopHandler : IRequestHandler<UpdateShopCommand, ShopDto>
         shop.Update(
             request.Request.Name,
             request.Request.Address,
+            request.Request.Phone,
             request.Request.OpeningTime,
             request.Request.ClosingTime,
             request.Request.AutoPowerOffDelay
@@ -45,6 +46,7 @@ public class UpdateShopHandler : IRequestHandler<UpdateShopCommand, ShopDto>
             Id = shop.Id,
             Name = shop.Name,
             Address = shop.Address,
+            Phone = shop.Phone,
             OpeningTime = shop.OpeningTime,
             ClosingTime = shop.ClosingTime,
             AutoPowerOffDelay = shop.AutoPowerOffDelay

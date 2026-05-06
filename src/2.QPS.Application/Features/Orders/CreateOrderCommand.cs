@@ -2,7 +2,6 @@ using MediatR;
 using QPS.Application.Contracts.Orders;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities;
-using QPS.Domain.Entities;
 using QPS.Domain.Exceptions;
 using System;
 using System.Threading;

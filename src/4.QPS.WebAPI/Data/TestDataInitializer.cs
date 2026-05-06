@@ -54,12 +54,12 @@ public static class TestDataInitializer
 
         var shops = new List<Shop>
         {
-            Shop.Create("旗舰店", "北京市朝阳区xxx路1号", new TimeSpan(9, 0, 0), new TimeSpan(22, 0, 0), 30),
-            Shop.Create("分店A", "北京市海淀区xxx路2号", new TimeSpan(10, 0, 0), new TimeSpan(21, 0, 0), 20),
-            Shop.Create("分店B", "北京市西城区xxx路3号", new TimeSpan(8, 0, 0), new TimeSpan(23, 0, 0), 45),
-            Shop.Create("分店C", "北京市东城区xxx路4号", new TimeSpan(9, 0, 0), new TimeSpan(22, 0, 0), 35),
-            Shop.Create("分店D", "北京市丰台区xxx路5号", new TimeSpan(8, 30, 0), new TimeSpan(21, 30, 0), 25),
-            Shop.Create("分店E", "北京市石景山区xxx路6号", new TimeSpan(10, 0, 0), new TimeSpan(20, 0, 0), 40)
+            Shop.Create("旗舰店", "北京市朝阳区xxx路1号", "010-12345678", new TimeSpan(9, 0, 0), new TimeSpan(22, 0, 0), 30),
+            Shop.Create("分店A", "北京市海淀区xxx路2号", "010-23456789", new TimeSpan(10, 0, 0), new TimeSpan(21, 0, 0), 20),
+            Shop.Create("分店B", "北京市西城区xxx路3号", "010-34567890", new TimeSpan(8, 0, 0), new TimeSpan(23, 0, 0), 45),
+            Shop.Create("分店C", "北京市东城区xxx路4号", "010-45678901", new TimeSpan(9, 0, 0), new TimeSpan(22, 0, 0), 35),
+            Shop.Create("分店D", "北京市丰台区xxx路5号", "010-56789012", new TimeSpan(8, 30, 0), new TimeSpan(21, 30, 0), 25),
+            Shop.Create("分店E", "北京市石景山区xxx路6号", "010-67890123", new TimeSpan(10, 0, 0), new TimeSpan(20, 0, 0), 40)
         };
 
         foreach (var shop in shops)

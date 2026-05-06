@@ -18,6 +18,8 @@ public interface IDbContext
     DbSet<RoomImage> RoomImages { get; }
     DbSet<RoomTag> RoomTags { get; }
     DbSet<RoomPlan> RoomPlans { get; }
+    DbSet<CustomerCoupon> CustomerCoupons { get; }
+    DbSet<Review> Reviews { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

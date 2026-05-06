@@ -38,6 +38,7 @@ public class GetShopsHandler : IRequestHandler<GetShopsQuery, PaginationResponse
             Id = s.Id,
             Name = s.Name,
             Address = s.Address,
+            Phone = s.Phone,
             OpeningTime = s.OpeningTime,
             ClosingTime = s.ClosingTime,
             AutoPowerOffDelay = s.AutoPowerOffDelay,

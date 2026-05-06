@@ -10,6 +10,8 @@ public class RoomDto
     public string ShopAddress { get; set; }
     public decimal UnitPrice { get; set; }
     public bool IsEnabled { get; set; }
+    public decimal Rating { get; set; }
+    public int RatingCount { get; set; }
     public List<RoomImageItemDto> Images { get; set; } = new List<RoomImageItemDto>();
     public List<RoomTagItemDto> Tags { get; set; } = new List<RoomTagItemDto>();
     public List<RoomPlanItemDto> Plans { get; set; } = new List<RoomPlanItemDto>();

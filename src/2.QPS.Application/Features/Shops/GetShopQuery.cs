@@ -34,6 +34,7 @@ public class GetShopHandler : IRequestHandler<GetShopQuery, ShopDto>
             Id = shop.Id,
             Name = shop.Name,
             Address = shop.Address,
+            Phone = shop.Phone,
             OpeningTime = shop.OpeningTime,
             ClosingTime = shop.ClosingTime,
             AutoPowerOffDelay = shop.AutoPowerOffDelay

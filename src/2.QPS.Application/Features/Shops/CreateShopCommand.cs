@@ -24,6 +24,7 @@ public class CreateShopHandler : IRequestHandler<CreateShopCommand, ShopDto>
         var shop = Shop.Create(
             request.Request.Name,
             request.Request.Address,
+            request.Request.Phone,
             request.Request.OpeningTime,
             request.Request.ClosingTime,
             request.Request.AutoPowerOffDelay
@@ -37,6 +38,7 @@ public class CreateShopHandler : IRequestHandler<CreateShopCommand, ShopDto>
             Id = shop.Id,
             Name = shop.Name,
             Address = shop.Address,
+            Phone = shop.Phone,
             OpeningTime = shop.OpeningTime,
             ClosingTime = shop.ClosingTime,
             AutoPowerOffDelay = shop.AutoPowerOffDelay

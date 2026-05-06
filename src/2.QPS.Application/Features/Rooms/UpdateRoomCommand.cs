@@ -53,7 +53,9 @@ public class UpdateRoomHandler : IRequestHandler<UpdateRoomCommand, RoomDto>
             Status = room.Status.ToChinese(),
             ShopId = room.ShopId,
             UnitPrice = room.UnitPrice,
-            IsEnabled = room.IsEnabled
+            IsEnabled = room.IsEnabled,
+            Rating = room.Rating,
+            RatingCount = room.RatingCount
         };
     }
 }

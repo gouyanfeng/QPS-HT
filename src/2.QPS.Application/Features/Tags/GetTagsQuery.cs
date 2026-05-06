@@ -34,6 +34,7 @@ public class GetTagsHandler : IRequestHandler<GetTagsQuery, PaginationResponse<T
         {
             Id = t.Id,
             TagName = t.TagName,
+            Category = t.Category,
             CreatedAt = t.CreatedAt,
             UpdatedAt = t.UpdatedAt
         });

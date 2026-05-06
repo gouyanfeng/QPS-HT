@@ -33,6 +33,7 @@ public class GetTagHandler : IRequestHandler<GetTagQuery, TagDto>
         {
             Id = tag.Id,
             TagName = tag.TagName,
+            Category = tag.Category,
             CreatedAt = tag.CreatedAt,
             UpdatedAt = tag.UpdatedAt
         };
