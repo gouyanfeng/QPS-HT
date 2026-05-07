@@ -44,7 +44,7 @@ public class GetStatisticsOverviewHandler : IRequestHandler<GetStatisticsOvervie
             .ToList();
 
         var completedOrdersInRange = ordersInRange
-            .Where(o => o.Status == OrderStatus.Paid)
+            .Where(o => o.Status == OrderStatus.Paid || o.Status == OrderStatus.Completed)
             .ToList();
 
         var totalOrders = ordersInRange.Count;
@@ -52,7 +52,7 @@ public class GetStatisticsOverviewHandler : IRequestHandler<GetStatisticsOvervie
 
         // 收入统计基于支付时间，确保与 previousRevenue 计算一致
         var totalRevenue = _dbContext.Orders
-            .Where(o => o.Status == OrderStatus.Paid && o.PaidAt.Value.Date >= startDate && o.PaidAt.Value.Date <= endDate)
+            .Where(o => (o.Status == OrderStatus.Paid || o.Status == OrderStatus.Completed) && o.PaidAt.HasValue && o.PaidAt.Value.Date >= startDate && o.PaidAt.Value.Date <= endDate)
             .Select(o => o.ActualAmount)
             .AsEnumerable()
             .Sum();
@@ -61,7 +61,7 @@ public class GetStatisticsOverviewHandler : IRequestHandler<GetStatisticsOvervie
             : 0m;
 
         var previousRevenue = _dbContext.Orders
-            .Where(o => o.Status == OrderStatus.Paid && o.PaidAt.Value.Date >= previousStartDate && o.PaidAt.Value.Date <= previousEndDate)
+            .Where(o => (o.Status == OrderStatus.Paid || o.Status == OrderStatus.Completed) && o.PaidAt.HasValue && o.PaidAt.Value.Date >= previousStartDate && o.PaidAt.Value.Date <= previousEndDate)
             .Select(o => o.ActualAmount)
             .AsEnumerable()
             .Sum();
@@ -80,7 +80,7 @@ public class GetStatisticsOverviewHandler : IRequestHandler<GetStatisticsOvervie
 
         // 收入趋势基于支付时间
         var revenueByDate = _dbContext.Orders
-            .Where(o => o.Status == OrderStatus.Paid && o.PaidAt.HasValue && o.PaidAt.Value.Date >= startDate && o.PaidAt.Value.Date <= endDate)
+            .Where(o => (o.Status == OrderStatus.Paid || o.Status == OrderStatus.Completed) && o.PaidAt.HasValue && o.PaidAt.Value.Date >= startDate && o.PaidAt.Value.Date <= endDate)
             .AsEnumerable()
             .GroupBy(o => o.PaidAt.Value.Date)
             .ToDictionary(g => g.Key, g => g.Sum(o => o.ActualAmount));
@@ -89,7 +89,7 @@ public class GetStatisticsOverviewHandler : IRequestHandler<GetStatisticsOvervie
         var revenueTrend = dateLabels.Select(date => revenueByDate.TryGetValue(date, out var revenue) ? revenue : 0m).ToArray();
 
         var topShops = _dbContext.Orders
-            .Where(o => o.Status == OrderStatus.Paid && o.PaidAt.HasValue && o.PaidAt.Value.Date >= startDate && o.PaidAt.Value.Date <= endDate)
+            .Where(o => (o.Status == OrderStatus.Paid || o.Status == OrderStatus.Completed) && o.PaidAt.HasValue && o.PaidAt.Value.Date >= startDate && o.PaidAt.Value.Date <= endDate)
             .AsEnumerable()
             .GroupBy(o => o.ShopId)
             .Select(g => new { ShopId = g.Key, Revenue = g.Sum(o => o.ActualAmount) })

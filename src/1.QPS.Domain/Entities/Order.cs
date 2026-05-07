@@ -46,12 +46,13 @@ public class Order : BaseEntity
     public void Start() { Status = OrderStatus.WaitingPayment; }
     public void Complete(decimal originAmount, decimal discountAmount, decimal actualAmount, string paymentMethod)
     {
-        Status = OrderStatus.WaitingPayment;
+        Status = OrderStatus.Completed;
         EndTime = DateTime.UtcNow;
         OriginAmount = originAmount;
         DiscountAmount = discountAmount;
         ActualAmount = actualAmount;
         PaymentMethod = paymentMethod;
+        PaidAt = DateTime.UtcNow;
     }
     public void Pay()
     {

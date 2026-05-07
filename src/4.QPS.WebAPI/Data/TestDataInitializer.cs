@@ -28,6 +28,8 @@ public static class TestDataInitializer
         InitializeCoupons(dbContext, merchant);
         var customers = InitializeCustomers(dbContext, merchant);
         InitializeOrders(dbContext, shops, rooms, customers, merchant);
+        InitializeCustomerCoupons(dbContext, customers, merchant);
+        InitializeReviews(dbContext, merchant);
     }
 
     private static Merchant InitializeMerchant(AppDbContext dbContext)
@@ -138,11 +140,16 @@ public static class TestDataInitializer
 
         var tags = new List<Tag>
         {
-            new Tag("VIP"),
-            new Tag("特惠"),
-            new Tag("热门"),
-            new Tag("安静"),
-            new Tag("宽敞")
+            new Tag("VIP", "等级"),
+            new Tag("特惠", "促销"),
+            new Tag("热门", "推荐"),
+            new Tag("安静", "环境"),
+            new Tag("宽敞", "环境"),
+            new Tag("温馨", "环境"),
+            new Tag("情侣", "主题"),
+            new Tag("商务", "主题"),
+            new Tag("电竞", "主题"),
+            new Tag("影音", "设施")
         };
 
         foreach (var tag in tags)
@@ -407,6 +414,94 @@ public static class TestDataInitializer
         }
 
         dbContext.RoomPlans.AddRange(roomPlans);
+        dbContext.SaveChanges();
+    }
+
+    private static void InitializeCustomerCoupons(AppDbContext dbContext, List<Customer> customers, Merchant merchant)
+    {
+        if (dbContext.CustomerCoupons.Any())
+            return;
+
+        var coupons = dbContext.Coupons.IgnoreQueryFilters().Where(c => c.MerchantId == merchant.Id).ToList();
+        if (!coupons.Any())
+            return;
+
+        var random = new Random();
+        var customerCoupons = new List<CustomerCoupon>();
+
+        foreach (var customer in customers)
+        {
+            // 每个客户随机分配1-3张优惠券
+            var couponCount = random.Next(1, 4);
+            var selectedCoupons = coupons.OrderBy(c => Guid.NewGuid()).Take(couponCount).ToList();
+
+            foreach (var coupon in selectedCoupons)
+            {
+                // 随机设置状态：未使用、已使用、已过期
+                var statuses = new[] { "unused", "used", "expired" };
+                var status = statuses[random.Next(statuses.Length)];
+
+                var customerCoupon = new CustomerCoupon(coupon.Id, customer.Id, status);
+                customerCoupon.GetType().GetProperty("MerchantId")?.SetValue(customerCoupon, merchant.Id);
+                customerCoupons.Add(customerCoupon);
+            }
+        }
+
+        dbContext.CustomerCoupons.AddRange(customerCoupons);
+        dbContext.SaveChanges();
+    }
+
+    private static void InitializeReviews(AppDbContext dbContext, Merchant merchant)
+    {
+        if (dbContext.Reviews.Any())
+            return;
+
+        // 获取已完成的订单（用于关联评价）
+        var completedOrders = dbContext.Orders
+            .IgnoreQueryFilters()
+            .Where(o => o.MerchantId == merchant.Id && o.Status == OrderStatus.Completed)
+            .ToList();
+
+        if (!completedOrders.Any())
+            return;
+
+        var random = new Random();
+        var reviews = new List<Review>();
+        var comments = new[]
+        {
+            "非常满意，环境很好！",
+            "服务态度很棒，下次还来。",
+            "房间很干净，设施齐全。",
+            "性价比很高，推荐！",
+            "体验不错，值得再来。",
+            "房间有点小，但整体不错。",
+            "服务很周到，赞！",
+            "环境优雅，适合约会。",
+            "价格合理，服务到位。",
+            "整体体验很好，会推荐给朋友。"
+        };
+
+        // 为一部分已完成的订单创建评价
+        var ordersForReview = completedOrders.OrderBy(o => Guid.NewGuid()).Take(30).ToList();
+
+        foreach (var order in ordersForReview)
+        {
+            var score = random.Next(1, 6); // 1-5分
+            var content = comments[random.Next(comments.Length)];
+
+            var review = new Review(order.Id, order.RoomId, order.CustomerId.Value, score, content);
+            review.GetType().GetProperty("MerchantId")?.SetValue(review, merchant.Id);
+            reviews.Add(review);
+
+            // 更新房间评分
+            var room = dbContext.Rooms.IgnoreQueryFilters().FirstOrDefault(r => r.Id == order.RoomId);
+            if (room != null)
+            {
+                room.AddRating((decimal)score);
+            }
+        }
+
+        dbContext.Reviews.AddRange(reviews);
         dbContext.SaveChanges();
     }
 }
