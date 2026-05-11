@@ -7,7 +7,17 @@ public class CreateOrderRequest
     public int DurationMinutes { get; set; }
 }
 
-public class SettleOrderRequest
+public class PayOrderRequest
 {
     public Guid OrderId { get; set; }
+    public decimal Amount { get; set; }
+    public string PaymentMethod { get; set; }
+}
+
+public class CompleteOrderRequest
+{
+    public decimal OriginAmount { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public decimal ActualAmount { get; set; }
+    public string PaymentMethod { get; set; }
 }

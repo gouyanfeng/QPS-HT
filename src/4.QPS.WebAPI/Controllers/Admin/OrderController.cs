@@ -40,10 +40,24 @@ public class OrderController : ControllerBase
         return CreatedAtAction(nameof(GetOrder), new { id = result }, result);
     }
 
-    [HttpPost("{id}/settle")]
-    public async Task<ActionResult> SettleOrder(Guid id)
+    [HttpPost("{id}/pay")]
+    public async Task<ActionResult> PayOrder(Guid id, [FromBody] PayOrderRequest request)
     {
-        await _mediator.Send(new SettleOrderCommand { OrderId = id });
+        await _mediator.Send(new PayOrderCommand { OrderId = id, Amount = request.Amount, PaymentMethod = request.PaymentMethod });
+        return NoContent();
+    }
+
+    [HttpPost("{id}/complete")]
+    public async Task<ActionResult> CompleteOrder(Guid id, [FromBody] CompleteOrderRequest request)
+    {
+        await _mediator.Send(new CompleteOrderCommand
+        {
+            OrderId = id,
+            OriginAmount = request.OriginAmount,
+            DiscountAmount = request.DiscountAmount,
+            ActualAmount = request.ActualAmount,
+            PaymentMethod = request.PaymentMethod
+        });
         return NoContent();
     }
 }

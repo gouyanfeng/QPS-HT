@@ -27,19 +27,16 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, Guid>
 {
     private readonly IDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IMqttService _mqttService;
 
     /// <summary>
     /// 构造函数
     /// </summary>
     /// <param name="dbContext">数据库上下文</param>
     /// <param name="currentUserService">当前用户服务</param>
-    /// <param name="mqttService">MQTT服务</param>
-    public CreateOrderHandler(IDbContext dbContext, ICurrentUserService currentUserService, IMqttService mqttService)
+    public CreateOrderHandler(IDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
         _currentUserService = currentUserService;
-        _mqttService = mqttService;
     }
 
     /// <summary>
@@ -66,11 +63,12 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, Guid>
 
         order.Start();
 
+        // 设置订单结束时间（当前时间 + 时长）
+        var endTime = DateTime.UtcNow.AddMinutes(request.Request.DurationMinutes);
+        order.GetType().GetProperty("EndTime")?.SetValue(order, endTime);
+
         // 更新房间状态为占用
         room.Occupy();
-
-        // 由于移除了 MqttTopic 字段，不再发送 MQTT 命令
-        // 可以根据实际需求添加其他逻辑
 
         // 保存到数据库
         _dbContext.Orders.Add(order);

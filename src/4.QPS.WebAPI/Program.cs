@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MediatR;
+
 using QPS.Application.Behaviours;
+using QPS.Application.Features.Orders;
 using QPS.Application.Interfaces;
 using QPS.Infrastructure;
 using QPS.Infrastructure.IoT;
@@ -136,6 +138,8 @@ builder.Services.AddMediatR(cfg =>
     cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(TransactionBehaviour<,>));
 });
 
+
+
 #endregion
 
 /// <summary>
@@ -183,6 +187,8 @@ app.UseAuthentication();
 
 // 启用授权
 app.UseAuthorization();
+
+
 
 // 映射控制器路由
 app.MapControllers();

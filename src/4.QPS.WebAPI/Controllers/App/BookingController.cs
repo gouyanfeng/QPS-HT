@@ -25,10 +25,10 @@ public class BookingController : ControllerBase
         return Ok(orderId);
     }
 
-    [HttpPost("settleOrder")]
-    public async Task<ActionResult<bool>> SettleOrder([FromBody] SettleOrderRequest request)
+    [HttpPost("payOrder")]
+    public async Task<ActionResult<bool>> PayOrder([FromBody] PayOrderRequest request)
     {
-        var result = await _mediator.Send(new SettleOrderCommand { OrderId = request.OrderId });
+        var result = await _mediator.Send(new PayOrderCommand { OrderId = request.OrderId, Amount = request.Amount, PaymentMethod = request.PaymentMethod });
         return Ok(result);
     }
 }
