@@ -67,7 +67,7 @@ QPS/
 | Shops | 店铺管理（增删改查） |
 | Rooms | 房间管理（状态控制、电源管理） |
 | RoomImages | 房间图片管理 |
-| Orders | 订单创建、结算 |
+| Orders | 订单创建、结算、自动完成 |
 | Plans | 套餐管理 |
 | Coupons | 优惠券管理 |
 | Customers | 客户管理 |
@@ -87,14 +87,18 @@ QPS/
 ### 4. QPS.WebAPI (表现层)
 
 **控制器**：
-- `AuthController` - 认证接口
-- `RoleController` - 角色管理接口
-- `UserController` - 用户管理接口
-- `ShopController` - 店铺管理接口
-- `RoomController` - 房间管理接口
-- `PlanController` - 套餐管理接口
-- `CouponController` - 优惠券管理接口
-- `CustomerController` - 客户管理接口
+| 控制器 | 路径 | 说明 |
+|--------|------|------|
+| `AuthController` | `/api/auth` | 认证接口 |
+| `RoleController` | `/api/admin/roles` | 角色管理接口 |
+| `UserController` | `/api/admin/users` | 用户管理接口 |
+| `ShopController` | `/api/admin/shops` | 店铺管理接口 |
+| `RoomController` | `/api/admin/rooms` | 房间管理接口 |
+| `PlanController` | `/api/admin/plans` | 套餐管理接口 |
+| `CouponController` | `/api/admin/coupons` | 优惠券管理接口 |
+| `CustomerController` | `/api/admin/customers` | 客户管理接口 |
+| `BookingController` | `/api/app/booking` | 订单预订接口 |
+| `OrderController` | `/api/admin/orders` | 订单管理接口 |
 
 **特性**：
 - 统一响应格式包装
@@ -118,14 +122,19 @@ Idle → Occupied → Cleaning → Idle
 ### 3. 订单生命周期
 ```csharp
 // 订单状态流转
-Pending → Active → Completed
-       ↘ Cancelled
+WaitingPayment → Paid → Completed
+               ↘ Timeout
+               ↘ Cancelled
+               ↘ Refunding → Refunded
 ```
 
 ### 4. 权限系统 (RBAC)
 - 角色：管理员、店长、收银员
 - 基于 JWT 的身份认证
 - 请求级别权限控制
+
+### 5. 订单自动完成
+订单到期后自动完成，恢复房间状态为空闲
 
 ## 开发规范
 
@@ -166,6 +175,31 @@ src/
     ├── Data/            # 测试数据初始化
     └── Program.cs       # 应用入口
 ```
+
+## 快速开始
+
+### 环境要求
+- .NET 8.0 SDK
+- SQLite（已内置）
+
+### 运行项目
+
+```bash
+# 克隆项目
+git clone <repository-url>
+cd QPS-HT
+
+# 构建项目
+dotnet build
+
+# 运行 API
+cd src/4.QPS.WebAPI
+dotnet run
+```
+
+### 访问地址
+- API 服务：http://localhost:5000
+- Swagger 文档：http://localhost:5000/swagger
 
 ## License
 
