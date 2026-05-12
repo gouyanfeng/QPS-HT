@@ -23,25 +23,21 @@ public class OrderPaidEventHandler : INotificationHandler<OrderPaidEvent>
     {
         try
         {
-            // 获取订单信息
             var order = await _dbContext.Orders.FindAsync(notification.OrderId, cancellationToken);
             if (order == null)
             {
-                _logger.LogWarning($"订单 {notification.OrderId} 不存在");
+                _logger.LogWarning($"订单支付事件：订单 {notification.OrderId} 不存在");
                 return;
             }
 
-            // 获取客户信息
             var customer = order.CustomerId.HasValue
                 ? await _dbContext.Customers.FindAsync(order.CustomerId.Value, cancellationToken)
                 : null;
 
             if (customer != null && !string.IsNullOrEmpty(customer.Phone))
             {
-                // 发送支付成功短信
                 var message = $"【QPS】您的订单 {order.OrderNo} 已支付成功，金额 {order.ActualAmount:F2} 元。感谢您的使用！";
                 await _smsService.SendAsync(customer.Phone, message);
-
                 _logger.LogInformation($"已向客户 {customer.Phone} 发送订单支付成功短信");
             }
             else
@@ -52,7 +48,8 @@ public class OrderPaidEventHandler : INotificationHandler<OrderPaidEvent>
         catch (Exception ex)
         {
             _logger.LogError(ex, $"处理订单支付事件失败，订单ID: {notification.OrderId}");
-            // 短信发送失败不影响主流程，不抛出异常
+            // 短信发送失败不影响主流程，记录日志但不抛出异常
+            // 可考虑将失败记录到数据库，后续通过定时任务重试
         }
     }
 }

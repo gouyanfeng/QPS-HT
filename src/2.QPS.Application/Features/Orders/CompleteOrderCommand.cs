@@ -52,6 +52,9 @@ public class CompleteOrderHandler : IRequestHandler<CompleteOrderCommand, bool>
         // 发布订单完成事件（用于自动断电）
         await _publisher.Publish(new OrderCompletedEvent(order.Id, order.RoomId), cancellationToken);
 
+        // 发布会话过期事件（用于会话级别处理）
+        await _publisher.Publish(new SessionExpiredEvent(order.Id), cancellationToken);
+
         return true;
     }
 }

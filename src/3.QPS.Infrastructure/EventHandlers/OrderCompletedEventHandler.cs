@@ -22,38 +22,33 @@ public class OrderCompletedEventHandler : INotificationHandler<OrderCompletedEve
     {
         try
         {
-            // 获取房间信息
             var room = await _dbContext.Rooms.FindAsync(notification.RoomId, cancellationToken);
             if (room == null)
             {
-                _logger.LogWarning($"房间 {notification.RoomId} 不存在");
+                _logger.LogWarning($"订单完成事件：房间 {notification.RoomId} 不存在");
                 return;
             }
 
-            // 发送断电指令（通过MQTT）
             await SendPowerOffCommand(room, notification.OrderId);
-
             _logger.LogInformation($"订单 {notification.OrderId} 已完成，已发送断电指令到房间 {room.Name}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"处理订单完成事件失败，订单ID: {notification.OrderId}");
-            // 断电失败不影响主流程，不抛出异常
+            // 断电失败不影响主流程，记录日志但不抛出异常
+            // 可考虑将失败记录到数据库，后续通过定时任务重试
         }
     }
 
     private async Task SendPowerOffCommand(Domain.Entities.Room room, Guid orderId)
     {
-        // 获取房间所在的店铺
         var shop = await _dbContext.Shops.FindAsync(room.ShopId);
         if (shop == null)
         {
-            _logger.LogWarning($"店铺 {room.ShopId} 不存在");
+            _logger.LogWarning($"订单完成事件：店铺 {room.ShopId} 不存在");
             return;
         }
 
-        // 构建断电命令
-        // 实际项目中需要根据硬件协议构建具体的命令格式
         var powerOffCommand = new
         {
             OrderId = orderId.ToString(),
@@ -64,8 +59,6 @@ public class OrderCompletedEventHandler : INotificationHandler<OrderCompletedEve
             Timestamp = DateTime.UtcNow
         };
 
-        // 发送MQTT消息
-        // 主题格式可以是: qps/{shopId}/{roomId}/command
         var topic = $"qps/{shop.Id}/{room.Id}/command";
         await _mqttService.SendCommandAsync(topic, System.Text.Json.JsonSerializer.Serialize(powerOffCommand));
     }
