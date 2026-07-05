@@ -1,7 +1,9 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Users;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities;
+using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.Users;
 
@@ -43,12 +45,19 @@ public class CreateUserHandler : IRequestHandler<CreateUserCommand, UserDto>
     /// <returns>用户DTO</returns>
     public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
+        // 根据角色编码查找角色
+        var role = await _dbContext.Roles
+            .FirstOrDefaultAsync(r => r.Code == request.Request.RoleCode && !r.IsDeleted, cancellationToken);
+
+        if (role == null)
+            throw new BusinessException(400, "角色不存在");
+
         // 创建用户（注意：这里应该对密码进行哈希处理，为了测试方便，暂时直接使用明文）
         var user = User.Create(
             request.Request.Username,
             request.Request.Password,
             request.Request.RealName,
-            request.Request.RoleId
+            role.Id
         );
 
         // 保存到数据库

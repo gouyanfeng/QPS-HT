@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Users;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
@@ -54,8 +55,15 @@ public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, UserDto>
             throw new BusinessException(404, "用户不存在");
         }
 
+        // 根据角色编码查找角色
+        var role = await _dbContext.Roles
+            .FirstOrDefaultAsync(r => r.Code == request.Request.RoleCode && !r.IsDeleted, cancellationToken);
+
+        if (role == null)
+            throw new BusinessException(400, "角色不存在");
+
         // 更新用户信息
-        user.Update(request.Request.RealName, request.Request.RoleId);
+        user.Update(request.Request.RealName, role.Id);
 
         // 更新密码（如果提供了新密码）
         if (!string.IsNullOrEmpty(request.Request.Password))
