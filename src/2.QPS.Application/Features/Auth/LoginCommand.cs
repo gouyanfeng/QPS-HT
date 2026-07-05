@@ -53,8 +53,17 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
             cancellationToken
         );
 
+        // 获取用户角色
+        var role = await _dbContext.Roles
+            .IgnoreQueryFilters()
+            .Where(r => r.Id == user.RoleId)
+            .Select(r => r.Code)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var roleCode = role ?? "admin";
+
         // 生成JWT令牌
-        var token = _jwtGenerator.GenerateToken(user.Id, user.MerchantId, "Admin");
+        var token = _jwtGenerator.GenerateToken(user.Id, user.MerchantId, roleCode);
 
         // 返回登录响应
         return new LoginResponse
@@ -63,7 +72,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
             UserId = user.Id,
             Username = user.Username,
             RealName = user.RealName,
-            Role = "Admin",
+            Role = roleCode,
             MerchantId = user.MerchantId,
             RoleId = user.RoleId
         };

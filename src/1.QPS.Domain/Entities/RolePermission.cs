@@ -5,13 +5,13 @@ namespace QPS.Domain.Entities;
 public class RolePermission : BaseEntity
 {
     public Guid RoleId { get; private set; }
-    public string PermissionCode { get; private set; }
+    public Guid PermissionId { get; private set; }
 
     protected RolePermission() { }
 
-    public RolePermission(Guid roleId, string permissionCode)
+    public RolePermission(Guid roleId, Guid permissionId)
     {
         RoleId = roleId;
-        PermissionCode = permissionCode;
+        PermissionId = permissionId;
     }
 }

@@ -19,6 +19,7 @@ public static class TestDataInitializer
         var shops = InitializeShops(dbContext, merchant);
         var roles = InitializeRoles(dbContext, merchant);
         InitializeUsers(dbContext, merchant, roles);
+        InitializePermissions(dbContext, roles);
         var tags = InitializeTags(dbContext, merchant);
         var rooms = InitializeRooms(dbContext, shops, merchant);
         InitializeRoomImages(dbContext, rooms, merchant);
@@ -83,8 +84,8 @@ public static class TestDataInitializer
         var roles = new List<Role>
         {
             new Role("管理员", "admin"),
-            new Role("店长", "shop_manager"),
-            new Role("收银员", "cashier")
+            new Role("商户", "merchant"),
+            new Role("用户", "user")
         };
 
         foreach (var role in roles)
@@ -104,13 +105,14 @@ public static class TestDataInitializer
             return;
 
         var adminRole = roles.First(r => r.Code == "admin");
-        var managerRole = roles.First(r => r.Code == "shop_manager");
+        var merchantRole = roles.First(r => r.Code == "merchant");
+        var userRole = roles.First(r => r.Code == "user");
 
         var users = new List<User>
         {
             User.Create("admin", "123456", "系统管理员", adminRole.Id),
-            User.Create("manager", "123456", "张店长", managerRole.Id),
-            User.Create("cashier1", "123456", "李收银员", roles.First(r => r.Code == "cashier").Id)
+            User.Create("merchant", "123456", "张商户", merchantRole.Id),
+            User.Create("user", "123456", "李用户", userRole.Id)
         };
 
         foreach (var user in users)
@@ -124,8 +126,8 @@ public static class TestDataInitializer
         var userRoles = new List<UserRole>
         {
             new UserRole(users[0].Id, adminRole.Id),
-            new UserRole(users[1].Id, managerRole.Id),
-            new UserRole(users[2].Id, roles.First(r => r.Code == "cashier").Id)
+            new UserRole(users[1].Id, merchantRole.Id),
+            new UserRole(users[2].Id, userRole.Id)
         };
 
         dbContext.UserRoles.AddRange(userRoles);
@@ -449,6 +451,154 @@ public static class TestDataInitializer
 
         dbContext.CustomerCoupons.AddRange(customerCoupons);
         dbContext.SaveChanges();
+    }
+
+    private static void InitializePermissions(AppDbContext dbContext, List<Role> roles)
+    {
+        if (dbContext.Permissions.IgnoreQueryFilters().Any())
+            return;
+
+        // 1. 创建权限树节点（先创建不含 ParentId，后续通过 code 查找设置）
+        var permList = new List<Permission>
+        {
+            new Permission("权限管理", "root"),
+            new Permission("首页", "home"),
+            new Permission("商户管理", "merchants"),
+            new Permission("新增", "merchants:add"),
+            new Permission("编辑", "merchants:edit"),
+            new Permission("门店管理", "shops"),
+            new Permission("新增", "shops:add"),
+            new Permission("编辑", "shops:edit"),
+            new Permission("删除", "shops:delete"),
+            new Permission("房间管理", "rooms"),
+            new Permission("新增", "rooms:add"),
+            new Permission("编辑", "rooms:edit"),
+            new Permission("优惠券管理", "coupons"),
+            new Permission("新增", "coupons:add"),
+            new Permission("编辑", "coupons:edit"),
+            new Permission("删除", "coupons:delete"),
+            new Permission("套餐管理", "plans"),
+            new Permission("新增", "plans:add"),
+            new Permission("编辑", "plans:edit"),
+            new Permission("删除", "plans:delete"),
+            new Permission("订单管理", "orders"),
+            new Permission("编辑", "orders:edit"),
+            new Permission("查看", "orders:view"),
+            new Permission("标签管理", "tags"),
+            new Permission("新增", "tags:add"),
+            new Permission("编辑", "tags:edit"),
+            new Permission("删除", "tags:delete"),
+            new Permission("用户管理", "users"),
+            new Permission("新增", "users:add"),
+            new Permission("编辑", "users:edit"),
+            new Permission("系统设置", "system"),
+            new Permission("角色设置", "role"),
+            new Permission("新增", "role:add"),
+            new Permission("编辑", "role:edit"),
+            new Permission("删除", "role:delete"),
+            new Permission("权限设置", "permission"),
+            new Permission("新增", "permission:add"),
+            new Permission("编辑", "permission:edit"),
+            new Permission("删除", "permission:delete"),
+        };
+
+        // 先全部保存，得到自动生成的 Id
+        dbContext.Permissions.AddRange(permList);
+        dbContext.SaveChanges();
+
+        // 建立 code → entity 的字典
+        var permDict = dbContext.Permissions.IgnoreQueryFilters()
+            .Where(p => !p.IsDeleted)
+            .ToDictionary(p => p.Code);
+
+        // 设置父子关系
+        SetParent(permDict, "home", "root");
+        SetParent(permDict, "merchants", "root");
+        SetParent(permDict, "shops", "root");
+        SetParent(permDict, "rooms", "root");
+        SetParent(permDict, "coupons", "root");
+        SetParent(permDict, "plans", "root");
+        SetParent(permDict, "orders", "root");
+        SetParent(permDict, "tags", "root");
+        SetParent(permDict, "users", "root");
+        SetParent(permDict, "system", "root");
+
+        SetParent(permDict, "merchants:add", "merchants");
+        SetParent(permDict, "merchants:edit", "merchants");
+        SetParent(permDict, "shops:add", "shops");
+        SetParent(permDict, "shops:edit", "shops");
+        SetParent(permDict, "shops:delete", "shops");
+        SetParent(permDict, "rooms:add", "rooms");
+        SetParent(permDict, "rooms:edit", "rooms");
+        SetParent(permDict, "coupons:add", "coupons");
+        SetParent(permDict, "coupons:edit", "coupons");
+        SetParent(permDict, "coupons:delete", "coupons");
+        SetParent(permDict, "plans:add", "plans");
+        SetParent(permDict, "plans:edit", "plans");
+        SetParent(permDict, "plans:delete", "plans");
+        SetParent(permDict, "orders:edit", "orders");
+        SetParent(permDict, "orders:view", "orders");
+        SetParent(permDict, "tags:add", "tags");
+        SetParent(permDict, "tags:edit", "tags");
+        SetParent(permDict, "tags:delete", "tags");
+        SetParent(permDict, "users:add", "users");
+        SetParent(permDict, "users:edit", "users");
+
+        SetParent(permDict, "role", "system");
+        SetParent(permDict, "permission", "system");
+
+        SetParent(permDict, "role:add", "role");
+        SetParent(permDict, "role:edit", "role");
+        SetParent(permDict, "role:delete", "role");
+        SetParent(permDict, "permission:add", "permission");
+        SetParent(permDict, "permission:edit", "permission");
+        SetParent(permDict, "permission:delete", "permission");
+
+        dbContext.SaveChanges();
+
+        // 2. 角色-权限分配
+        // root 节点本身不分配
+        var allPermCodes = permList.Where(p => p.Code != "root").Select(p => p.Code).ToList();
+        var admin = roles.First(r => r.Code == "admin");
+        var merchant = roles.First(r => r.Code == "merchant");
+        var user = roles.First(r => r.Code == "user");
+
+        foreach (var code in allPermCodes)
+        {
+            if (permDict.TryGetValue(code, out var perm))
+                dbContext.RolePermissions.Add(new RolePermission(admin.Id, perm.Id));
+        }
+
+        var merchantPerms = new[] {
+            "home", "shops", "shops:add", "shops:edit", "shops:delete",
+            "rooms", "rooms:add", "rooms:edit",
+            "orders", "orders:edit", "orders:view",
+            "coupons", "coupons:add", "coupons:edit",
+            "plans", "plans:edit",
+            "tags", "tags:add", "tags:edit", "tags:delete"
+        };
+        foreach (var code in merchantPerms)
+        {
+            if (permDict.TryGetValue(code, out var perm))
+                dbContext.RolePermissions.Add(new RolePermission(merchant.Id, perm.Id));
+        }
+
+        var userPerms = new[] { "home", "orders", "orders:view" };
+        foreach (var code in userPerms)
+        {
+            if (permDict.TryGetValue(code, out var perm))
+                dbContext.RolePermissions.Add(new RolePermission(user.Id, perm.Id));
+        }
+
+        dbContext.SaveChanges();
+    }
+
+    private static void SetParent(Dictionary<string, Permission> dict, string childCode, string parentCode)
+    {
+        if (dict.TryGetValue(childCode, out var child) && dict.TryGetValue(parentCode, out var parent))
+        {
+            child.GetType().GetProperty("ParentId")?.SetValue(child, parent.Id);
+        }
     }
 
     private static void InitializeReviews(AppDbContext dbContext, Merchant merchant)

@@ -10,6 +10,8 @@ public interface IDbContext
     DbSet<Merchant> Merchants { get; }
     DbSet<User> Users { get; }
     DbSet<Role> Roles { get; }
+    DbSet<Permission> Permissions { get; }
+    DbSet<RolePermission> RolePermissions { get; }
     DbSet<Coupon> Coupons { get; }
     DbSet<Shop> Shops { get; }
     DbSet<Tag> Tags { get; }
