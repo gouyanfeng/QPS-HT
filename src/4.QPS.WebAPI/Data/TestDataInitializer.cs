@@ -523,7 +523,7 @@ public static class TestDataInitializer
         SetParent(permDict, "plans", "root");
         SetParent(permDict, "orders", "root");
         SetParent(permDict, "tags", "root");
-        SetParent(permDict, "users", "root");
+        SetParent(permDict, "users", "system");
         SetParent(permDict, "system", "root");
 
         SetParent(permDict, "merchants:add", "merchants");
