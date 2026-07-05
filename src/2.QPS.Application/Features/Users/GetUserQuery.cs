@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Users;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
@@ -42,19 +43,23 @@ public class GetUserHandler : IRequestHandler<GetUserQuery, UserDto>
     public async Task<UserDto> Handle(GetUserQuery request, CancellationToken cancellationToken)
     {
         // 查询用户
-        var user = await _dbContext.Users.FindAsync(request.Id, cancellationToken);
+        var user = await _dbContext.SystemUsers.FindAsync(new object[] { request.Id }, cancellationToken);
 
         if (user == null)
         {
             throw new BusinessException(404, "用户不存在");
         }
 
+        // 从关联表查询角色ID
+        var userRole = await _dbContext.SystemUserRoles
+            .FirstOrDefaultAsync(ur => ur.UserId == request.Id, cancellationToken);
+
         // 转换为DTO
         return new UserDto
         {
             Id = user.Id,
             MerchantId = user.MerchantId,
-            RoleId = user.RoleId,
+            RoleId = userRole?.RoleId ?? Guid.Empty,
             Username = user.Username,
             RealName = user.RealName,
             IsActive = user.IsActive

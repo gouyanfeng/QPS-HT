@@ -54,18 +54,20 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginationResponse
     public async Task<PaginationResponse<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
         // 构建查询，全局查询过滤器会自动过滤MerchantId
-        var query = from a in _dbContext.Users.AsNoTracking()
-                    join b in _dbContext.Roles.AsNoTracking() on a.RoleId equals b.Id into ab
-                    from b in ab.DefaultIfEmpty()
+        var query = from a in _dbContext.SystemUsers.AsNoTracking()
+                    join ur in _dbContext.SystemUserRoles.AsNoTracking() on a.Id equals ur.UserId into urGroup
+                    from ur in urGroup.DefaultIfEmpty()
+                    join r in _dbContext.SystemRoles.AsNoTracking() on ur.RoleId equals r.Id into rGroup
+                    from r in rGroup.DefaultIfEmpty()
                     select new
                     {
                         Id = a.Id,
                         MerchantId = a.MerchantId,
-                        RoleId = a.RoleId,
+                        RoleId = ur != null ? ur.RoleId : (Guid?)null,
                         Username = a.Username,
                         RealName = a.RealName,
                         IsActive = a.IsActive,
-                        RoleName = b != null ? b.Name : null
+                        RoleName = r != null ? r.Name : null
                     };
 
         // 应用查询条件
@@ -89,7 +91,7 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginationResponse
         {
             Id = u.Id,
             MerchantId = u.MerchantId,
-            RoleId = u.RoleId,
+            RoleId = u.RoleId ?? Guid.Empty,
             Username = u.Username,
             RealName = u.RealName,
             IsActive = u.IsActive,

@@ -1,6 +1,8 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Users;
 using QPS.Application.Interfaces;
+using QPS.Domain.Entities;
 using QPS.Domain.Exceptions;
 using System;
 
@@ -47,7 +49,7 @@ public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, UserDto>
     public async Task<UserDto> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
         // 查询用户
-        var user = await _dbContext.Users.FindAsync(request.Id, cancellationToken);
+        var user = await _dbContext.SystemUsers.FindAsync(request.Id, cancellationToken);
 
         if (user == null)
         {
@@ -55,7 +57,7 @@ public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, UserDto>
         }
 
         // 更新用户信息
-        user.Update(request.Request.RealName, request.Request.RoleId);
+        user.Update(request.Request.RealName);
 
         // 更新密码（如果提供了新密码）
         if (!string.IsNullOrEmpty(request.Request.Password))
@@ -77,12 +79,25 @@ public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, UserDto>
         // 保存到数据库
         await _dbContext.SaveChangesAsync(cancellationToken);
 
+        // 同步更新用户-角色关联记录（用于权限检查）
+        var existingUserRole = await _dbContext.SystemUserRoles
+            .FirstOrDefaultAsync(ur => ur.UserId == request.Id, cancellationToken);
+
+        if (existingUserRole != null)
+        {
+            _dbContext.SystemUserRoles.Remove(existingUserRole);
+        }
+
+        var newUserRole = new SystemUserRole(request.Id, request.Request.RoleId);
+        _dbContext.SystemUserRoles.Add(newUserRole);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
         // 转换为DTO
         return new UserDto
         {
             Id = user.Id,
             MerchantId = user.MerchantId,
-            RoleId = user.RoleId,
+            RoleId = request.Request.RoleId,
             Username = user.Username,
             RealName = user.RealName,
             IsActive = user.IsActive

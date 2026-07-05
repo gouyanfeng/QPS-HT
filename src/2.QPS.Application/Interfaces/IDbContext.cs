@@ -8,8 +8,11 @@ public interface IDbContext
     DbSet<Room> Rooms { get; }
     DbSet<Order> Orders { get; }
     DbSet<Merchant> Merchants { get; }
-    DbSet<User> Users { get; }
-    DbSet<Role> Roles { get; }
+    DbSet<SystemUser> SystemUsers { get; }
+    DbSet<SystemRole> SystemRoles { get; }
+    DbSet<SystemUserRole> SystemUserRoles { get; }
+    DbSet<SystemPermission> SystemPermissions { get; }
+    DbSet<SystemRolePermission> SystemRolePermissions { get; }
     DbSet<Coupon> Coupons { get; }
     DbSet<Shop> Shops { get; }
     DbSet<Tag> Tags { get; }

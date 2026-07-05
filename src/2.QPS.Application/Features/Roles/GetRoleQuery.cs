@@ -41,7 +41,7 @@ public class GetRoleHandler : IRequestHandler<GetRoleQuery, RoleDto>
     public async Task<RoleDto> Handle(GetRoleQuery request, CancellationToken cancellationToken)
     {
         // 查询角色
-        var role = await _dbContext.Roles.FindAsync(request.Id, cancellationToken);
+        var role = await _dbContext.SystemRoles.FindAsync(request.Id, cancellationToken);
 
         if (role == null)
         {

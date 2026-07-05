@@ -47,7 +47,7 @@ public class GetRolesHandler : IRequestHandler<GetRolesQuery, PaginationResponse
     public async Task<PaginationResponse<RoleDto>> Handle(GetRolesQuery request, CancellationToken cancellationToken)
     {
         // 构建查询，全局查询过滤器会自动过滤MerchantId
-        var query = _dbContext.Roles.AsQueryable();
+        var query = _dbContext.SystemRoles.AsQueryable();
 
         // 应用查询条件
         if (!string.IsNullOrEmpty(request.Name))

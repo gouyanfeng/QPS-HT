@@ -8,7 +8,6 @@ public class Merchant : AggregateRoot
     public string Phone { get; private set; }
     public DateTime? ExpiryDate { get; private set; }
     public bool IsActive { get; private set; }
-    public DateTime CreatedAt { get; private set; }
 
     protected Merchant() { }
 
@@ -18,7 +17,6 @@ public class Merchant : AggregateRoot
         Phone = phone;
         ExpiryDate = expiryDate;
         IsActive = true;
-        CreatedAt = DateTime.UtcNow;
     }
 
     public static Merchant Create(string name, string phone, DateTime? expiryDate)

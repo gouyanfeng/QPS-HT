@@ -2,12 +2,12 @@ using QPS.Domain.Common;
 
 namespace QPS.Domain.Entities;
 
-public class Role : BaseEntity
+public class SystemRole : BaseEntity
 {
     public string Name { get; private set; }
     public string Code { get; private set; }
 
-    public Role(string name, string code)
+    public SystemRole(string name, string code)
     {
         Name = name;
         Code = code;

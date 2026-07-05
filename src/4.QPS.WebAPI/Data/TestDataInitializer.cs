@@ -19,6 +19,8 @@ public static class TestDataInitializer
         var shops = InitializeShops(dbContext, merchant);
         var roles = InitializeRoles(dbContext, merchant);
         InitializeUsers(dbContext, merchant, roles);
+        InitializePermissions(dbContext, merchant);
+        InitializeRolePermissions(dbContext, merchant, roles);
         var tags = InitializeTags(dbContext, merchant);
         var rooms = InitializeRooms(dbContext, shops, merchant);
         InitializeRoomImages(dbContext, rooms, merchant);
@@ -74,17 +76,17 @@ public static class TestDataInitializer
         return shops;
     }
 
-    private static List<Role> InitializeRoles(AppDbContext dbContext, Merchant merchant)
+    private static List<SystemRole> InitializeRoles(AppDbContext dbContext, Merchant merchant)
     {
-        var existingRoles = dbContext.Roles.IgnoreQueryFilters().Where(r => r.MerchantId == merchant.Id).ToList();
+        var existingRoles = dbContext.SystemRoles.IgnoreQueryFilters().Where(r => r.MerchantId == merchant.Id).ToList();
         if (existingRoles.Any())
             return existingRoles;
 
-        var roles = new List<Role>
+        var roles = new List<SystemRole>
         {
-            new Role("管理员", "admin"),
-            new Role("店长", "shop_manager"),
-            new Role("收银员", "cashier")
+            new SystemRole("管理员", "admin"),
+            new SystemRole("店长", "shop_manager"),
+            new SystemRole("收银员", "cashier")
         };
 
         foreach (var role in roles)
@@ -92,25 +94,25 @@ public static class TestDataInitializer
             role.GetType().GetProperty("MerchantId")?.SetValue(role, merchant.Id);
         }
 
-        dbContext.Roles.AddRange(roles);
+        dbContext.SystemRoles.AddRange(roles);
         dbContext.SaveChanges();
         return roles;
     }
 
-    private static void InitializeUsers(AppDbContext dbContext, Merchant merchant, List<Role> roles)
+    private static void InitializeUsers(AppDbContext dbContext, Merchant merchant, List<SystemRole> roles)
     {
-        var existingUsers = dbContext.Users.IgnoreQueryFilters().Where(u => u.MerchantId == merchant.Id).ToList();
+        var existingUsers = dbContext.SystemUsers.IgnoreQueryFilters().Where(u => u.MerchantId == merchant.Id).ToList();
         if (existingUsers.Any())
             return;
 
         var adminRole = roles.First(r => r.Code == "admin");
         var managerRole = roles.First(r => r.Code == "shop_manager");
 
-        var users = new List<User>
+        var users = new List<SystemUser>
         {
-            User.Create("admin", "123456", "系统管理员", adminRole.Id),
-            User.Create("manager", "123456", "张店长", managerRole.Id),
-            User.Create("cashier1", "123456", "李收银员", roles.First(r => r.Code == "cashier").Id)
+            SystemUser.Create("admin", "123456", "系统管理员"),
+            SystemUser.Create("manager", "123456", "张店长"),
+            SystemUser.Create("cashier1", "123456", "李收银员")
         };
 
         foreach (var user in users)
@@ -118,17 +120,17 @@ public static class TestDataInitializer
             user.GetType().GetProperty("MerchantId")?.SetValue(user, merchant.Id);
         }
 
-        dbContext.Users.AddRange(users);
+        dbContext.SystemUsers.AddRange(users);
         dbContext.SaveChanges();
 
-        var userRoles = new List<UserRole>
+        var userRoles = new List<SystemUserRole>
         {
-            new UserRole(users[0].Id, adminRole.Id),
-            new UserRole(users[1].Id, managerRole.Id),
-            new UserRole(users[2].Id, roles.First(r => r.Code == "cashier").Id)
+            new SystemUserRole(users[0].Id, adminRole.Id),
+            new SystemUserRole(users[1].Id, managerRole.Id),
+            new SystemUserRole(users[2].Id, roles.First(r => r.Code == "cashier").Id)
         };
 
-        dbContext.UserRoles.AddRange(userRoles);
+        dbContext.SystemUserRoles.AddRange(userRoles);
         dbContext.SaveChanges();
     }
 
@@ -502,6 +504,142 @@ public static class TestDataInitializer
         }
 
         dbContext.Reviews.AddRange(reviews);
+        dbContext.SaveChanges();
+    }
+
+    private static void InitializePermissions(AppDbContext dbContext, Merchant merchant)
+    {
+        var existingPermissions = dbContext.SystemPermissions.IgnoreQueryFilters().Where(p => p.MerchantId == merchant.Id).ToList();
+        if (existingPermissions.Any())
+            return;
+
+        // 1. 先创建父级分组权限
+        var parentPermissions = new List<SystemPermission>
+        {
+            new SystemPermission("order", "订单管理"),
+            new SystemPermission("room", "房间管理"),
+            new SystemPermission("coupon", "优惠券管理"),
+            new SystemPermission("user", "用户管理"),
+            new SystemPermission("role", "角色管理"),
+            new SystemPermission("shop", "店铺管理"),
+            new SystemPermission("settings", "系统设置"),
+            new SystemPermission("permission", "权限管理"),
+        };
+
+        foreach (var p in parentPermissions)
+        {
+            p.GetType().GetProperty("MerchantId")?.SetValue(p, merchant.Id);
+        }
+
+        dbContext.SystemPermissions.AddRange(parentPermissions);
+        dbContext.SaveChanges();
+
+        // 2. 查询获取父级 ID 映射
+        var savedPermissions = dbContext.SystemPermissions.IgnoreQueryFilters()
+            .Where(p => p.MerchantId == merchant.Id)
+            .ToDictionary(p => p.PermissionCode);
+
+        // 3. 创建子权限（功能点）
+        var childPermissions = new List<SystemPermission>
+        {
+            // 订单管理
+            new SystemPermission("order:view", "订单查看", savedPermissions["order"].Id),
+            new SystemPermission("order:create", "创建订单", savedPermissions["order"].Id),
+            new SystemPermission("order:edit", "编辑订单", savedPermissions["order"].Id),
+            new SystemPermission("order:delete", "删除订单", savedPermissions["order"].Id),
+            new SystemPermission("order:settle", "结算订单", savedPermissions["order"].Id),
+
+            // 房间管理
+            new SystemPermission("room:view", "房间查看", savedPermissions["room"].Id),
+            new SystemPermission("room:create", "创建房间", savedPermissions["room"].Id),
+            new SystemPermission("room:edit", "编辑房间", savedPermissions["room"].Id),
+            new SystemPermission("room:delete", "删除房间", savedPermissions["room"].Id),
+
+            // 优惠券管理
+            new SystemPermission("coupon:view", "优惠券查看", savedPermissions["coupon"].Id),
+            new SystemPermission("coupon:create", "创建优惠券", savedPermissions["coupon"].Id),
+            new SystemPermission("coupon:edit", "编辑优惠券", savedPermissions["coupon"].Id),
+            new SystemPermission("coupon:delete", "删除优惠券", savedPermissions["coupon"].Id),
+
+            // 用户管理
+            new SystemPermission("user:view", "用户查看", savedPermissions["user"].Id),
+            new SystemPermission("user:create", "创建用户", savedPermissions["user"].Id),
+            new SystemPermission("user:edit", "编辑用户", savedPermissions["user"].Id),
+
+            // 角色管理
+            new SystemPermission("role:view", "角色查看", savedPermissions["role"].Id),
+            new SystemPermission("role:create", "创建角色", savedPermissions["role"].Id),
+            new SystemPermission("role:edit", "编辑角色", savedPermissions["role"].Id),
+            new SystemPermission("role:delete", "删除角色", savedPermissions["role"].Id),
+
+            // 店铺管理
+            new SystemPermission("shop:view", "店铺查看", savedPermissions["shop"].Id),
+            new SystemPermission("shop:create", "创建店铺", savedPermissions["shop"].Id),
+            new SystemPermission("shop:edit", "编辑店铺", savedPermissions["shop"].Id),
+            new SystemPermission("shop:delete", "删除店铺", savedPermissions["shop"].Id),
+
+            // 系统设置
+            new SystemPermission("settings:view", "设置查看", savedPermissions["settings"].Id),
+            new SystemPermission("settings:edit", "修改设置", savedPermissions["settings"].Id),
+
+            // 权限管理
+            new SystemPermission("permission:view", "权限查看", savedPermissions["permission"].Id),
+            new SystemPermission("permission:create", "创建权限", savedPermissions["permission"].Id),
+            new SystemPermission("permission:edit", "编辑权限", savedPermissions["permission"].Id),
+            new SystemPermission("permission:delete", "删除权限", savedPermissions["permission"].Id),
+        };
+
+        foreach (var p in childPermissions)
+        {
+            p.GetType().GetProperty("MerchantId")?.SetValue(p, merchant.Id);
+        }
+
+        dbContext.SystemPermissions.AddRange(childPermissions);
+        dbContext.SaveChanges();
+    }
+
+    private static void InitializeRolePermissions(AppDbContext dbContext, Merchant merchant, List<SystemRole> roles)
+    {
+        var permissions = dbContext.SystemPermissions.IgnoreQueryFilters().Where(p => p.MerchantId == merchant.Id).ToList();
+        var existingRolePermissions = dbContext.SystemRolePermissions.IgnoreQueryFilters().Where(rp => rp.MerchantId == merchant.Id).ToList();
+        if (existingRolePermissions.Any())
+            return;
+
+        var adminRole = roles.First(r => r.Code == "admin");
+        var managerRole = roles.First(r => r.Code == "shop_manager");
+        var cashierRole = roles.First(r => r.Code == "cashier");
+
+        var rolePermissions = new List<SystemRolePermission>();
+
+        // 管理员：所有权限
+        foreach (var permission in permissions)
+        {
+            rolePermissions.Add(new SystemRolePermission(adminRole.Id, permission.Id));
+        }
+
+        // 店长：订单、房间、优惠券、店铺相关权限
+        var managerPermissionCodes = new[] { "order:", "room:", "coupon:", "shop:" };
+        var managerPermissions = permissions.Where(p =>
+            managerPermissionCodes.Any(prefix => p.PermissionCode.StartsWith(prefix))).ToList();
+        foreach (var permission in managerPermissions)
+        {
+            rolePermissions.Add(new SystemRolePermission(managerRole.Id, permission.Id));
+        }
+
+        // 收银员：订单相关权限
+        var cashierPermissions = permissions.Where(p =>
+            p.PermissionCode.StartsWith("order:")).ToList();
+        foreach (var permission in cashierPermissions)
+        {
+            rolePermissions.Add(new SystemRolePermission(cashierRole.Id, permission.Id));
+        }
+
+        foreach (var rp in rolePermissions)
+        {
+            rp.GetType().GetProperty("MerchantId")?.SetValue(rp, merchant.Id);
+        }
+
+        dbContext.SystemRolePermissions.AddRange(rolePermissions);
         dbContext.SaveChanges();
     }
 }

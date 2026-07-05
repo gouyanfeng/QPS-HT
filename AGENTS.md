@@ -1,17 +1,97 @@
-# Agent 指南
+# AGENTS - 技能优先使用规则
 
+## 核心原则
 
-业务代码不用处理MerchantId，底层会自动处理。
+**在回答任何问题或执行任何操作之前，必须首先检查是否有适用的技能。**
 
-每次run项目时，先杀掉原来的 5000 端口，再启动项目。
+## 技能调用优先级
 
+### 第一层：流程技能（Process Skills）
+| 技能 | 触发条件 | 优先级 |
+|------|----------|--------|
+| brainstorming | 开始新任务、设计方案、探索可能性 | 1 |
+| systematic-debugging | 修复 bug、排查问题 | 2 |
+| writing-plans | 编写开发计划 | 3 |
+| executing-plans | 执行已制定的计划 | 4 |
 
-# 测试用的token
-authorization
-Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiOWZlYjg4Mi05NDgwLTRjNWItOWUxYS05MjUxODU0YzUzZmEiLCJtZXJjaGFudElkIjoiN2I0NDc4ODYtNTM5Yi00MWQxLWJjNzEtZWMxNTljYmU5ZmUwIiwicm9sZSI6IkFkbWluIiwiZXhwIjoxNzc4NjY0ODc1LCJpc3MiOiJRUFMuQVBJIiwiYXVkIjoiUVBTLkNsaWVudCJ9.1v1lq72YwspuK3QqlI1Hbd7kpBcLfHN74qU0NxTRfh0
+### 第二层：领域技能（Domain Skills）
+| 技能 | 触发条件 | 优先级 |
+|------|----------|--------|
+| using-git-worktrees | 使用 Git Worktrees | 5 |
+| finishing-a-development-branch | 完成开发分支 | 6 |
+| writing-skills | 编写新技能 | 7 |
+| subagent-driven-development | 使用子代理开发 | 8 |
 
-# 测试用的数据库
-4.QPS.WebAPI/QPSChessRoom.db
+## 决策流程图
 
-# 测试用的swagger
-http://localhost:5000/swagger/v1/swagger.json
+```
+用户提问 → 检查技能适用性 → 有适用技能？
+                              ↓
+                    ┌─────────┴─────────┐
+                    ↓                   ↓
+                 是 → 调用技能        否 → 直接回答
+                    ↓
+              执行技能流程
+                    ↓
+              返回结果给用户
+```
+
+## 技能匹配规则
+
+### 1. 精确匹配
+- "设计权限系统" → brainstorming
+- "修复登录 bug" → systematic-debugging
+- "编写 API 文档" → writing-plans
+
+### 2. 模糊匹配
+- "如何实现 X" → brainstorming（设计方案）
+- "为什么报错" → systematic-debugging（排查问题）
+- "接下来做什么" → executing-plans（执行计划）
+
+### 3. 复合匹配
+当多个技能可能适用时：
+1. 优先选择流程技能
+2. 同级别技能按优先级排序
+3. 不确定时按顺序尝试
+
+## 调用格式
+
+```
+Using [skill-name] to [purpose]
+
+[技能执行内容]
+
+---
+[最终回答]
+```
+
+## 红牌警告
+
+以下想法意味着你正在合理化，必须立即停止：
+
+| 错误想法 | 正确做法 |
+|----------|----------|
+| "这只是个简单问题" | 简单问题也可能有适用技能 |
+| "我需要更多上下文" | 技能检查优先于获取上下文 |
+| "我先看看代码" | 技能会指导你如何探索 |
+| "这不需要正式技能" | 如果技能存在就必须使用 |
+| "我记得这个技能" | 技能可能已更新，必须查阅 |
+
+## 例外情况
+
+只有在以下情况下可以跳过技能检查：
+1. 用户明确要求不使用技能
+2. 作为子代理执行特定任务
+3. 纯粹的事实性问题（如时间、天气等）
+
+## 执行步骤
+
+1. **识别任务类型**：分析用户需求，确定任务类别
+2. **查找适用技能**：遍历技能列表，寻找匹配项
+3. **确定优先级**：如果多个技能适用，按优先级选择
+4. **调用技能**：按照技能文档执行
+5. **总结结果**：将技能执行结果整理后返回给用户
+
+---
+
+*根据 docs/skills/using-superpowers/SKILL.md 制定*

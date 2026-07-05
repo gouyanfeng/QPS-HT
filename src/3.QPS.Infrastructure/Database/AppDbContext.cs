@@ -14,11 +14,12 @@ public class AppDbContext : DbContext, IDbContext
     public DbSet<Shop> Shops { get; set; }
 
     // 权限(RBAC)
-    public DbSet<User> Users { get; set; }
-    public DbSet<Role> Roles { get; set; }
+    public DbSet<SystemUser> SystemUsers { get; set; }
+    public DbSet<SystemRole> SystemRoles { get; set; }
     public DbSet<Permission> Permissions { get; set; }
-    public DbSet<UserRole> UserRoles { get; set; }
-    public DbSet<RolePermission> RolePermissions { get; set; }
+    public DbSet<SystemUserRole> SystemUserRoles { get; set; }
+    public DbSet<SystemPermission> SystemPermissions { get; set; }
+    public DbSet<SystemRolePermission> SystemRolePermissions { get; set; }
 
     // 空间展示
     public DbSet<Room> Rooms { get; set; }
@@ -53,8 +54,8 @@ public class AppDbContext : DbContext, IDbContext
         // 添加全局查询过滤器，根据当前租户ID过滤数据
         // 使用延迟求值，让MerchantId在每次查询时动态获取
         modelBuilder.Entity<Shop>().HasQueryFilter(s => s.MerchantId == _currentUserService.MerchantId);
-        modelBuilder.Entity<User>().HasQueryFilter(u => u.MerchantId == _currentUserService.MerchantId);
-        modelBuilder.Entity<Role>().HasQueryFilter(r => r.MerchantId == _currentUserService.MerchantId);
+        modelBuilder.Entity<SystemUser>().HasQueryFilter(u => u.MerchantId == _currentUserService.MerchantId);
+        modelBuilder.Entity<SystemRole>().HasQueryFilter(r => r.MerchantId == _currentUserService.MerchantId);
         modelBuilder.Entity<Room>().HasQueryFilter(r => r.MerchantId == _currentUserService.MerchantId);
         modelBuilder.Entity<Tag>().HasQueryFilter(t => t.MerchantId == _currentUserService.MerchantId);
         modelBuilder.Entity<Plan>().HasQueryFilter(p => p.MerchantId == _currentUserService.MerchantId);

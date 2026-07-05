@@ -7,7 +7,6 @@ public class DeviceOperationLog : BaseEntity
     public Guid RoomId { get; private set; }
     public string Action { get; private set; }
     public string Operator { get; private set; }
-    public DateTime CreatedAt { get; private set; }
 
     protected DeviceOperationLog() { }
 
@@ -16,6 +15,5 @@ public class DeviceOperationLog : BaseEntity
         RoomId = roomId;
         Action = action;
         Operator = @operator;
-        CreatedAt = DateTime.UtcNow;
     }
 }

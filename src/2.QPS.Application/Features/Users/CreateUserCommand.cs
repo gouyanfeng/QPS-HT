@@ -44,15 +44,19 @@ public class CreateUserHandler : IRequestHandler<CreateUserCommand, UserDto>
     public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
         // 创建用户（注意：这里应该对密码进行哈希处理，为了测试方便，暂时直接使用明文）
-        var user = User.Create(
+        var user = SystemUser.Create(
             request.Request.Username,
             request.Request.Password,
-            request.Request.RealName,
-            request.Request.RoleId
+            request.Request.RealName
         );
 
         // 保存到数据库
-        _dbContext.Users.Add(user);
+        _dbContext.SystemUsers.Add(user);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // 同步创建用户-角色关联记录（用于权限检查）
+        var userRole = new SystemUserRole(user.Id, request.Request.RoleId);
+        _dbContext.SystemUserRoles.Add(userRole);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         // 转换为DTO
@@ -60,7 +64,7 @@ public class CreateUserHandler : IRequestHandler<CreateUserCommand, UserDto>
         {
             Id = user.Id,
             MerchantId = user.MerchantId,
-            RoleId = user.RoleId,
+            RoleId = request.Request.RoleId,
             Username = user.Username,
             RealName = user.RealName,
             IsActive = user.IsActive

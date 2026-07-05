@@ -2,14 +2,14 @@ using QPS.Domain.Common;
 
 namespace QPS.Domain.Entities;
 
-public class UserRole : BaseEntity
+public class SystemUserRole : BaseEntity
 {
     public Guid UserId { get; private set; }
     public Guid RoleId { get; private set; }
 
-    protected UserRole() { }
+    protected SystemUserRole() { }
 
-    public UserRole(Guid userId, Guid roleId)
+    public SystemUserRole(Guid userId, Guid roleId)
     {
         UserId = userId;
         RoleId = roleId;

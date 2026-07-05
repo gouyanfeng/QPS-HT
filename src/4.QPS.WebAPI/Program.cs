@@ -110,7 +110,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 /// </summary>
 builder.Services.AddHttpContextAccessor(); // 添加HTTP上下文访问器
 
-// 添加基础设施服务（数据库、身份认证、MQTT等）
+// 添加基础设施服务（数据库、身份认证、MQTT、权限服务等）
 builder.Services.AddInfrastructure();
 
 // 注册JWT生成器
