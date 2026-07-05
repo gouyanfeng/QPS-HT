@@ -33,8 +33,9 @@ public class UpdateRolePermissionsHandler : IRequestHandler<UpdateRolePermission
 
     public async Task<bool> Handle(UpdateRolePermissionsCommand request, CancellationToken cancellationToken)
     {
-        // 查找角色
+        // 查找角色（绕过租户过滤，权限管理为系统级操作）
         var role = await _dbContext.Roles
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(r => r.Code == request.Role && !r.IsDeleted, cancellationToken);
 
         if (role == null)
