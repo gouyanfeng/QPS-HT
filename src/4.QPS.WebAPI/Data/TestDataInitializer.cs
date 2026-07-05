@@ -19,7 +19,7 @@ public static class TestDataInitializer
         var shops = InitializeShops(dbContext, merchant);
         var roles = InitializeRoles(dbContext, merchant);
         InitializeUsers(dbContext, merchant, roles);
-        InitializePermissions(dbContext, roles);
+        InitializePermissions(dbContext, roles, merchant);
         var tags = InitializeTags(dbContext, merchant);
         var rooms = InitializeRooms(dbContext, shops, merchant);
         InitializeRoomImages(dbContext, rooms, merchant);
@@ -453,7 +453,7 @@ public static class TestDataInitializer
         dbContext.SaveChanges();
     }
 
-    private static void InitializePermissions(AppDbContext dbContext, List<Role> roles)
+    private static void InitializePermissions(AppDbContext dbContext, List<Role> roles, Merchant merchant)
     {
         if (dbContext.Permissions.IgnoreQueryFilters().Any())
             return;
@@ -504,6 +504,9 @@ public static class TestDataInitializer
 
         // 先全部保存，得到自动生成的 Id
         dbContext.Permissions.AddRange(permList);
+        // 设置 MerchantId
+        foreach (var p in permList)
+            p.GetType().GetProperty("MerchantId")?.SetValue(p, merchant.Id);
         dbContext.SaveChanges();
 
         // 建立 code → entity 的字典
@@ -559,14 +562,14 @@ public static class TestDataInitializer
         // 2. 角色-权限分配
         // root 节点本身不分配
         var allPermCodes = permList.Where(p => p.Code != "root").Select(p => p.Code).ToList();
-        var admin = roles.First(r => r.Code == "admin");
-        var merchant = roles.First(r => r.Code == "merchant");
-        var user = roles.First(r => r.Code == "user");
+        var adminRole = roles.First(r => r.Code == "admin");
+        var merchantRole = roles.First(r => r.Code == "merchant");
+        var userRole = roles.First(r => r.Code == "user");
 
         foreach (var code in allPermCodes)
         {
             if (permDict.TryGetValue(code, out var perm))
-                dbContext.RolePermissions.Add(new RolePermission(admin.Id, perm.Id));
+                dbContext.RolePermissions.Add(new RolePermission(adminRole.Id, perm.Id));
         }
 
         var merchantPerms = new[] {
@@ -580,15 +583,19 @@ public static class TestDataInitializer
         foreach (var code in merchantPerms)
         {
             if (permDict.TryGetValue(code, out var perm))
-                dbContext.RolePermissions.Add(new RolePermission(merchant.Id, perm.Id));
+                dbContext.RolePermissions.Add(new RolePermission(merchantRole.Id, perm.Id));
         }
 
         var userPerms = new[] { "home", "orders", "orders:view" };
         foreach (var code in userPerms)
         {
             if (permDict.TryGetValue(code, out var perm))
-                dbContext.RolePermissions.Add(new RolePermission(user.Id, perm.Id));
+                dbContext.RolePermissions.Add(new RolePermission(userRole.Id, perm.Id));
         }
+
+        // 设置 RolePermission 的 MerchantId
+        foreach (var rp in dbContext.RolePermissions.Local)
+            rp.GetType().GetProperty("MerchantId")?.SetValue(rp, merchant.Id);
 
         dbContext.SaveChanges();
     }

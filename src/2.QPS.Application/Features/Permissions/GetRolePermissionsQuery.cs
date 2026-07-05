@@ -27,9 +27,7 @@ public class GetRolePermissionsHandler : IRequestHandler<GetRolePermissionsQuery
 
     public async Task<Dictionary<string, RolePermissionsDto>> Handle(GetRolePermissionsQuery request, CancellationToken cancellationToken)
     {
-        // 绕过租户过滤，权限管理为系统级操作
         var rolesQuery = _dbContext.Roles
-            .IgnoreQueryFilters()
             .Where(r => !r.IsDeleted)
             .AsQueryable();
 

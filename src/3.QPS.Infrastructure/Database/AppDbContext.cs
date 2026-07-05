@@ -61,6 +61,8 @@ public class AppDbContext : DbContext, IDbContext
         modelBuilder.Entity<Coupon>().HasQueryFilter(c => c.MerchantId == _currentUserService.MerchantId);
         modelBuilder.Entity<Discount>().HasQueryFilter(d => d.MerchantId == _currentUserService.MerchantId);
         modelBuilder.Entity<Order>().HasQueryFilter(o => o.MerchantId == _currentUserService.MerchantId);
+        modelBuilder.Entity<Permission>().HasQueryFilter(p => p.MerchantId == _currentUserService.MerchantId);
+        modelBuilder.Entity<RolePermission>().HasQueryFilter(rp => rp.MerchantId == _currentUserService.MerchantId);
     }
 
     public override int SaveChanges()
