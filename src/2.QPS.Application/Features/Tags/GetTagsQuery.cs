@@ -10,6 +10,7 @@ namespace QPS.Application.Features.Tags;
 public class GetTagsQuery : PaginationRequest, IRequest<PaginationResponse<TagDto>>
 {
     public string? TagName { get; set; }
+    public string? Category { get; set; }
 }
 
 public class GetTagsHandler : IRequestHandler<GetTagsQuery, PaginationResponse<TagDto>>
@@ -28,6 +29,11 @@ public class GetTagsHandler : IRequestHandler<GetTagsQuery, PaginationResponse<T
         if (!string.IsNullOrEmpty(request.TagName))
         {
             query = query.Where(t => t.TagName.Contains(request.TagName));
+        }
+
+        if (!string.IsNullOrEmpty(request.Category))
+        {
+            query = query.Where(t => t.Category.Contains(request.Category));
         }
 
         var dtoQuery = query.Select(t => new TagDto
