@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace QPS.Application.Pagination;
+namespace QPS.Application.Extensions;
 
 /// <summary>
 /// 分页响应类

@@ -49,7 +49,7 @@ public class ScheduleOrderCompletionJob
             }
 
             // 完成订单
-            order.GetType().GetProperty("Status")?.SetValue(order, (object)OrderStatus.Completed);
+            order.Complete();
 
             // 获取对应的房间
             var room = await _dbContext.Rooms.FindAsync(order.RoomId);

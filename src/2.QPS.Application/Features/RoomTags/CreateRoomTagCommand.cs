@@ -45,8 +45,7 @@ public class CreateRoomTagHandler : IRequestHandler<CreateRoomTagCommand, RoomTa
             throw new BusinessException(400, "该房间已关联此标签");
         }
 
-        var mapping = new RoomTag(request.RoomId, request.TagId);
-        mapping.GetType().GetProperty("MerchantId")?.SetValue(mapping, _currentUserService.MerchantId);
+        var mapping = new RoomTag(request.RoomId, request.TagId, _currentUserService.MerchantId);
 
         _dbContext.RoomTags.Add(mapping);
         await _dbContext.SaveChangesAsync(cancellationToken);

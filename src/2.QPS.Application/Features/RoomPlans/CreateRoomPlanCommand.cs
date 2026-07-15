@@ -45,8 +45,7 @@ public class CreateRoomPlanHandler : IRequestHandler<CreateRoomPlanCommand, Room
             throw new BusinessException(400, "该房间已关联此套餐");
         }
 
-        var mapping = new RoomPlan(request.RoomId, request.PlanId);
-        mapping.GetType().GetProperty("MerchantId")?.SetValue(mapping, _currentUserService.MerchantId);
+        var mapping = new RoomPlan(request.RoomId, request.PlanId, _currentUserService.MerchantId);
 
         _dbContext.RoomPlans.Add(mapping);
         await _dbContext.SaveChangesAsync(cancellationToken);

@@ -61,11 +61,8 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, Guid>
         // 创建订单
         var order = Order.Create(room.ShopId, room.Id, null);
 
-        order.Start();
-
         // 设置订单结束时间（当前时间 + 时长）
-        var endTime = DateTime.UtcNow.AddMinutes(request.Request.DurationMinutes);
-        order.GetType().GetProperty("EndTime")?.SetValue(order, endTime);
+        order.SetTimeLimit(DateTime.UtcNow.AddMinutes(request.Request.DurationMinutes));
 
         // 更新房间状态为占用
         room.Occupy();

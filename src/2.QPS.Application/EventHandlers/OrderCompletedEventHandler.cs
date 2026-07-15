@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using QPS.Application.Interfaces;
 using QPS.Domain.Events;
 
-namespace QPS.Infrastructure.EventHandlers;
+namespace QPS.Application.EventHandlers;
 
 public class OrderCompletedEventHandler : INotificationHandler<OrderCompletedEvent>
 {

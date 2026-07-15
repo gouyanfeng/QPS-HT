@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Client;
 using QPS.Application.Interfaces;
@@ -10,10 +11,12 @@ namespace QPS.Infrastructure.IoT;
 public class MqttClientService : IMqttService
 {
     private readonly IMqttClient _mqttClient;
+    private readonly ILogger<MqttClientService> _logger;
     private bool _isConnected;
 
-    public MqttClientService()
+    public MqttClientService(ILogger<MqttClientService> logger)
     {
+        _logger = logger;
         var factory = new MqttFactory();
         _mqttClient = factory.CreateMqttClient();
         _isConnected = false;
@@ -37,7 +40,7 @@ public class MqttClientService : IMqttService
             catch (Exception ex)
             {
                 // 记录错误，但不抛出异常，避免影响主要功能
-                Console.WriteLine($"MQTT 连接失败: {ex.Message}");
+                _logger.LogWarning(ex, "MQTT 连接失败");
                 _isConnected = false;
             }
         }
@@ -62,13 +65,13 @@ public class MqttClientService : IMqttService
             else
             {
                 // MQTT 未连接，记录警告但继续执行
-                Console.WriteLine("MQTT 未连接，跳过发送命令");
+                _logger.LogWarning("MQTT 未连接，跳过发送命令");
             }
         }
         catch (Exception ex)
         {
             // 记录错误，但不抛出异常，避免影响主要功能
-            Console.WriteLine($"发送 MQTT 命令失败: {ex.Message}");
+                _logger.LogError(ex, "发送 MQTT 命令失败");
         }
     }
 
@@ -94,7 +97,7 @@ public class MqttClientService : IMqttService
         catch (Exception ex)
         {
             // 记录错误，但不抛出异常，避免影响主要功能
-            Console.WriteLine($"订阅 MQTT 主题失败: {ex.Message}");
+            _logger.LogError(ex, "订阅 MQTT 主题失败");
         }
     }
 }

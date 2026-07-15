@@ -69,10 +69,8 @@ public class PayOrderHandler : IRequestHandler<PayOrderCommand, bool>
         // 支付订单
         order.Pay();
 
-        // 更新订单金额
-        order.GetType().GetProperty("OriginAmount")?.SetValue(order, request.Amount);
-        order.GetType().GetProperty("ActualAmount")?.SetValue(order, request.Amount);
-        order.GetType().GetProperty("PaymentMethod")?.SetValue(order, request.PaymentMethod);
+        // 记录支付金额和方式
+        order.AssignPaymentDetails(request.Amount, request.Amount, request.PaymentMethod);
 
         // 保存到数据库
         await _dbContext.SaveChangesAsync(cancellationToken);

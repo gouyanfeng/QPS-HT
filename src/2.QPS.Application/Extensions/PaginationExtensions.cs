@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace QPS.Application.Pagination;
+namespace QPS.Application.Extensions;
 
 /// <summary>
 /// 分页扩展方法

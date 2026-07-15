@@ -39,7 +39,7 @@ public class Order : BaseEntity
 
     public static Order Create(Guid shopId, Guid roomId, Guid? customerId)
     {
-        var orderNo = DateTime.Now.ToString("yyyyMMddHHmmss") + new Random().Next(100000, 999999).ToString();
+        var orderNo = DateTime.UtcNow.ToString("yyyyMMddHHmmss") + new Random().Next(100000, 999999).ToString();
         return new Order(orderNo, shopId, roomId, customerId);
     }
 
@@ -72,4 +72,29 @@ public class Order : BaseEntity
         Status = OrderStatus.Timeout;
     }
     public void Cancel() { Status = OrderStatus.Cancelled; }
+
+    /// <summary>
+    /// 设置订单有效时长
+    /// </summary>
+    /// <summary>
+    /// 自动完成订单（用于定时任务，不涉及金额）
+    /// </summary>
+    public void Complete()
+    {
+        if (Status != OrderStatus.Paid) throw new InvalidOperationException("只能完成已支付的订单");
+        Status = OrderStatus.Completed;
+        EndTime = DateTime.UtcNow;
+    }
+
+    public void SetTimeLimit(DateTime endTime) => EndTime = endTime;
+
+    /// <summary>
+    /// 分配支付金额和方式
+    /// </summary>
+    public void AssignPaymentDetails(decimal originAmount, decimal actualAmount, string paymentMethod)
+    {
+        OriginAmount = originAmount;
+        ActualAmount = actualAmount;
+        PaymentMethod = paymentMethod;
+    }
 }

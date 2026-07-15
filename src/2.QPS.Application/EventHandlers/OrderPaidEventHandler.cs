@@ -2,9 +2,8 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using QPS.Application.Interfaces;
 using QPS.Domain.Events;
-using QPS.Infrastructure.Sms;
 
-namespace QPS.Infrastructure.EventHandlers;
+namespace QPS.Application.EventHandlers;
 
 public class OrderPaidEventHandler : INotificationHandler<OrderPaidEvent>
 {

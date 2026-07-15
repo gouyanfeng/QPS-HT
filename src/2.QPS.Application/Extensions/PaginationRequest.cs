@@ -1,4 +1,4 @@
-namespace QPS.Application.Pagination;
+namespace QPS.Application.Extensions;
 
 /// <summary>
 /// 分页请求基类

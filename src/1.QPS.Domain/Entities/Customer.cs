@@ -2,7 +2,7 @@ using QPS.Domain.Common;
 
 namespace QPS.Domain.Entities;
 
-public class Customer : AggregateRoot
+public class Customer : BaseEntity
 {
     public string OpenId { get; private set; }
     public string Phone { get; private set; }

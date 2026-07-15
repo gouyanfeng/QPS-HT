@@ -12,9 +12,10 @@ public class RoomTag : BaseEntity
 
     protected RoomTag() { }
 
-    public RoomTag(Guid roomId, Guid tagId)
+    public RoomTag(Guid roomId, Guid tagId, Guid merchantId)
     {
         RoomId = roomId;
         TagId = tagId;
+        MerchantId = merchantId;
     }
 }

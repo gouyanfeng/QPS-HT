@@ -384,8 +384,7 @@ public static class TestDataInitializer
 
             foreach (var tag in selectedTags)
             {
-                var roomTag = new RoomTag(room.Id, tag.Id);
-                roomTag.GetType().GetProperty("MerchantId")?.SetValue(roomTag, merchant.Id);
+                var roomTag = new RoomTag(room.Id, tag.Id, merchant.Id);
                 roomTags.Add(roomTag);
             }
         }
@@ -409,8 +408,7 @@ public static class TestDataInitializer
 
             foreach (var plan in selectedPlans)
             {
-                var roomPlan = new RoomPlan(room.Id, plan.Id);
-                roomPlan.GetType().GetProperty("MerchantId")?.SetValue(roomPlan, merchant.Id);
+                var roomPlan = new RoomPlan(room.Id, plan.Id, merchant.Id);
                 roomPlans.Add(roomPlan);
             }
         }

@@ -1,11 +1,7 @@
 using Microsoft.Extensions.Logging;
+using QPS.Application.Interfaces;
 
 namespace QPS.Infrastructure.Sms;
-
-public interface ISmsService
-{
-    Task SendAsync(string phoneNumber, string message);
-}
 
 public class SmsService : ISmsService
 {
