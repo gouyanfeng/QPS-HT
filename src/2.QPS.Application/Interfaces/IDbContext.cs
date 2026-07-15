@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using QPS.Domain.Entities;
-
+using QPS.Domain.Entities.Qps;
+using QPS.Domain.Entities.System;
 namespace QPS.Application.Interfaces;
 
 public interface IDbContext
@@ -8,10 +9,10 @@ public interface IDbContext
     DbSet<Room> Rooms { get; }
     DbSet<Order> Orders { get; }
     DbSet<Merchant> Merchants { get; }
-    DbSet<User> Users { get; }
-    DbSet<Role> Roles { get; }
-    DbSet<Permission> Permissions { get; }
-    DbSet<RolePermission> RolePermissions { get; }
+    DbSet<SystemUser> SystemUsers { get; }
+    DbSet<SystemRole> SystemRoles { get; }
+    DbSet<SystemPermission> SystemPermissions { get; }
+    DbSet<SystemRolePermission> SystemRolePermissions { get; }
     DbSet<Coupon> Coupons { get; }
     DbSet<Shop> Shops { get; }
     DbSet<Tag> Tags { get; }
@@ -22,6 +23,8 @@ public interface IDbContext
     DbSet<RoomPlan> RoomPlans { get; }
     DbSet<CustomerCoupon> CustomerCoupons { get; }
     DbSet<Review> Reviews { get; }
+    DbSet<SystemDataDictionary> SystemDataDictionaries { get; }
+    DbSet<SystemErrorLog> SystemErrorLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

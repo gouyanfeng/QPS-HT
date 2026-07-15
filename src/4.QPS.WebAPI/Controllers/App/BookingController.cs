@@ -1,8 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using QPS.Application.Features.Orders;
-using QPS.Application.Contracts.Orders;
+using QPS.Application.Features.Qps.Orders;
+using QPS.Application.Contracts.Qps.Orders;
 
 namespace QPS.WebAPI.Controllers.App;
 

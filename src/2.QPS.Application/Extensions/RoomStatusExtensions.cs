@@ -1,5 +1,5 @@
 using QPS.Domain.Entities;
-
+using QPS.Domain.Entities.Qps;
 namespace QPS.Application.Extensions;
 
 public static class RoomStatusExtensions

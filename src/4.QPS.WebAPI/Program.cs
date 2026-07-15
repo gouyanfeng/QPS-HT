@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MediatR;
 
 using QPS.Application.Behaviours;
-using QPS.Application.Features.Orders;
+using QPS.Application.Features.Qps.Orders;
 using QPS.Application.Interfaces;
 using QPS.Infrastructure;
 using QPS.Infrastructure.IoT;
@@ -13,6 +14,8 @@ using QPS.Infrastructure.Identity;
 using QPS.Infrastructure.Database;
 using QPS.WebAPI.Data;
 using QPS.WebAPI.Filters;
+using QPS.WebAPI.Middleware;
+using QPS.Application.Features.System;
 using System.Text;
 
 /// <summary>
@@ -81,6 +84,17 @@ builder.Services.AddSwaggerGen(c =>
 /// <summary>
 /// 配置数据库
 /// </summary>
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=QPSChessRoom.db";
+var sqliteConnectionStringBuilder = new SqliteConnectionStringBuilder(connectionString);
+
+if (string.IsNullOrWhiteSpace(sqliteConnectionStringBuilder.DataSource) || !System.IO.Path.IsPathRooted(sqliteConnectionStringBuilder.DataSource))
+{
+    sqliteConnectionStringBuilder.DataSource = System.IO.Path.Combine(
+        builder.Environment.ContentRootPath,
+        System.IO.Path.GetFileName(sqliteConnectionStringBuilder.DataSource ?? "QPSChessRoom.db"));
+}
+
+builder.Configuration["ConnectionStrings:DefaultConnection"] = sqliteConnectionStringBuilder.ConnectionString;
 builder.Services.AddDbContext<AppDbContext>(options =>
     // 使用SQLite数据库，连接字符串从配置中获取
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -88,6 +102,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 /// <summary>
 /// 配置认证
 /// </summary>
+var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] ?? "ThisIsASecretKeyThatIsAtLeast32CharactersLong";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "QPS.API";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "QPS.Client";
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -98,10 +116,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,              // 验证受众
             ValidateLifetime = true,              // 验证过期时间
             ValidateIssuerSigningKey = true,      // 验证签名密钥
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],       // 有效颁发者
-            ValidAudience = builder.Configuration["Jwt:Audience"],   // 有效受众
+            ValidIssuer = jwtIssuer,              // 有效颁发者
+            ValidAudience = jwtAudience,          // 有效受众
             // 签名密钥
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey))
         };
     });
 
@@ -115,10 +133,13 @@ builder.Services.AddInfrastructure();
 
 // 注册JWT生成器
 builder.Services.AddScoped<IJwtGenerator>(_ => new JwtGenerator(
-    builder.Configuration["Jwt:SecretKey"],  // 密钥
-    builder.Configuration["Jwt:Issuer"],    // 颁发者
-    builder.Configuration["Jwt:Audience"]   // 受众
+    jwtSecretKey,  // 密钥
+    jwtIssuer,     // 颁发者
+    jwtAudience    // 受众
 ));
+
+// 注册错误日志服务
+builder.Services.AddScoped<IErrorLogService, ErrorLogService>();
 
 /// <summary>
 /// 注册MediatR和行为
@@ -176,8 +197,8 @@ app.UseSwaggerUI();
 // 启用跨域
 app.UseCors("AllowAll");
 
-// 启用异常处理
-app.UseExceptionHandler(HandleException);
+// 启用异常处理中间件
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 // 启用HTTPS重定向
 app.UseHttpsRedirection();
@@ -199,49 +220,3 @@ app.MapControllers();
 /// 运行应用程序
 /// </summary>
 app.Run();
-
-#region 异常处理方法
-
-/// <summary>
-/// 异常处理方法
-/// </summary>
-/// <param name="appBuilder">应用程序构建器</param>
-static void HandleException(IApplicationBuilder appBuilder)
-{
-    appBuilder.Run(async context =>
-    {
-        // 记录异常信息
-        Console.WriteLine($"HandleException:");
-
-        // 获取异常信息
-        var exceptionPayload = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
-        var exception = exceptionPayload?.Error;
-
-        // 设置响应状态码为200，让前端Axios走成功回调
-        context.Response.StatusCode = 200;
-        context.Response.ContentType = "application/json";
-
-        // 默认错误码和消息
-        int errorCode = 500;
-        string message = "服务器内部错误";
-
-        // 处理自定义业务异常
-        if (exception is QPS.Domain.Exceptions.BusinessException bizEx)
-        {
-            errorCode = bizEx.ErrorCode;
-            message = bizEx.Message;
-        }
-
-        // 创建错误响应
-        var response = QPS.Application.Common.ApiResponse<object>.Fail(errorCode, message);
-
-        // 序列化响应并写入HTTP响应
-        await context.Response.WriteAsJsonAsync(response, new System.Text.Json.JsonSerializerOptions
-        {
-            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        });
-    });
-}
-
-#endregion

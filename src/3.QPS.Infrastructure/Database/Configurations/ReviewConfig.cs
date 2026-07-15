@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using QPS.Domain.Entities;
-
+using QPS.Domain.Entities.Qps;
 namespace QPS.Infrastructure.Database.Configurations;
 
 public class ReviewConfig : IEntityTypeConfiguration<Review>

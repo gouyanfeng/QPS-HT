@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using QPS.Application.Interfaces;
 using QPS.Domain.Events;
+using QPS.Domain.Entities.Qps;
 
 namespace QPS.Application.EventHandlers;
 
@@ -47,7 +48,7 @@ public class SessionExpiredEventHandler : INotificationHandler<SessionExpiredEve
         }
     }
 
-    private async Task SendSessionExpiredCommand(Domain.Entities.Room room, Guid orderId)
+    private async Task SendSessionExpiredCommand(Room room, Guid orderId)
     {
         var shop = await _dbContext.Shops.FindAsync(room.ShopId);
         if (shop == null)

@@ -1,5 +1,5 @@
 using FluentValidation;
-using QPS.Application.Contracts.Rooms;
+using QPS.Application.Contracts.Qps.Rooms;
 
 namespace QPS.Application.Validators.Rooms;
 
