@@ -63,7 +63,7 @@ public class GetDataDictionariesQueryHandler : IRequestHandler<GetDataDictionari
                 Id = d.Id,
                 ParentId = d.ParentId,
                 ParentName = d.ParentId.HasValue
-                    ? allDictionaries.FirstOrDefault(x => x.Id == d.ParentId.Value)?.Name
+                    ? GetParentName(allDictionaries, d.ParentId.Value)
                     : null,
                 Code = d.Code,
                 Name = d.Name,
@@ -98,5 +98,11 @@ public class GetDataDictionariesQueryHandler : IRequestHandler<GetDataDictionari
         }
 
         return false;
+    }
+
+    private static string? GetParentName(IReadOnlyList<Domain.Entities.System.SystemDataDictionary> dictionaries, Guid parentId)
+    {
+        var parent = dictionaries.FirstOrDefault(x => x.Id == parentId);
+        return parent?.Name;
     }
 }
