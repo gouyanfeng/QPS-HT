@@ -20,12 +20,10 @@ public interface IErrorLogService
 public class ErrorLogService : IErrorLogService
 {
     private readonly IDbContext _dbContext;
-    private readonly ICurrentUserService _currentUserService;
 
-    public ErrorLogService(IDbContext dbContext, ICurrentUserService currentUserService)
+    public ErrorLogService(IDbContext dbContext)
     {
         _dbContext = dbContext;
-        _currentUserService = currentUserService;
     }
 
     public async Task LogErrorAsync(
@@ -54,8 +52,6 @@ public class ErrorLogService : IErrorLogService
                 userAgent,
                 httpStatusCode
             );
-
-            errorLog.GetType().GetProperty("MerchantId")?.SetValue(errorLog, _currentUserService.MerchantId);
 
             await _dbContext.SystemErrorLogs.AddAsync(errorLog);
             await _dbContext.SaveChangesAsync();

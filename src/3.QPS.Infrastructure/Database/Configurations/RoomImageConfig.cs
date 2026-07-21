@@ -17,9 +17,5 @@ public class RoomImageConfig : IEntityTypeConfiguration<RoomImage>
             .WithMany(r => r.RoomImages)
             .HasForeignKey(ri => ri.RoomId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasOne<Merchant>()
-            .WithMany()
-            .HasForeignKey(ri => ri.MerchantId);
     }
 }

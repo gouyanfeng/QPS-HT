@@ -40,7 +40,6 @@ public class CreateRoleHandler : IRequestHandler<CreateRoleCommand, RoleDto>
     /// <returns>角色DTO</returns>
     public async Task<RoleDto> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
-        // 创建角色，不传递merchantId，底层会自动处理
         var role = new SystemRole(request.Request.Name, request.Request.Code);
 
         // 保存到数据库
@@ -51,7 +50,6 @@ public class CreateRoleHandler : IRequestHandler<CreateRoleCommand, RoleDto>
         return new RoleDto
         {
             Id = role.Id,
-            MerchantId = role.MerchantId,
             Name = role.Name,
             Code = role.Code
         };

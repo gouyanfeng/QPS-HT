@@ -7,7 +7,6 @@ namespace QPS.Domain.Common;
 public abstract class BaseEntity
 {
     public Guid Id { get; protected set; }
-    public Guid MerchantId { get; protected set; }
     public DateTime CreatedAt { get; set; }
     public string CreatedBy { get; set; }
     public DateTime UpdatedAt { get; set; }

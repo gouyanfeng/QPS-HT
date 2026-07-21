@@ -35,19 +35,16 @@ public class PayOrderCommand : IRequest<bool>
 public class PayOrderHandler : IRequestHandler<PayOrderCommand, bool>
 {
     private readonly IDbContext _dbContext;
-    private readonly ICurrentUserService _currentUserService;
     private readonly IPublisher _publisher;
 
     /// <summary>
     /// 构造函数
     /// </summary>
     /// <param name="dbContext">数据库上下文</param>
-    /// <param name="currentUserService">当前用户服务</param>
     /// <param name="publisher">事件发布器</param>
-    public PayOrderHandler(IDbContext dbContext, ICurrentUserService currentUserService, IPublisher publisher)
+    public PayOrderHandler(IDbContext dbContext, IPublisher publisher)
     {
         _dbContext = dbContext;
-        _currentUserService = currentUserService;
         _publisher = publisher;
     }
 
@@ -59,9 +56,8 @@ public class PayOrderHandler : IRequestHandler<PayOrderCommand, bool>
     /// <returns>操作是否成功</returns>
     public async Task<bool> Handle(PayOrderCommand request, CancellationToken cancellationToken)
     {
-        var merchantId = _currentUserService.MerchantId;
         var order = await _dbContext.Orders.FindAsync(request.OrderId, cancellationToken);
-        if (order == null || order.MerchantId != merchantId) return false;
+        if (order == null) return false;
 
         // 检查订单状态是否可以支付
         if (order.Status != OrderStatus.WaitingPayment) return false;

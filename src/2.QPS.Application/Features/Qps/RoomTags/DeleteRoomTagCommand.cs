@@ -13,12 +13,10 @@ public class DeleteRoomTagCommand : IRequest<bool>
 public class DeleteRoomTagHandler : IRequestHandler<DeleteRoomTagCommand, bool>
 {
     private readonly IDbContext _dbContext;
-    private readonly ICurrentUserService _currentUserService;
 
-    public DeleteRoomTagHandler(IDbContext dbContext, ICurrentUserService currentUserService)
+    public DeleteRoomTagHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
-        _currentUserService = currentUserService;
     }
 
     public async Task<bool> Handle(DeleteRoomTagCommand request, CancellationToken cancellationToken)
@@ -27,11 +25,6 @@ public class DeleteRoomTagHandler : IRequestHandler<DeleteRoomTagCommand, bool>
         if (mapping == null)
         {
             throw new BusinessException(404, "关联记录不存在");
-        }
-
-        if (mapping.MerchantId != _currentUserService.MerchantId)
-        {
-            throw new BusinessException(403, "无权操作");
         }
 
         _dbContext.RoomTags.Remove(mapping);

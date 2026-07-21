@@ -12,20 +12,16 @@ public record GetDataDictionaryTreeQuery : IRequest<List<DataDictionaryDto>>
 public class GetDataDictionaryTreeQueryHandler : IRequestHandler<GetDataDictionaryTreeQuery, List<DataDictionaryDto>>
 {
     private readonly IDbContext _dbContext;
-    private readonly ICurrentUserService _currentUserService;
 
-    public GetDataDictionaryTreeQueryHandler(IDbContext dbContext, ICurrentUserService currentUserService)
+    public GetDataDictionaryTreeQueryHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
-        _currentUserService = currentUserService;
     }
 
     public async Task<List<DataDictionaryDto>> Handle(GetDataDictionaryTreeQuery request, CancellationToken cancellationToken)
     {
-        var merchantId = _currentUserService.MerchantId;
-
         var allDictionaries = await _dbContext.SystemDataDictionaries
-            .Where(d => d.MerchantId == merchantId && d.IsActive)
+            .Where(d => d.IsActive)
             .OrderBy(d => d.SortOrder)
             .ToListAsync(cancellationToken);
 
@@ -53,7 +49,6 @@ public class GetDataDictionaryTreeQueryHandler : IRequestHandler<GetDataDictiona
                 Description = parent.Description,
                 SortOrder = parent.SortOrder,
                 IsActive = parent.IsActive,
-                MerchantId = parent.MerchantId,
                 Children = BuildTree(children, allNodes)
             };
 

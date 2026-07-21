@@ -19,21 +19,18 @@ public class CompleteOrderCommand : IRequest<bool>
 public class CompleteOrderHandler : IRequestHandler<CompleteOrderCommand, bool>
 {
     private readonly IDbContext _dbContext;
-    private readonly ICurrentUserService _currentUserService;
     private readonly IPublisher _publisher;
 
-    public CompleteOrderHandler(IDbContext dbContext, ICurrentUserService currentUserService, IPublisher publisher)
+    public CompleteOrderHandler(IDbContext dbContext, IPublisher publisher)
     {
         _dbContext = dbContext;
-        _currentUserService = currentUserService;
         _publisher = publisher;
     }
 
     public async Task<bool> Handle(CompleteOrderCommand request, CancellationToken cancellationToken)
     {
-        var merchantId = _currentUserService.MerchantId;
         var order = await _dbContext.Orders.FindAsync(request.OrderId, cancellationToken);
-        if (order == null || order.MerchantId != merchantId) return false;
+        if (order == null) return false;
 
         // 完成订单
         order.Complete(request.OriginAmount, request.DiscountAmount, request.ActualAmount, request.PaymentMethod);

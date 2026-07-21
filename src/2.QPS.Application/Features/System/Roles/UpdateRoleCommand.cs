@@ -63,7 +63,6 @@ public class UpdateRoleHandler : IRequestHandler<UpdateRoleCommand, RoleDto>
         return new RoleDto
         {
             Id = role.Id,
-            MerchantId = role.MerchantId,
             Name = role.Name,
             Code = role.Code
         };

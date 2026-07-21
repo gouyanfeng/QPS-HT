@@ -19,9 +19,5 @@ public class RoomTagConfig : IEntityTypeConfiguration<RoomTag>
             .WithMany()
             .HasForeignKey(rt => rt.TagId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasOne<Merchant>()
-            .WithMany()
-            .HasForeignKey(rt => rt.MerchantId);
     }
 }

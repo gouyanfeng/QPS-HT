@@ -53,33 +53,17 @@ public class AppDbContext : DbContext, IDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
-
-        // 添加全局查询过滤器，根据当前租户ID过滤数据
-        // 使用延迟求值，让MerchantId在每次查询时动态获取
-        modelBuilder.Entity<Shop>().HasQueryFilter(s => s.MerchantId == _currentUserService.MerchantId);
-        modelBuilder.Entity<SystemUser>().HasQueryFilter(u => u.MerchantId == _currentUserService.MerchantId);
-        modelBuilder.Entity<SystemRole>().HasQueryFilter(r => r.MerchantId == _currentUserService.MerchantId);
-        modelBuilder.Entity<Room>().HasQueryFilter(r => r.MerchantId == _currentUserService.MerchantId);
-        modelBuilder.Entity<Tag>().HasQueryFilter(t => t.MerchantId == _currentUserService.MerchantId);
-        modelBuilder.Entity<Plan>().HasQueryFilter(p => p.MerchantId == _currentUserService.MerchantId);
-        modelBuilder.Entity<Coupon>().HasQueryFilter(c => c.MerchantId == _currentUserService.MerchantId);
-        modelBuilder.Entity<Discount>().HasQueryFilter(d => d.MerchantId == _currentUserService.MerchantId);
-        modelBuilder.Entity<Order>().HasQueryFilter(o => o.MerchantId == _currentUserService.MerchantId);
-        modelBuilder.Entity<SystemPermission>().HasQueryFilter(p => p.MerchantId == _currentUserService.MerchantId);
-        modelBuilder.Entity<SystemRolePermission>().HasQueryFilter(rp => rp.MerchantId == _currentUserService.MerchantId);
     }
 
     public override int SaveChanges()
     {
         SetAuditFields();
-        SetMerchantIdForNewEntities();
         return base.SaveChanges();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         SetAuditFields();
-        SetMerchantIdForNewEntities();
         return await base.SaveChangesAsync(cancellationToken);
     }
 
@@ -103,28 +87,6 @@ public class AppDbContext : DbContext, IDbContext
 
             entity.UpdatedAt = now;
             entity.UpdatedBy = currentUser;
-        }
-    }
-
-    private void SetMerchantIdForNewEntities()
-    {
-        var merchantId = _currentUserService.MerchantId;
-        var entries = ChangeTracker.Entries()
-            .Where(e => e.State == EntityState.Added);
-
-        foreach (var entry in entries)
-        {
-            var entity = entry.Entity;
-            var merchantIdProperty = entity.GetType().GetProperty("MerchantId");
-
-            if (merchantIdProperty != null)
-            {
-                var currentValue = merchantIdProperty.GetValue(entity);
-                if (currentValue is Guid guid && guid == Guid.Empty)
-                {
-                    merchantIdProperty.SetValue(entity, merchantId);
-                }
-            }
         }
     }
 }

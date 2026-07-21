@@ -12,7 +12,6 @@ public class OrderConfig : IEntityTypeConfiguration<Order>
 
         builder.HasKey(o => o.Id);
         builder.Property(o => o.OrderNo).IsRequired().HasMaxLength(50);
-        builder.Property(o => o.MerchantId).IsRequired();
         builder.Property(o => o.ShopId).IsRequired();
         builder.Property(o => o.RoomId).IsRequired();
         builder.Property(o => o.CustomerId).IsRequired(false);

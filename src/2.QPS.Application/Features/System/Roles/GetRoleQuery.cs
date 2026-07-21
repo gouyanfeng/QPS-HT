@@ -52,7 +52,6 @@ public class GetRoleHandler : IRequestHandler<GetRoleQuery, RoleDto>
         return new RoleDto
         {
             Id = role.Id,
-            MerchantId = role.MerchantId,
             Name = role.Name,
             Code = role.Code
         };

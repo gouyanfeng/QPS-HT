@@ -13,27 +13,23 @@ public record DeleteDataDictionaryCommand : IRequest<Unit>
 public class DeleteDataDictionaryCommandHandler : IRequestHandler<DeleteDataDictionaryCommand, Unit>
 {
     private readonly IDbContext _dbContext;
-    private readonly ICurrentUserService _currentUserService;
 
-    public DeleteDataDictionaryCommandHandler(IDbContext dbContext, ICurrentUserService currentUserService)
+    public DeleteDataDictionaryCommandHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
-        _currentUserService = currentUserService;
     }
 
     public async Task<Unit> Handle(DeleteDataDictionaryCommand request, CancellationToken cancellationToken)
     {
-        var merchantId = _currentUserService.MerchantId;
-
         var dataDictionary = await _dbContext.SystemDataDictionaries
-            .FirstOrDefaultAsync(d => d.Id == request.Id && d.MerchantId == merchantId, cancellationToken);
+            .FirstOrDefaultAsync(d => d.Id == request.Id, cancellationToken);
         if (dataDictionary == null)
         {
             throw new BusinessException(404, "数据字典不存在");
         }
 
         var hasChildren = await _dbContext.SystemDataDictionaries
-            .AnyAsync(d => d.ParentId == request.Id && d.MerchantId == merchantId, cancellationToken);
+            .AnyAsync(d => d.ParentId == request.Id, cancellationToken);
         if (hasChildren)
         {
             throw new BusinessException(400, "存在子节点，无法删除");

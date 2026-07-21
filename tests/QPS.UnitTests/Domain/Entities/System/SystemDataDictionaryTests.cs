@@ -1,4 +1,5 @@
 using QPS.Domain.Entities.System;
+using Xunit;
 
 namespace QPS.UnitTests.Domain.Entities.System;
 
@@ -7,7 +8,6 @@ public class SystemDataDictionaryTests
     [Fact]
     public void Update_ShouldUpdateParentId_WhenProvided()
     {
-        var merchantId = Guid.NewGuid();
         var dictionary = new SystemDataDictionary(
             Guid.NewGuid(),
             "room_status",
@@ -15,8 +15,7 @@ public class SystemDataDictionaryTests
             "Idle",
             "房间状态枚举",
             1,
-            true,
-            merchantId);
+            true);
 
         var newParentId = Guid.NewGuid();
 

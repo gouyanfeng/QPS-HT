@@ -22,17 +22,14 @@ public class CreateUserCommand : IRequest<UserDto>
 public class CreateUserHandler : IRequestHandler<CreateUserCommand, UserDto>
 {
     private readonly IDbContext _dbContext;
-    private readonly ICurrentUserService _currentUserService;
 
     /// <summary>
     /// 构造函数
     /// </summary>
     /// <param name="dbContext">数据库上下文</param>
-    /// <param name="currentUserService">当前用户服务</param>
-    public CreateUserHandler(IDbContext dbContext, ICurrentUserService currentUserService)
+    public CreateUserHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
-        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -59,7 +56,6 @@ public class CreateUserHandler : IRequestHandler<CreateUserCommand, UserDto>
         return new UserDto
         {
             Id = user.Id,
-            MerchantId = user.MerchantId,
             RoleId = user.RoleId,
             Username = user.Username,
             RealName = user.RealName,

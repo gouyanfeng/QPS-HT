@@ -16,12 +16,10 @@ public class CreateRoomPlanCommand : IRequest<RoomPlanDto>
 public class CreateRoomPlanHandler : IRequestHandler<CreateRoomPlanCommand, RoomPlanDto>
 {
     private readonly IDbContext _dbContext;
-    private readonly ICurrentUserService _currentUserService;
 
-    public CreateRoomPlanHandler(IDbContext dbContext, ICurrentUserService currentUserService)
+    public CreateRoomPlanHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
-        _currentUserService = currentUserService;
     }
 
     public async Task<RoomPlanDto> Handle(CreateRoomPlanCommand request, CancellationToken cancellationToken)
@@ -45,7 +43,7 @@ public class CreateRoomPlanHandler : IRequestHandler<CreateRoomPlanCommand, Room
             throw new BusinessException(400, "该房间已关联此套餐");
         }
 
-        var mapping = new RoomPlan(request.RoomId, request.PlanId, _currentUserService.MerchantId);
+        var mapping = new RoomPlan(request.RoomId, request.PlanId);
 
         _dbContext.RoomPlans.Add(mapping);
         await _dbContext.SaveChangesAsync(cancellationToken);

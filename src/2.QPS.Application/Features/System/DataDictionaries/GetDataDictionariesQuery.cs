@@ -17,20 +17,15 @@ public class GetDataDictionariesQuery : PaginationRequest, IRequest<PaginationRe
 public class GetDataDictionariesQueryHandler : IRequestHandler<GetDataDictionariesQuery, PaginationResponse<DataDictionaryDto>>
 {
     private readonly IDbContext _dbContext;
-    private readonly ICurrentUserService _currentUserService;
 
-    public GetDataDictionariesQueryHandler(IDbContext dbContext, ICurrentUserService currentUserService)
+    public GetDataDictionariesQueryHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
-        _currentUserService = currentUserService;
     }
 
     public async Task<PaginationResponse<DataDictionaryDto>> Handle(GetDataDictionariesQuery request, CancellationToken cancellationToken)
     {
-        var merchantId = _currentUserService.MerchantId;
-
         var allDictionaries = await _dbContext.SystemDataDictionaries
-            .Where(d => d.MerchantId == merchantId)
             .OrderBy(d => d.SortOrder)
             .ToListAsync(cancellationToken);
 
@@ -70,8 +65,7 @@ public class GetDataDictionariesQueryHandler : IRequestHandler<GetDataDictionari
                 Value = d.Value,
                 Description = d.Description,
                 SortOrder = d.SortOrder,
-                IsActive = d.IsActive,
-                MerchantId = d.MerchantId
+                IsActive = d.IsActive
             });
 
         return await dtoQuery.ToPaginationResponseAsync(request);

@@ -19,9 +19,5 @@ public class RoomPlanConfig : IEntityTypeConfiguration<RoomPlan>
             .WithMany()
             .HasForeignKey(rp => rp.PlanId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasOne<Merchant>()
-            .WithMany()
-            .HasForeignKey(rp => rp.MerchantId);
     }
 }

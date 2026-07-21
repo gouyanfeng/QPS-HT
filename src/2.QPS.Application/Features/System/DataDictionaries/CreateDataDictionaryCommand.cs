@@ -15,22 +15,18 @@ public record CreateDataDictionaryCommand : IRequest<DataDictionaryDto>
 public class CreateDataDictionaryCommandHandler : IRequestHandler<CreateDataDictionaryCommand, DataDictionaryDto>
 {
     private readonly IDbContext _dbContext;
-    private readonly ICurrentUserService _currentUserService;
 
-    public CreateDataDictionaryCommandHandler(IDbContext dbContext, ICurrentUserService currentUserService)
+    public CreateDataDictionaryCommandHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
-        _currentUserService = currentUserService;
     }
 
     public async Task<DataDictionaryDto> Handle(CreateDataDictionaryCommand request, CancellationToken cancellationToken)
     {
-        var merchantId = _currentUserService.MerchantId;
-
         if (request.Request.ParentId.HasValue)
         {
             var parent = await _dbContext.SystemDataDictionaries
-                .FirstOrDefaultAsync(d => d.Id == request.Request.ParentId.Value && d.MerchantId == merchantId, cancellationToken);
+                .FirstOrDefaultAsync(d => d.Id == request.Request.ParentId.Value, cancellationToken);
             if (parent == null)
             {
                 throw new BusinessException(404, "父级数据字典不存在");
@@ -38,7 +34,7 @@ public class CreateDataDictionaryCommandHandler : IRequestHandler<CreateDataDict
         }
 
         var exists = await _dbContext.SystemDataDictionaries
-            .AnyAsync(d => d.Code == request.Request.Code && d.MerchantId == merchantId, cancellationToken);
+            .AnyAsync(d => d.Code == request.Request.Code, cancellationToken);
         if (exists)
         {
             throw new BusinessException(400, "编码已存在");
@@ -52,7 +48,6 @@ public class CreateDataDictionaryCommandHandler : IRequestHandler<CreateDataDict
             request.Request.Description,
             request.Request.SortOrder,
             request.Request.IsActive,
-            merchantId,
             request.Request.ParentId
         );
 
@@ -68,8 +63,7 @@ public class CreateDataDictionaryCommandHandler : IRequestHandler<CreateDataDict
             Value = dataDictionary.Value,
             Description = dataDictionary.Description,
             SortOrder = dataDictionary.SortOrder,
-            IsActive = dataDictionary.IsActive,
-            MerchantId = dataDictionary.MerchantId
+            IsActive = dataDictionary.IsActive
         };
     }
 }

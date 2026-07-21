@@ -52,7 +52,6 @@ public class GetUserHandler : IRequestHandler<GetUserQuery, UserDto>
         return new UserDto
         {
             Id = user.Id,
-            MerchantId = user.MerchantId,
             RoleId = user.RoleId,
             Username = user.Username,
             RealName = user.RealName,

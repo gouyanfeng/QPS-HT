@@ -46,7 +46,6 @@ public class GetRolesHandler : IRequestHandler<GetRolesQuery, PaginationResponse
     /// <returns>角色DTO分页响应</returns>
     public async Task<PaginationResponse<RoleDto>> Handle(GetRolesQuery request, CancellationToken cancellationToken)
     {
-        // 构建查询，全局查询过滤器会自动过滤MerchantId
         var query = _dbContext.SystemRoles.AsQueryable();
 
         // 应用查询条件
@@ -64,7 +63,6 @@ public class GetRolesHandler : IRequestHandler<GetRolesQuery, PaginationResponse
         var dtoQuery = query.Select(r => new RoleDto
         {
             Id = r.Id,
-            MerchantId = r.MerchantId,
             Name = r.Name,
             Code = r.Code
         });

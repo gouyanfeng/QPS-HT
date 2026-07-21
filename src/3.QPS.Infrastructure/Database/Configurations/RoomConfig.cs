@@ -19,9 +19,5 @@ public class RoomConfig : IEntityTypeConfiguration<Room>
             .WithMany(s => s.Rooms)
             .HasForeignKey(r => r.ShopId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasOne<Merchant>()
-            .WithMany()
-            .HasForeignKey(r => r.MerchantId);
     }
 }

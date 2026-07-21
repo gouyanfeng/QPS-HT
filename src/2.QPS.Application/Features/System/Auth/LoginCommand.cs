@@ -54,7 +54,6 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
 
         // 获取用户角色
         var role = await _dbContext.SystemRoles
-            .IgnoreQueryFilters()
             .Where(r => r.Id == user.RoleId)
             .Select(r => r.Code)
             .FirstOrDefaultAsync(cancellationToken);
@@ -62,7 +61,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
         var roleCode = role ?? "admin";
 
         // 生成JWT令牌
-        var token = _jwtGenerator.GenerateToken(user.Id, user.MerchantId, roleCode);
+        var token = _jwtGenerator.GenerateToken(user.Id, roleCode);
 
         // 返回登录响应
         return new LoginResponse
@@ -72,7 +71,6 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
             Username = user.Username,
             RealName = user.RealName,
             Role = roleCode,
-            MerchantId = user.MerchantId,
             RoleId = user.RoleId
         };
     }
@@ -86,7 +84,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
     /// <returns>验证通过的用户</returns>
     private async Task<SystemUser> ValidateUserAsync(string username, string password, CancellationToken cancellationToken)
     {
-        var user = await _dbContext.SystemUsers.IgnoreQueryFilters()
+        var user = await _dbContext.SystemUsers
             .Where(u => u.Username == username)
             .FirstOrDefaultAsync(cancellationToken);
 

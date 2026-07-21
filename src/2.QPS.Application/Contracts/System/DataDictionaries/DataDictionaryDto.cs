@@ -11,6 +11,5 @@ public class DataDictionaryDto
     public string Description { get; set; }
     public int SortOrder { get; set; }
     public bool IsActive { get; set; }
-    public Guid MerchantId { get; set; }
     public List<DataDictionaryDto> Children { get; set; } = new List<DataDictionaryDto>();
 }

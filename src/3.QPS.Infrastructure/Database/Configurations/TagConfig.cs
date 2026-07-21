@@ -11,9 +11,5 @@ public class TagConfig : IEntityTypeConfiguration<Tag>
         builder.HasKey(t => t.Id);
         builder.Property(t => t.TagName).IsRequired().HasMaxLength(50);
         builder.Property(t => t.Category).HasMaxLength(50).HasDefaultValue("");
-
-        builder.HasOne<Merchant>()
-            .WithMany()
-            .HasForeignKey(t => t.MerchantId);
     }
 }

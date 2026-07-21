@@ -51,14 +51,12 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginationResponse
     /// <returns>用户DTO分页响应</returns>
     public async Task<PaginationResponse<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
-        // 构建查询，全局查询过滤器会自动过滤MerchantId
         var query = from a in _dbContext.SystemUsers.AsNoTracking()
                     join b in _dbContext.SystemRoles.AsNoTracking() on a.RoleId equals b.Id into ab
                     from b in ab.DefaultIfEmpty()
                     select new
                     {
                         Id = a.Id,
-                        MerchantId = a.MerchantId,
                         RoleId = a.RoleId,
                         Username = a.Username,
                         RealName = a.RealName,
@@ -86,7 +84,6 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginationResponse
         var dtoQuery = query.Select(u => new UserDto
         {
             Id = u.Id,
-            MerchantId = u.MerchantId,
             RoleId = u.RoleId,
             Username = u.Username,
             RealName = u.RealName,

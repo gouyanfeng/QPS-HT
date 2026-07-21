@@ -16,12 +16,10 @@ public class CreateRoomTagCommand : IRequest<RoomTagDto>
 public class CreateRoomTagHandler : IRequestHandler<CreateRoomTagCommand, RoomTagDto>
 {
     private readonly IDbContext _dbContext;
-    private readonly ICurrentUserService _currentUserService;
 
-    public CreateRoomTagHandler(IDbContext dbContext, ICurrentUserService currentUserService)
+    public CreateRoomTagHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
-        _currentUserService = currentUserService;
     }
 
     public async Task<RoomTagDto> Handle(CreateRoomTagCommand request, CancellationToken cancellationToken)
@@ -45,7 +43,7 @@ public class CreateRoomTagHandler : IRequestHandler<CreateRoomTagCommand, RoomTa
             throw new BusinessException(400, "该房间已关联此标签");
         }
 
-        var mapping = new RoomTag(request.RoomId, request.TagId, _currentUserService.MerchantId);
+        var mapping = new RoomTag(request.RoomId, request.TagId);
 
         _dbContext.RoomTags.Add(mapping);
         await _dbContext.SaveChangesAsync(cancellationToken);

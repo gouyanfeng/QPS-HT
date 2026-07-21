@@ -12,10 +12,9 @@ public class RoomPlan : BaseEntity
 
     protected RoomPlan() { }
 
-    public RoomPlan(Guid roomId, Guid planId, Guid merchantId)
+    public RoomPlan(Guid roomId, Guid planId)
     {
         RoomId = roomId;
         PlanId = planId;
-        MerchantId = merchantId;
     }
 }

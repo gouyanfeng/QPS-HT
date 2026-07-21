@@ -22,30 +22,6 @@ public class CurrentUserService : ICurrentUserService
         }
     }
 
-    public Guid MerchantId
-    {
-        get
-        {
-            // 从请求头中获取商户ID
-            if (_httpContextAccessor.HttpContext?.Request.Headers.TryGetValue("X-Merchant-Id", out var merchantIdStr) == true &&
-                Guid.TryParse(merchantIdStr, out var merchantId))
-            {
-                return merchantId;
-            }
-
-            // 如果请求头中没有，从JWT Token中获取
-            // 这里假设商户ID存储在Claims中
-            if (_httpContextAccessor.HttpContext?.User?.FindFirst("merchantId")?.Value is string merchantIdClaim &&
-                Guid.TryParse(merchantIdClaim, out var merchantIdFromClaim))
-            {
-                return merchantIdFromClaim;
-            }
-
-            Console.WriteLine("MerchantId not found in request headers or JWT claims. Returning Guid.Empty.");
-            return Guid.Empty;
-        }
-    }
-
     public Guid? ShopId
     {
         get

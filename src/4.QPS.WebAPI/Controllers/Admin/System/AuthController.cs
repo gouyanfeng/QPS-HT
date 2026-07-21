@@ -32,4 +32,15 @@ public class AuthController : ControllerBase
         var response = await _mediator.Send(command);
         return Ok(response);
     }
+
+    /// <summary>
+    /// 获取当前登录用户权限代码列表
+    /// </summary>
+    [HttpGet("user-permissions")]
+    public async Task<ActionResult<UserPermissionsResponse>> GetUserPermissions()
+    {
+        var query = new GetUserPermissionsQuery();
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
 }

@@ -15,27 +15,27 @@ public static class TestDataInitializer
         if (merchant == null)
             return;
 
-        var shops = InitializeShops(dbContext, merchant);
-        var roles = InitializeRoles(dbContext, merchant);
-        InitializeUsers(dbContext, merchant, roles);
-        InitializePermissions(dbContext, roles, merchant);
-        var tags = InitializeTags(dbContext, merchant);
-        var rooms = InitializeRooms(dbContext, shops, merchant);
-        InitializeRoomImages(dbContext, rooms, merchant);
-        var plans = InitializePlans(dbContext, merchant);
-        InitializeRoomTags(dbContext, rooms, tags, merchant);
-        InitializeRoomPlans(dbContext, rooms, plans, merchant);
-        InitializeCoupons(dbContext, merchant);
-        var customers = InitializeCustomers(dbContext, merchant);
-        InitializeOrders(dbContext, shops, rooms, customers, merchant);
-        InitializeCustomerCoupons(dbContext, customers, merchant);
-        InitializeReviews(dbContext, merchant);
-        InitializeDataDictionaries(dbContext, merchant);
+        var shops = InitializeShops(dbContext);
+        var roles = InitializeRoles(dbContext);
+        InitializeUsers(dbContext, roles);
+        InitializePermissions(dbContext, roles);
+        var tags = InitializeTags(dbContext);
+        var rooms = InitializeRooms(dbContext, shops);
+        InitializeRoomImages(dbContext, rooms);
+        var plans = InitializePlans(dbContext);
+        InitializeRoomTags(dbContext, rooms, tags);
+        InitializeRoomPlans(dbContext, rooms, plans);
+        InitializeCoupons(dbContext);
+        var customers = InitializeCustomers(dbContext);
+        InitializeOrders(dbContext, shops, rooms, customers);
+        InitializeCustomerCoupons(dbContext, customers);
+        InitializeReviews(dbContext);
+        InitializeDataDictionaries(dbContext);
     }
 
-    private static Merchant InitializeMerchant(AppDbContext dbContext)
+    private static Merchant? InitializeMerchant(AppDbContext dbContext)
     {
-        var existingMerchant = dbContext.Merchants.IgnoreQueryFilters().FirstOrDefault();
+        var existingMerchant = dbContext.Merchants.FirstOrDefault();
         if (existingMerchant != null)
         {
             return existingMerchant;
@@ -47,11 +47,10 @@ public static class TestDataInitializer
         return merchant;
     }
 
-    private static List<Shop> InitializeShops(AppDbContext dbContext, Merchant merchant)
+    private static List<Shop> InitializeShops(AppDbContext dbContext)
     {
-        var existingShops = dbContext.Shops.IgnoreQueryFilters().Where(s => s.MerchantId == merchant.Id).ToList();
-        if (existingShops.Any())
-            return existingShops;
+        if (dbContext.Shops.Any())
+            return dbContext.Shops.ToList();
 
         var shops = new List<Shop>
         {
@@ -63,21 +62,15 @@ public static class TestDataInitializer
             Shop.Create("分店E", "北京市石景山区xxx路6号", "010-67890123", new TimeSpan(10, 0, 0), new TimeSpan(20, 0, 0), 40)
         };
 
-        foreach (var shop in shops)
-        {
-            shop.GetType().GetProperty("MerchantId")?.SetValue(shop, merchant.Id);
-        }
-
         dbContext.Shops.AddRange(shops);
         dbContext.SaveChanges();
         return shops;
     }
 
-    private static List<SystemRole> InitializeRoles(AppDbContext dbContext, Merchant merchant)
+    private static List<SystemRole> InitializeRoles(AppDbContext dbContext)
     {
-        var existingRoles = dbContext.SystemRoles.IgnoreQueryFilters().Where(r => r.MerchantId == merchant.Id).ToList();
-        if (existingRoles.Any())
-            return existingRoles;
+        if (dbContext.SystemRoles.Any())
+            return dbContext.SystemRoles.ToList();
 
         var roles = new List<SystemRole>
         {
@@ -86,20 +79,14 @@ public static class TestDataInitializer
             new SystemRole("用户", "user")
         };
 
-        foreach (var role in roles)
-        {
-            role.GetType().GetProperty("MerchantId")?.SetValue(role, merchant.Id);
-        }
-
         dbContext.SystemRoles.AddRange(roles);
         dbContext.SaveChanges();
         return roles;
     }
 
-    private static void InitializeUsers(AppDbContext dbContext, Merchant merchant, List<SystemRole> roles)
+    private static void InitializeUsers(AppDbContext dbContext, List<SystemRole> roles)
     {
-        var existingUsers = dbContext.SystemUsers.IgnoreQueryFilters().Where(u => u.MerchantId == merchant.Id).ToList();
-        if (existingUsers.Any())
+        if (dbContext.SystemUsers.Any())
             return;
 
         var adminRole = roles.First(r => r.Code == "admin");
@@ -112,11 +99,6 @@ public static class TestDataInitializer
             SystemUser.Create("merchant", "123456", "张商户", merchantRole.Id),
             SystemUser.Create("user", "123456", "李用户", userRole.Id)
         };
-
-        foreach (var user in users)
-        {
-            user.GetType().GetProperty("MerchantId")?.SetValue(user, merchant.Id);
-        }
 
         dbContext.SystemUsers.AddRange(users);
         dbContext.SaveChanges();
@@ -132,11 +114,10 @@ public static class TestDataInitializer
         dbContext.SaveChanges();
     }
 
-    private static List<Tag> InitializeTags(AppDbContext dbContext, Merchant merchant)
+    private static List<Tag> InitializeTags(AppDbContext dbContext)
     {
-        var existingTags = dbContext.Tags.IgnoreQueryFilters().Where(t => t.MerchantId == merchant.Id).ToList();
-        if (existingTags.Any())
-            return existingTags;
+        if (dbContext.Tags.Any())
+            return dbContext.Tags.ToList();
 
         var tags = new List<Tag>
         {
@@ -152,21 +133,15 @@ public static class TestDataInitializer
             new Tag("影音", "设施")
         };
 
-        foreach (var tag in tags)
-        {
-            tag.GetType().GetProperty("MerchantId")?.SetValue(tag, merchant.Id);
-        }
-
         dbContext.Tags.AddRange(tags);
         dbContext.SaveChanges();
         return tags;
     }
 
-    private static List<Room> InitializeRooms(AppDbContext dbContext, List<Shop> shops, Merchant merchant)
+    private static List<Room> InitializeRooms(AppDbContext dbContext, List<Shop> shops)
     {
-        var existingRooms = dbContext.Rooms.IgnoreQueryFilters().Where(r => r.MerchantId == merchant.Id).ToList();
-        if (existingRooms.Any())
-            return existingRooms;
+        if (dbContext.Rooms.Any())
+            return dbContext.Rooms.ToList();
 
         var rooms = new List<Room>();
         var random = new Random();
@@ -186,7 +161,6 @@ public static class TestDataInitializer
             var statusIndex = i % statuses.Length;
             room.GetType().GetProperty("Status")?.SetValue(room, Enum.Parse(typeof(RoomStatus), statuses[statusIndex]));
 
-            room.GetType().GetProperty("MerchantId")?.SetValue(room, merchant.Id);
             rooms.Add(room);
         }
 
@@ -195,7 +169,7 @@ public static class TestDataInitializer
         return rooms;
     }
 
-    private static void InitializeRoomImages(AppDbContext dbContext, List<Room> rooms, Merchant merchant)
+    private static void InitializeRoomImages(AppDbContext dbContext, List<Room> rooms)
     {
         if (dbContext.RoomImages.Any())
             return;
@@ -205,13 +179,8 @@ public static class TestDataInitializer
         foreach (var room in rooms.Take(5))
         {
             var image1 = new RoomImage(room.Id, $"https://example.com/images/room/{room.Id}-1.jpg", true, 1);
-            image1.GetType().GetProperty("MerchantId")?.SetValue(image1, merchant.Id);
-
             var image2 = new RoomImage(room.Id, $"https://example.com/images/room/{room.Id}-2.jpg", false, 2);
-            image2.GetType().GetProperty("MerchantId")?.SetValue(image2, merchant.Id);
-
             var image3 = new RoomImage(room.Id, $"https://example.com/images/room/{room.Id}-3.jpg", false, 3);
-            image3.GetType().GetProperty("MerchantId")?.SetValue(image3, merchant.Id);
 
             images.Add(image1);
             images.Add(image2);
@@ -222,11 +191,10 @@ public static class TestDataInitializer
         dbContext.SaveChanges();
     }
 
-    private static List<Plan> InitializePlans(AppDbContext dbContext, Merchant merchant)
+    private static List<Plan> InitializePlans(AppDbContext dbContext)
     {
-        var existingPlans = dbContext.Plans.IgnoreQueryFilters().Where(p => p.MerchantId == merchant.Id).ToList();
-        if (existingPlans.Any())
-            return existingPlans;
+        if (dbContext.Plans.Any())
+            return dbContext.Plans.ToList();
 
         var plans = new List<Plan>
         {
@@ -236,20 +204,14 @@ public static class TestDataInitializer
             new Plan("通宵套餐", "8小时通宵服务", 298.00m, 480)
         };
 
-        foreach (var plan in plans)
-        {
-            plan.GetType().GetProperty("MerchantId")?.SetValue(plan, merchant.Id);
-        }
-
         dbContext.Plans.AddRange(plans);
         dbContext.SaveChanges();
         return plans;
     }
 
-    private static void InitializeCoupons(AppDbContext dbContext, Merchant merchant)
+    private static void InitializeCoupons(AppDbContext dbContext)
     {
-        var existingCoupons = dbContext.Coupons.IgnoreQueryFilters().Where(c => c.MerchantId == merchant.Id).ToList();
-        if (existingCoupons.Any())
+        if (dbContext.Coupons.Any())
             return;
 
         var coupons = new List<Coupon>
@@ -259,16 +221,11 @@ public static class TestDataInitializer
             new Coupon("会员折扣", "percent", 10.00m, 0, DateTime.Now.AddMonths(1))
         };
 
-        foreach (var coupon in coupons)
-        {
-            coupon.GetType().GetProperty("MerchantId")?.SetValue(coupon, merchant.Id);
-        }
-
         dbContext.Coupons.AddRange(coupons);
         dbContext.SaveChanges();
     }
 
-    private static List<Customer> InitializeCustomers(AppDbContext dbContext, Merchant merchant)
+    private static List<Customer> InitializeCustomers(AppDbContext dbContext)
     {
         if (dbContext.Customers.Any())
             return dbContext.Customers.ToList();
@@ -282,17 +239,12 @@ public static class TestDataInitializer
             new Customer("openid_005", "13900139005", "钱七", "https://example.com/avatar/5.jpg")
         };
 
-        foreach (var customer in customers)
-        {
-            customer.GetType().GetProperty("MerchantId")?.SetValue(customer, merchant.Id);
-        }
-
         dbContext.Customers.AddRange(customers);
         dbContext.SaveChanges();
         return customers;
     }
 
-    private static void InitializeOrders(AppDbContext dbContext, List<Shop> shops, List<Room> rooms, List<Customer> customers, Merchant merchant)
+    private static void InitializeOrders(AppDbContext dbContext, List<Shop> shops, List<Room> rooms, List<Customer> customers)
     {
         if (dbContext.Orders.Any())
             return;
@@ -307,8 +259,6 @@ public static class TestDataInitializer
             var customer = customers[random.Next(customers.Count)];
 
             var order = Order.Create(shop.Id, room.Id, customer.Id);
-            order.GetType().GetProperty("MerchantId")?.SetValue(order, merchant.Id);
-
             orders.Add(order);
         }
 
@@ -328,11 +278,7 @@ public static class TestDataInitializer
         foreach (var order in orders)
         {
             var item1 = new OrderItem(order.Id, "基础服务", order.OriginAmount * 0.8m, 1);
-            item1.GetType().GetProperty("MerchantId")?.SetValue(item1, merchant.Id);
-
             var item2 = new OrderItem(order.Id, "附加服务", order.OriginAmount * 0.2m, 1);
-            item2.GetType().GetProperty("MerchantId")?.SetValue(item2, merchant.Id);
-
             dbContext.OrderItems.Add(item1);
             dbContext.OrderItems.Add(item2);
         }
@@ -362,7 +308,7 @@ public static class TestDataInitializer
         dbContext.SaveChanges();
     }
 
-    private static void InitializeRoomTags(AppDbContext dbContext, List<Room> rooms, List<Tag> tags, Merchant merchant)
+    private static void InitializeRoomTags(AppDbContext dbContext, List<Room> rooms, List<Tag> tags)
     {
         if (dbContext.RoomTags.Any())
             return;
@@ -377,7 +323,7 @@ public static class TestDataInitializer
 
             foreach (var tag in selectedTags)
             {
-                var roomTag = new RoomTag(room.Id, tag.Id, merchant.Id);
+                var roomTag = new RoomTag(room.Id, tag.Id);
                 roomTags.Add(roomTag);
             }
         }
@@ -386,7 +332,7 @@ public static class TestDataInitializer
         dbContext.SaveChanges();
     }
 
-    private static void InitializeRoomPlans(AppDbContext dbContext, List<Room> rooms, List<Plan> plans, Merchant merchant)
+    private static void InitializeRoomPlans(AppDbContext dbContext, List<Room> rooms, List<Plan> plans)
     {
         if (dbContext.RoomPlans.Any())
             return;
@@ -401,7 +347,7 @@ public static class TestDataInitializer
 
             foreach (var plan in selectedPlans)
             {
-                var roomPlan = new RoomPlan(room.Id, plan.Id, merchant.Id);
+                var roomPlan = new RoomPlan(room.Id, plan.Id);
                 roomPlans.Add(roomPlan);
             }
         }
@@ -410,12 +356,12 @@ public static class TestDataInitializer
         dbContext.SaveChanges();
     }
 
-    private static void InitializeCustomerCoupons(AppDbContext dbContext, List<Customer> customers, Merchant merchant)
+    private static void InitializeCustomerCoupons(AppDbContext dbContext, List<Customer> customers)
     {
         if (dbContext.CustomerCoupons.Any())
             return;
 
-        var coupons = dbContext.Coupons.IgnoreQueryFilters().Where(c => c.MerchantId == merchant.Id).ToList();
+        var coupons = dbContext.Coupons.ToList();
         if (!coupons.Any())
             return;
 
@@ -433,7 +379,6 @@ public static class TestDataInitializer
                 var status = statuses[random.Next(statuses.Length)];
 
                 var customerCoupon = new CustomerCoupon(coupon.Id, customer.Id, status);
-                customerCoupon.GetType().GetProperty("MerchantId")?.SetValue(customerCoupon, merchant.Id);
                 customerCoupons.Add(customerCoupon);
             }
         }
@@ -442,9 +387,9 @@ public static class TestDataInitializer
         dbContext.SaveChanges();
     }
 
-    private static void InitializePermissions(AppDbContext dbContext, List<SystemRole> roles, Merchant merchant)
+    private static void InitializePermissions(AppDbContext dbContext, List<SystemRole> roles)
     {
-        if (dbContext.SystemPermissions.IgnoreQueryFilters().Any())
+        if (dbContext.SystemPermissions.Any())
             return;
 
         var permList = new List<SystemPermission>
@@ -495,11 +440,9 @@ public static class TestDataInitializer
         };
 
         dbContext.SystemPermissions.AddRange(permList);
-        foreach (var p in permList)
-            p.GetType().GetProperty("MerchantId")?.SetValue(p, merchant.Id);
         dbContext.SaveChanges();
 
-        var permDict = dbContext.SystemPermissions.IgnoreQueryFilters()
+        var permDict = dbContext.SystemPermissions
             .Where(p => !p.IsDeleted)
             .ToDictionary(p => p.Code);
 
@@ -583,9 +526,6 @@ public static class TestDataInitializer
                 dbContext.SystemRolePermissions.Add(new SystemRolePermission(userRole.Id, perm.Id));
         }
 
-        foreach (var rp in dbContext.SystemRolePermissions.Local)
-            rp.GetType().GetProperty("MerchantId")?.SetValue(rp, merchant.Id);
-
         dbContext.SaveChanges();
     }
 
@@ -597,14 +537,13 @@ public static class TestDataInitializer
         }
     }
 
-    private static void InitializeReviews(AppDbContext dbContext, Merchant merchant)
+    private static void InitializeReviews(AppDbContext dbContext)
     {
         if (dbContext.Reviews.Any())
             return;
 
         var completedOrders = dbContext.Orders
-            .IgnoreQueryFilters()
-            .Where(o => o.MerchantId == merchant.Id && o.Status == OrderStatus.Completed)
+            .Where(o => o.Status == OrderStatus.Completed)
             .ToList();
 
         if (!completedOrders.Any())
@@ -634,10 +573,9 @@ public static class TestDataInitializer
             var content = comments[random.Next(comments.Length)];
 
             var review = new Review(order.Id, order.RoomId, order.CustomerId.Value, score, content);
-            review.GetType().GetProperty("MerchantId")?.SetValue(review, merchant.Id);
             reviews.Add(review);
 
-            var room = dbContext.Rooms.IgnoreQueryFilters().FirstOrDefault(r => r.Id == order.RoomId);
+            var room = dbContext.Rooms.FirstOrDefault(r => r.Id == order.RoomId);
             if (room != null)
             {
                 room.AddRating((decimal)score);
@@ -648,52 +586,49 @@ public static class TestDataInitializer
         dbContext.SaveChanges();
     }
 
-    private static void InitializeDataDictionaries(AppDbContext dbContext, Merchant merchant)
+    private static void InitializeDataDictionaries(AppDbContext dbContext)
     {
-        var existingDictionaries = dbContext.SystemDataDictionaries.IgnoreQueryFilters().Where(d => d.MerchantId == merchant.Id).ToList();
-        if (existingDictionaries.Any())
+        if (dbContext.SystemDataDictionaries.Any())
             return;
 
         var dictionaries = new List<SystemDataDictionary>
         {
-            new SystemDataDictionary(Guid.NewGuid(), "room_status", "房间状态", "Idle", "房间状态枚举", 1, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "room_status_occupied", "占用", "Occupied", "房间已被占用", 2, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "room_status_cleaning", "清洁中", "Cleaning", "房间清洁中", 3, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "room_status_fault", "故障", "Fault", "房间故障", 4, true, merchant.Id),
+            new SystemDataDictionary(Guid.NewGuid(), "room_status", "房间状态", "Idle", "房间状态枚举", 1, true),
+            new SystemDataDictionary(Guid.NewGuid(), "room_status_occupied", "占用", "Occupied", "房间已被占用", 2, true),
+            new SystemDataDictionary(Guid.NewGuid(), "room_status_cleaning", "清洁中", "Cleaning", "房间清洁中", 3, true),
+            new SystemDataDictionary(Guid.NewGuid(), "room_status_fault", "故障", "Fault", "房间故障", 4, true),
 
-            new SystemDataDictionary(Guid.NewGuid(), "order_status", "订单状态", "Pending", "订单状态枚举", 1, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "order_status_started", "进行中", "Started", "订单进行中", 2, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "order_status_completed", "已完成", "Completed", "订单已完成", 3, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "order_status_canceled", "已取消", "Canceled", "订单已取消", 4, true, merchant.Id),
+            new SystemDataDictionary(Guid.NewGuid(), "order_status", "订单状态", "Pending", "订单状态枚举", 1, true),
+            new SystemDataDictionary(Guid.NewGuid(), "order_status_started", "进行中", "Started", "订单进行中", 2, true),
+            new SystemDataDictionary(Guid.NewGuid(), "order_status_completed", "已完成", "Completed", "订单已完成", 3, true),
+            new SystemDataDictionary(Guid.NewGuid(), "order_status_canceled", "已取消", "Canceled", "订单已取消", 4, true),
 
-            new SystemDataDictionary(Guid.NewGuid(), "coupon_type", "优惠券类型", "fixed", "优惠券类型枚举", 1, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "coupon_type_percent", "折扣券", "percent", "按比例折扣", 2, true, merchant.Id),
+            new SystemDataDictionary(Guid.NewGuid(), "coupon_type", "优惠券类型", "fixed", "优惠券类型枚举", 1, true),
+            new SystemDataDictionary(Guid.NewGuid(), "coupon_type_percent", "折扣券", "percent", "按比例折扣", 2, true),
 
-            new SystemDataDictionary(Guid.NewGuid(), "pay_method", "支付方式", "wechat", "支付方式枚举", 1, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "pay_method_alipay", "支付宝", "alipay", "支付宝支付", 2, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "pay_method_cash", "现金", "cash", "现金支付", 3, true, merchant.Id),
+            new SystemDataDictionary(Guid.NewGuid(), "pay_method", "支付方式", "wechat", "支付方式枚举", 1, true),
+            new SystemDataDictionary(Guid.NewGuid(), "pay_method_alipay", "支付宝", "alipay", "支付宝支付", 2, true),
+            new SystemDataDictionary(Guid.NewGuid(), "pay_method_cash", "现金", "cash", "现金支付", 3, true),
 
-            new SystemDataDictionary(Guid.NewGuid(), "customer_level", "客户等级", "normal", "客户等级枚举", 1, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "customer_level_vip", "VIP", "vip", "VIP客户", 2, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "customer_level_vip2", "VIP2", "vip2", "高级VIP客户", 3, true, merchant.Id),
+            new SystemDataDictionary(Guid.NewGuid(), "customer_level", "客户等级", "normal", "客户等级枚举", 1, true),
+            new SystemDataDictionary(Guid.NewGuid(), "customer_level_vip", "VIP", "vip", "VIP客户", 2, true),
+            new SystemDataDictionary(Guid.NewGuid(), "customer_level_vip2", "VIP2", "vip2", "高级VIP客户", 3, true),
 
-            new SystemDataDictionary(Guid.NewGuid(), "shop_status", "门店状态", "normal", "门店状态枚举", 1, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "shop_status_closed", "休息", "closed", "门店休息中", 2, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "shop_status_maintenance", "维护", "maintenance", "门店维护中", 3, true, merchant.Id),
+            new SystemDataDictionary(Guid.NewGuid(), "shop_status", "门店状态", "normal", "门店状态枚举", 1, true),
+            new SystemDataDictionary(Guid.NewGuid(), "shop_status_closed", "休息", "closed", "门店休息中", 2, true),
+            new SystemDataDictionary(Guid.NewGuid(), "shop_status_maintenance", "维护", "maintenance", "门店维护中", 3, true),
 
-            new SystemDataDictionary(Guid.NewGuid(), "review_score", "评价星级", "1", "评价星级枚举", 1, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "review_score_2", "2星", "2", "二星评价", 2, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "review_score_3", "3星", "3", "三星评价", 3, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "review_score_4", "4星", "4", "四星评价", 4, true, merchant.Id),
-            new SystemDataDictionary(Guid.NewGuid(), "review_score_5", "5星", "5", "五星评价", 5, true, merchant.Id)
+            new SystemDataDictionary(Guid.NewGuid(), "review_score", "评价星级", "1", "评价星级枚举", 1, true),
+            new SystemDataDictionary(Guid.NewGuid(), "review_score_2", "2星", "2", "二星评价", 2, true),
+            new SystemDataDictionary(Guid.NewGuid(), "review_score_3", "3星", "3", "三星评价", 3, true),
+            new SystemDataDictionary(Guid.NewGuid(), "review_score_4", "4星", "4", "四星评价", 4, true),
+            new SystemDataDictionary(Guid.NewGuid(), "review_score_5", "5星", "5", "五星评价", 5, true)
         };
 
         dbContext.SystemDataDictionaries.AddRange(dictionaries);
         dbContext.SaveChanges();
 
-        var dictDict = dbContext.SystemDataDictionaries.IgnoreQueryFilters()
-            .Where(d => d.MerchantId == merchant.Id)
-            .ToDictionary(d => d.Code);
+        var dictDict = dbContext.SystemDataDictionaries.ToDictionary(d => d.Code);
 
         SetDataDictParent(dictDict, "room_status_occupied", "room_status");
         SetDataDictParent(dictDict, "room_status_cleaning", "room_status");
