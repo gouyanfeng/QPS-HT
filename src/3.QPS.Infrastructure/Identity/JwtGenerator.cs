@@ -20,18 +20,13 @@ public class JwtGenerator : IJwtGenerator
         _audience = audience ?? throw new ArgumentNullException(nameof(audience));
     }
 
-    public string GenerateToken(Guid userId, string role, Guid? shopId = null)
+    public string GenerateToken(Guid userId, string role)
     {
         var claims = new List<Claim>
         {
             new Claim("userId", userId.ToString()),
             new Claim("role", role)
         };
-
-        if (shopId.HasValue)
-        {
-            claims.Add(new Claim("shopId", shopId.Value.ToString()));
-        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

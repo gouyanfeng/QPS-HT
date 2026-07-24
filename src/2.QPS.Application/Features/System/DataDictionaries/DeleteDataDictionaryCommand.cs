@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
 
@@ -23,16 +23,18 @@ public class DeleteDataDictionaryCommandHandler : IRequestHandler<DeleteDataDict
     {
         var dataDictionary = await _dbContext.SystemDataDictionaries
             .FirstOrDefaultAsync(d => d.Id == request.Id, cancellationToken);
+
         if (dataDictionary == null)
         {
-            throw new BusinessException(404, "数据字典不存在");
+            throw new BusinessException(404, "Data dictionary does not exist.");
         }
 
         var hasChildren = await _dbContext.SystemDataDictionaries
             .AnyAsync(d => d.ParentId == request.Id, cancellationToken);
+
         if (hasChildren)
         {
-            throw new BusinessException(400, "存在子节点，无法删除");
+            throw new BusinessException(400, "Cannot delete a data dictionary with child nodes.");
         }
 
         _dbContext.SystemDataDictionaries.Remove(dataDictionary);

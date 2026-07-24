@@ -1,7 +1,8 @@
-using Microsoft.EntityFrameworkCore;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.DataDictionaries;
 using QPS.Application.Interfaces;
+using QPS.Domain.Entities.System;
 
 namespace QPS.Application.Features.System.DataDictionaries;
 
@@ -30,8 +31,9 @@ public class GetDataDictionaryTreeQueryHandler : IRequestHandler<GetDataDictiona
         return BuildTree(rootNodes, allDictionaries);
     }
 
-    private List<DataDictionaryDto> BuildTree(List<Domain.Entities.System.SystemDataDictionary> parents,
-        List<Domain.Entities.System.SystemDataDictionary> allNodes)
+    private static List<DataDictionaryDto> BuildTree(
+        List<SystemDataDictionary> parents,
+        List<SystemDataDictionary> allNodes)
     {
         var result = new List<DataDictionaryDto>();
 

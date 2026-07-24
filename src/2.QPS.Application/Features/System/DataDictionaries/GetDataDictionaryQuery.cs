@@ -1,7 +1,8 @@
-using Microsoft.EntityFrameworkCore;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.DataDictionaries;
 using QPS.Application.Interfaces;
+using QPS.Domain.Entities.System;
 using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.System.DataDictionaries;
@@ -24,11 +25,17 @@ public class GetDataDictionaryQueryHandler : IRequestHandler<GetDataDictionaryQu
     {
         var dataDictionary = await _dbContext.SystemDataDictionaries
             .FirstOrDefaultAsync(d => d.Id == request.Id, cancellationToken);
+
         if (dataDictionary == null)
         {
-            throw new BusinessException(404, "数据字典不存在");
+            throw new BusinessException(404, "Data dictionary does not exist.");
         }
 
+        return ToDto(dataDictionary);
+    }
+
+    private static DataDictionaryDto ToDto(SystemDataDictionary dataDictionary)
+    {
         return new DataDictionaryDto
         {
             Id = dataDictionary.Id,

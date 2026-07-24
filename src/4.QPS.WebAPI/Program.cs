@@ -6,10 +6,8 @@ using Microsoft.OpenApi.Models;
 using MediatR;
 
 using QPS.Application.Behaviours;
-using QPS.Application.Features.Qps.Orders;
 using QPS.Application.Interfaces;
 using QPS.Infrastructure;
-using QPS.Infrastructure.IoT;
 using QPS.Infrastructure.Identity;
 using QPS.Infrastructure.Database;
 using QPS.WebAPI.Data;
@@ -22,6 +20,9 @@ using System.Text;
 /// 程序入口类
 /// </summary>
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 #region 服务注册
 
@@ -84,14 +85,14 @@ builder.Services.AddSwaggerGen(c =>
 /// <summary>
 /// 配置数据库
 /// </summary>
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=QPSChessRoom.db";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=QPS.db";
 var sqliteConnectionStringBuilder = new SqliteConnectionStringBuilder(connectionString);
 
 if (string.IsNullOrWhiteSpace(sqliteConnectionStringBuilder.DataSource) || !System.IO.Path.IsPathRooted(sqliteConnectionStringBuilder.DataSource))
 {
     sqliteConnectionStringBuilder.DataSource = System.IO.Path.Combine(
         builder.Environment.ContentRootPath,
-        System.IO.Path.GetFileName(sqliteConnectionStringBuilder.DataSource ?? "QPSChessRoom.db"));
+        System.IO.Path.GetFileName(sqliteConnectionStringBuilder.DataSource ?? "QPS.db"));
 }
 
 builder.Configuration["ConnectionStrings:DefaultConnection"] = sqliteConnectionStringBuilder.ConnectionString;
@@ -128,7 +129,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 /// </summary>
 builder.Services.AddHttpContextAccessor(); // 添加HTTP上下文访问器
 
-// 添加基础设施服务（数据库、身份认证、MQTT等）
+// 添加基础设施服务（数据库、身份认证等）
 builder.Services.AddInfrastructure();
 
 // 注册JWT生成器
@@ -139,6 +140,7 @@ builder.Services.AddScoped<IJwtGenerator>(_ => new JwtGenerator(
 ));
 
 // 注册错误日志服务
+builder.Services.AddInfrastructure();
 builder.Services.AddScoped<IErrorLogService, ErrorLogService>();
 
 /// <summary>

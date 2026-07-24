@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.DataDictionaries;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.System;
@@ -25,19 +25,21 @@ public class CreateDataDictionaryCommandHandler : IRequestHandler<CreateDataDict
     {
         if (request.Request.ParentId.HasValue)
         {
-            var parent = await _dbContext.SystemDataDictionaries
-                .FirstOrDefaultAsync(d => d.Id == request.Request.ParentId.Value, cancellationToken);
-            if (parent == null)
+            var parentExists = await _dbContext.SystemDataDictionaries
+                .AnyAsync(d => d.Id == request.Request.ParentId.Value, cancellationToken);
+
+            if (!parentExists)
             {
-                throw new BusinessException(404, "父级数据字典不存在");
+                throw new BusinessException(404, "Parent data dictionary does not exist.");
             }
         }
 
         var exists = await _dbContext.SystemDataDictionaries
             .AnyAsync(d => d.Code == request.Request.Code, cancellationToken);
+
         if (exists)
         {
-            throw new BusinessException(400, "编码已存在");
+            throw new BusinessException(400, "Code already exists.");
         }
 
         var dataDictionary = new SystemDataDictionary(
@@ -48,12 +50,16 @@ public class CreateDataDictionaryCommandHandler : IRequestHandler<CreateDataDict
             request.Request.Description,
             request.Request.SortOrder,
             request.Request.IsActive,
-            request.Request.ParentId
-        );
+            request.Request.ParentId);
 
         await _dbContext.SystemDataDictionaries.AddAsync(dataDictionary, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
+        return ToDto(dataDictionary);
+    }
+
+    private static DataDictionaryDto ToDto(SystemDataDictionary dataDictionary)
+    {
         return new DataDictionaryDto
         {
             Id = dataDictionary.Id,

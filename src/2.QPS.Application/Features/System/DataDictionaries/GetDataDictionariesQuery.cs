@@ -1,8 +1,9 @@
 using MediatR;
-using QPS.Application.Contracts.System.DataDictionaries;
-using QPS.Application.Interfaces;
-using QPS.Application.Extensions;
 using Microsoft.EntityFrameworkCore;
+using QPS.Application.Contracts.System.DataDictionaries;
+using QPS.Application.Extensions;
+using QPS.Application.Interfaces;
+using QPS.Domain.Entities.System;
 
 namespace QPS.Application.Features.System.DataDictionaries;
 
@@ -71,7 +72,7 @@ public class GetDataDictionariesQueryHandler : IRequestHandler<GetDataDictionari
         return await dtoQuery.ToPaginationResponseAsync(request);
     }
 
-    private static bool IsDescendantOf(Guid nodeId, Guid parentId, IReadOnlyList<Domain.Entities.System.SystemDataDictionary> dictionaries)
+    private static bool IsDescendantOf(Guid nodeId, Guid parentId, IReadOnlyList<SystemDataDictionary> dictionaries)
     {
         var dictionaryById = dictionaries.ToDictionary(d => d.Id);
         var current = dictionaryById.GetValueOrDefault(nodeId);
@@ -94,7 +95,7 @@ public class GetDataDictionariesQueryHandler : IRequestHandler<GetDataDictionari
         return false;
     }
 
-    private static string? GetParentName(IReadOnlyList<Domain.Entities.System.SystemDataDictionary> dictionaries, Guid parentId)
+    private static string? GetParentName(IReadOnlyList<SystemDataDictionary> dictionaries, Guid parentId)
     {
         var parent = dictionaries.FirstOrDefault(x => x.Id == parentId);
         return parent?.Name;

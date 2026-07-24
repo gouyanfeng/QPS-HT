@@ -50,8 +50,7 @@ public class ErrorLogService : IErrorLogService
                 username,
                 ipAddress,
                 userAgent,
-                httpStatusCode
-            );
+                httpStatusCode);
 
             await _dbContext.SystemErrorLogs.AddAsync(errorLog);
             await _dbContext.SaveChangesAsync();
