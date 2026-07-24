@@ -25,8 +25,8 @@ public static class TestDataInitializer
 
         var roles = new List<SystemRole>
         {
-            new("Administrator", "admin"),
-            new("User", "user")
+            new("管理员", "admin"),
+            new("用户", "user")
         };
 
         dbContext.SystemRoles.AddRange(roles);
@@ -47,8 +47,8 @@ public static class TestDataInitializer
 
         var users = new List<SystemUser>
         {
-            SystemUser.Create("admin", "123456", "Administrator", adminRole.Id),
-            SystemUser.Create("user", "123456", "User", userRole.Id)
+            SystemUser.Create("admin", "123456", "系统管理员", adminRole.Id),
+            SystemUser.Create("user", "123456", "普通用户", userRole.Id)
         };
 
         dbContext.SystemUsers.AddRange(users);
@@ -71,24 +71,24 @@ public static class TestDataInitializer
             return;
         }
 
-        var root = new SystemPermission("Permission Management", "root");
-        var home = new SystemPermission("Home", "home");
-        var system = new SystemPermission("System", "system");
-        var users = new SystemPermission("Users", "users");
-        var usersAdd = new SystemPermission("Add", "users:add");
-        var usersEdit = new SystemPermission("Edit", "users:edit");
-        var role = new SystemPermission("Roles", "role");
-        var roleAdd = new SystemPermission("Add", "role:add");
-        var roleEdit = new SystemPermission("Edit", "role:edit");
-        var roleDelete = new SystemPermission("Delete", "role:delete");
-        var permission = new SystemPermission("Permissions", "permission");
-        var permissionAdd = new SystemPermission("Add", "permission:add");
-        var permissionEdit = new SystemPermission("Edit", "permission:edit");
-        var permissionDelete = new SystemPermission("Delete", "permission:delete");
-        var dataDictionary = new SystemPermission("Data Dictionary", "dataDictionary");
-        var dataDictionaryAdd = new SystemPermission("Add", "dataDictionary:add");
-        var dataDictionaryEdit = new SystemPermission("Edit", "dataDictionary:edit");
-        var dataDictionaryDelete = new SystemPermission("Delete", "dataDictionary:delete");
+        var root = new SystemPermission("权限管理", "root");
+        var home = new SystemPermission("首页", "home");
+        var system = new SystemPermission("系统设置", "system");
+        var users = new SystemPermission("用户管理", "users");
+        var usersAdd = new SystemPermission("新增", "users:add");
+        var usersEdit = new SystemPermission("编辑", "users:edit");
+        var role = new SystemPermission("角色设置", "role");
+        var roleAdd = new SystemPermission("新增", "role:add");
+        var roleEdit = new SystemPermission("编辑", "role:edit");
+        var roleDelete = new SystemPermission("删除", "role:delete");
+        var permission = new SystemPermission("权限设置", "permission");
+        var permissionAdd = new SystemPermission("新增", "permission:add");
+        var permissionEdit = new SystemPermission("编辑", "permission:edit");
+        var permissionDelete = new SystemPermission("删除", "permission:delete");
+        var dataDictionary = new SystemPermission("数据字典", "dataDictionary");
+        var dataDictionaryAdd = new SystemPermission("新增", "dataDictionary:add");
+        var dataDictionaryEdit = new SystemPermission("编辑", "dataDictionary:edit");
+        var dataDictionaryDelete = new SystemPermission("删除", "dataDictionary:delete");
 
         SetParent(home, root);
         SetParent(system, root);
@@ -110,24 +110,11 @@ public static class TestDataInitializer
 
         var permissions = new List<SystemPermission>
         {
-            root,
-            home,
-            system,
-            users,
-            usersAdd,
-            usersEdit,
-            role,
-            roleAdd,
-            roleEdit,
-            roleDelete,
-            permission,
-            permissionAdd,
-            permissionEdit,
-            permissionDelete,
-            dataDictionary,
-            dataDictionaryAdd,
-            dataDictionaryEdit,
-            dataDictionaryDelete
+            root, home, system,
+            users, usersAdd, usersEdit,
+            role, roleAdd, roleEdit, roleDelete,
+            permission, permissionAdd, permissionEdit, permissionDelete,
+            dataDictionary, dataDictionaryAdd, dataDictionaryEdit, dataDictionaryDelete
         };
 
         dbContext.SystemPermissions.AddRange(permissions);
@@ -151,8 +138,8 @@ public static class TestDataInitializer
 
         var dictionaries = new List<SystemDataDictionary>
         {
-            new(Guid.NewGuid(), "system_status", "System Status", "active", "Generic system status", 1, true),
-            new(Guid.NewGuid(), "account_status", "Account Status", "active", "Generic account status", 2, true)
+            new(Guid.NewGuid(), "system_status", "系统状态", "active", "通用系统状态", 1, true),
+            new(Guid.NewGuid(), "account_status", "账户状态", "active", "通用账户状态", 2, true)
         };
 
         dbContext.SystemDataDictionaries.AddRange(dictionaries);
