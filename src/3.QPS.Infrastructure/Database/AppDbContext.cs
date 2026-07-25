@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using QPS.Application.Interfaces;
 using QPS.Domain.Common;
 using QPS.Domain.Entities.System;
+using QPS.Domain.Entities.Crm;
 
 namespace QPS.Infrastructure.Database;
 
@@ -16,6 +17,11 @@ public class AppDbContext : DbContext, IDbContext
     public DbSet<SystemRolePermission> SystemRolePermissions { get; set; }
     public DbSet<SystemDataDictionary> SystemDataDictionaries { get; set; }
     public DbSet<SystemErrorLog> SystemErrorLogs { get; set; }
+
+    // CRM 模块
+    public DbSet<CrmCustomer> CrmCustomers { get; set; }
+    public DbSet<CrmContact> CrmContacts { get; set; }
+    public DbSet<CrmFollowRecord> CrmFollowRecords { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUserService currentUserService) : base(options)
     {

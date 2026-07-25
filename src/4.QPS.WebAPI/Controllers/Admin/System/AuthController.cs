@@ -43,4 +43,19 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(query);
         return Ok(result);
     }
+
+    /// <summary>
+    /// 修改当前登录用户密码
+    /// </summary>
+    [HttpPost("change-password")]
+    public async Task<ActionResult<bool>> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var command = new ChangePasswordCommand
+        {
+            OldPassword = request.OldPassword,
+            NewPassword = request.NewPassword
+        };
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
 }
