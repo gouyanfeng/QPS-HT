@@ -15,4 +15,10 @@ public class CurrentUserService : ICurrentUserService
     public string? UserId => _httpContextAccessor.HttpContext?.User?.FindFirst("userId")?.Value;
 
     public string? Username => _httpContextAccessor.HttpContext?.User?.FindFirst("username")?.Value;
+
+    public string? RequestPath => _httpContextAccessor.HttpContext?.Request?.Path.Value;
+
+    public string? IpAddress => _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+
+    public string? UserAgent => _httpContextAccessor.HttpContext?.Request?.Headers.UserAgent.ToString();
 }
