@@ -31,6 +31,12 @@ public class AppDbContext : DbContext, IDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        modelBuilder.Entity<CrmCustomer>(entity =>
+        {
+            entity.Property(customer => customer.Lat).HasPrecision(10, 6);
+            entity.Property(customer => customer.Lng).HasPrecision(10, 6);
+        });
     }
 
     public override int SaveChanges()
