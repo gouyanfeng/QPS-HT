@@ -92,16 +92,16 @@ public class AppDbContext : DbContext, IDbContext
     public override int SaveChanges()
     {
         var operationLogs = CollectOperationLogs();
-        SetAuditFields();
         SystemOperationLogs.AddRange(operationLogs);
+        SetAuditFields();
         return base.SaveChanges();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var operationLogs = CollectOperationLogs();
-        SetAuditFields();
         await SystemOperationLogs.AddRangeAsync(operationLogs, cancellationToken);
+        SetAuditFields();
         return await base.SaveChangesAsync(cancellationToken);
     }
 
