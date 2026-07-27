@@ -17,6 +17,7 @@ public class AppDbContext : DbContext, IDbContext
     public DbSet<SystemRolePermission> SystemRolePermissions { get; set; }
     public DbSet<SystemDataDictionary> SystemDataDictionaries { get; set; }
     public DbSet<SystemErrorLog> SystemErrorLogs { get; set; }
+    public DbSet<SystemOperationLog> SystemOperationLogs { get; set; }
 
     // CRM 模块
     public DbSet<CrmCustomer> CrmCustomers { get; set; }
@@ -36,6 +37,22 @@ public class AppDbContext : DbContext, IDbContext
         {
             entity.Property(customer => customer.Lat).HasPrecision(10, 6);
             entity.Property(customer => customer.Lng).HasPrecision(10, 6);
+        });
+
+        modelBuilder.Entity<SystemOperationLog>(entity =>
+        {
+            entity.HasIndex(log => new { log.EntityType, log.EntityId, log.CreatedAt });
+            entity.HasIndex(log => new { log.OperatorUserId, log.CreatedAt });
+            entity.HasIndex(log => new { log.ActionType, log.CreatedAt });
+
+            entity.Property(log => log.EntityType).HasMaxLength(100);
+            entity.Property(log => log.EntityId).HasMaxLength(64);
+            entity.Property(log => log.ActionType).HasMaxLength(50);
+            entity.Property(log => log.OperatorUserId).HasMaxLength(64);
+            entity.Property(log => log.OperatorName).HasMaxLength(100);
+            entity.Property(log => log.RequestPath).HasMaxLength(300);
+            entity.Property(log => log.IpAddress).HasMaxLength(64);
+            entity.Property(log => log.UserAgent).HasMaxLength(500);
         });
     }
 

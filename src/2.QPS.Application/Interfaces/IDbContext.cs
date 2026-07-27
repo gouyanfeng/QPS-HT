@@ -13,6 +13,7 @@ public interface IDbContext
     DbSet<SystemRolePermission> SystemRolePermissions { get; }
     DbSet<SystemDataDictionary> SystemDataDictionaries { get; }
     DbSet<SystemErrorLog> SystemErrorLogs { get; }
+    DbSet<SystemOperationLog> SystemOperationLogs { get; }
 
     // CRM 模块
     DbSet<CrmCustomer> CrmCustomers { get; }
