@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
 
@@ -26,7 +27,8 @@ public class DeleteCrmCustomerHandler : IRequestHandler<DeleteCrmCustomerCommand
 
     public async Task<bool> Handle(DeleteCrmCustomerCommand request, CancellationToken cancellationToken)
     {
-        var customer = await _dbContext.CrmCustomers.FindAsync(request.Id, cancellationToken);
+        var customer = await _dbContext.CrmCustomers
+            .FirstOrDefaultAsync(c => c.Id == request.Id && !c.IsDeleted, cancellationToken);
 
         if (customer == null)
         {

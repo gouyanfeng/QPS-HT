@@ -30,10 +30,18 @@ public class CrmCustomerController : ControllerBase
         [FromQuery] string sortField = "CreatedAt",
         [FromQuery] string sortDirection = "Descending",
         [FromQuery] string? customerName = null,
+        [FromQuery] string? keyword = null,
         [FromQuery] string? customerType = null,
         [FromQuery] string? grade = null,
         [FromQuery] string? status = null,
-        [FromQuery] Guid? ownerUserId = null)
+        [FromQuery] Guid? ownerUserId = null,
+        [FromQuery] string? mainProduct = null,
+        [FromQuery] string? province = null,
+        [FromQuery] string? city = null,
+        [FromQuery] DateTime? nextFollowFrom = null,
+        [FromQuery] DateTime? nextFollowTo = null,
+        [FromQuery] bool? onlyOverdue = null,
+        [FromQuery] bool? onlyNoNextFollow = null)
     {
         var query = new GetCrmCustomersQuery
         {
@@ -42,10 +50,18 @@ public class CrmCustomerController : ControllerBase
             SortField = sortField,
             SortDirection = sortDirection,
             CustomerName = customerName,
+            Keyword = keyword,
             CustomerType = customerType,
             Grade = grade,
             Status = status,
-            OwnerUserId = ownerUserId
+            OwnerUserId = ownerUserId,
+            MainProduct = mainProduct,
+            Province = province,
+            City = city,
+            NextFollowFrom = nextFollowFrom,
+            NextFollowTo = nextFollowTo,
+            OnlyOverdue = onlyOverdue,
+            OnlyNoNextFollow = onlyNoNextFollow
         };
 
         var result = await _mediator.Send(query);

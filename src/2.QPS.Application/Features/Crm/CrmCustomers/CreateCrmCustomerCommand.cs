@@ -46,6 +46,14 @@ public class CreateCrmCustomerHandler : IRequestHandler<CreateCrmCustomerCommand
             request.Request.ParentCustomerId
         );
 
+        if (!string.IsNullOrWhiteSpace(request.Request.PrimaryContactName) ||
+            !string.IsNullOrWhiteSpace(request.Request.PrimaryContactPhone))
+        {
+            customer.UpdatePrimaryContact(
+                request.Request.PrimaryContactName ?? string.Empty,
+                request.Request.PrimaryContactPhone ?? string.Empty);
+        }
+
         _dbContext.CrmCustomers.Add(customer);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -69,6 +77,11 @@ public class CreateCrmCustomerHandler : IRequestHandler<CreateCrmCustomerCommand
             Status = customer.Status,
             OwnerUserId = customer.OwnerUserId,
             Remark = customer.Remark,
+            PrimaryContactName = customer.PrimaryContactName,
+            PrimaryContactPhone = customer.PrimaryContactPhone,
+            LastFollowAt = customer.LastFollowAt,
+            LastFollowResult = customer.LastFollowResult,
+            NextFollowAt = customer.NextFollowAt,
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt
         };

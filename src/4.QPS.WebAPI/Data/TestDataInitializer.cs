@@ -205,102 +205,129 @@ public static class TestDataInitializer
             return;
         }
 
-        // 创建测试客户数据
+        // 创建药材 CRM 测试客户数据
         var customers = new List<CrmCustomer>
         {
             CrmCustomer.Create(
-                customerName: "北京科技有限公司",
-                customerType: "企业客户",
-                mainProduct: "软件开发",
+                customerName: "陇西黄芪种植合作社",
+                customerType: "合作社",
+                mainProduct: "黄芪",
                 grade: "A",
-                score: 1000,
-                province: "北京市",
-                city: "北京市",
-                area: "朝阳区",
-                address: "北京市朝阳区科技园区A座",
-                lat: 39.9042m,
-                lng: 116.4074m,
-                sourcePlatform: "官网",
-                sourceLeadId: 1001,
+                score: 92,
+                province: "甘肃省",
+                city: "定西市",
+                area: "陇西县",
+                address: "甘肃省定西市陇西县首阳镇黄芪种植片区",
+                lat: 35.0036m,
+                lng: 104.6386m,
+                sourcePlatform: "百度地图",
+                sourceLeadId: 2001,
                 ownerUserId: null,
-                remark: "重要客户，需要重点跟进",
+                remark: "A类合作社，黄芪种植规模较大，需要持续跟进收购意向。",
                 parentCustomerId: null
             ),
             CrmCustomer.Create(
-                customerName: "上海贸易集团",
-                customerType: "企业客户",
-                mainProduct: "进出口贸易",
-                grade: "A",
-                score: 850,
-                province: "上海市",
-                city: "上海市",
-                area: "浦东新区",
-                address: "上海市浦东新区陆家嘴金融中心",
-                lat: 31.2304m,
-                lng: 121.4737m,
-                sourcePlatform: "展会",
-                sourceLeadId: 1002,
-                ownerUserId: null,
-                remark: "长期合作伙伴",
-                parentCustomerId: null
-            ),
-            CrmCustomer.Create(
-                customerName: "广州制造有限公司",
-                customerType: "企业客户",
-                mainProduct: "机械设备",
+                customerName: "岷县当归基地",
+                customerType: "基地",
+                mainProduct: "当归",
                 grade: "B",
-                score: 600,
-                province: "广东省",
-                city: "广州市",
-                area: "天河区",
-                address: "广州市天河区工业园区",
-                lat: 23.1291m,
-                lng: 113.2644m,
-                sourcePlatform: "电话营销",
-                sourceLeadId: 1003,
+                score: 85,
+                province: "甘肃省",
+                city: "定西市",
+                area: "岷县",
+                address: "甘肃省定西市岷县梅川镇当归种植基地",
+                lat: 34.4391m,
+                lng: 104.0369m,
+                sourcePlatform: "百度地图",
+                sourceLeadId: 2002,
                 ownerUserId: null,
-                remark: "潜力客户",
+                remark: "基地电话有效，负责人上午更容易接听。",
                 parentCustomerId: null
             ),
             CrmCustomer.Create(
-                customerName: "深圳市创新科技",
-                customerType: "企业客户",
-                mainProduct: "电子产品",
+                customerName: "亳州药材流通商",
+                customerType: "流通商",
+                mainProduct: "多品类",
                 grade: "B",
-                score: 550,
-                province: "广东省",
-                city: "深圳市",
-                area: "南山区",
-                address: "深圳市南山区科技园",
-                lat: 22.5431m,
-                lng: 114.0579m,
-                sourcePlatform: "线上广告",
-                sourceLeadId: 1004,
+                score: 71,
+                province: "安徽省",
+                city: "亳州市",
+                area: "谯城区",
+                address: "安徽省亳州市谯城区药材市场周边",
+                lat: 33.8446m,
+                lng: 115.7793m,
+                sourcePlatform: "百度地图",
+                sourceLeadId: 2003,
                 ownerUserId: null,
-                remark: "新兴科技公司",
-                parentCustomerId: null
-            ),
-            CrmCustomer.Create(
-                customerName: "李小明",
-                customerType: "个人客户",
-                mainProduct: "个人服务",
-                grade: "C",
-                score: 200,
-                province: "浙江省",
-                city: "杭州市",
-                area: "西湖区",
-                address: "杭州市西湖区文三路",
-                lat: 30.2741m,
-                lng: 120.1552m,
-                sourcePlatform: "社交媒体",
-                sourceLeadId: 1005,
-                ownerUserId: null,
-                remark: "个人用户",
+                remark: "流通商多品类经营，需确认黄芪和当归近期采购计划。",
                 parentCustomerId: null
             )
         };
 
         dbContext.CrmCustomers.AddRange(customers);
+        dbContext.SaveChanges();
+
+        var contacts = new List<CrmContact>
+        {
+            CrmContact.Create(
+                customerId: customers[0].Id,
+                contactName: "王建国",
+                phone: "13893210001",
+                phoneType: "手机",
+                wechat: "wx_huangqi_wang",
+                roleName: "合作社负责人",
+                isPrimary: true,
+                remark: "主联系人，了解今年黄芪采收量。"),
+            CrmContact.Create(
+                customerId: customers[0].Id,
+                contactName: "李会计",
+                phone: "13993210002",
+                phoneType: "手机",
+                wechat: "wx_huangqi_li",
+                roleName: "财务",
+                isPrimary: false,
+                remark: "可确认结算方式。"),
+            CrmContact.Create(
+                customerId: customers[1].Id,
+                contactName: "张主任",
+                phone: "13893220001",
+                phoneType: "手机",
+                wechat: "wx_danggui_zhang",
+                roleName: "基地负责人",
+                isPrimary: true,
+                remark: "上午 9 点后方便沟通。")
+        };
+
+        dbContext.CrmContacts.AddRange(contacts);
+        customers[0].UpdatePrimaryContact(contacts[0].ContactName, contacts[0].Phone);
+        customers[1].UpdatePrimaryContact(contacts[2].ContactName, contacts[2].Phone);
+        dbContext.SaveChanges();
+
+        var nextFollowAt = DateTime.Now.Date.AddDays(2).AddHours(10);
+        var followRecords = new List<CrmFollowRecord>
+        {
+            CrmFollowRecord.Create(
+                customerId: customers[0].Id,
+                contactId: contacts[0].Id,
+                followType: "电话",
+                followResult: "已接通",
+                intentLevel: "A",
+                content: "王建国反馈今年黄芪长势较好，预计下周能给出可供货量。",
+                nextFollowAt: DateTime.Now.Date.AddDays(1).AddHours(15),
+                operatorUserId: null),
+            CrmFollowRecord.Create(
+                customerId: customers[0].Id,
+                contactId: contacts[0].Id,
+                followType: "微信",
+                followResult: "有意向",
+                intentLevel: "A",
+                content: "已添加微信并发送合作资料，对方希望先确认收购价格区间。",
+                nextFollowAt: nextFollowAt,
+                operatorUserId: null)
+        };
+
+        dbContext.CrmFollowRecords.AddRange(followRecords);
+        customers[0].UpdateFollowSummary(DateTime.Now, "有意向", nextFollowAt);
         dbContext.SaveChanges();
     }
 }

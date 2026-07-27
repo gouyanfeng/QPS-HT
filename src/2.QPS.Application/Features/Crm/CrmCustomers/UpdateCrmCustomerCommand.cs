@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
@@ -28,7 +29,8 @@ public class UpdateCrmCustomerHandler : IRequestHandler<UpdateCrmCustomerCommand
 
     public async Task<CrmCustomerDto> Handle(UpdateCrmCustomerCommand request, CancellationToken cancellationToken)
     {
-        var customer = await _dbContext.CrmCustomers.FindAsync(request.Id, cancellationToken);
+        var customer = await _dbContext.CrmCustomers
+            .FirstOrDefaultAsync(c => c.Id == request.Id && !c.IsDeleted, cancellationToken);
 
         if (customer == null)
         {
@@ -63,6 +65,21 @@ public class UpdateCrmCustomerHandler : IRequestHandler<UpdateCrmCustomerCommand
             customer.AssignOwner(request.Request.OwnerUserId);
         }
 
+        if (!string.IsNullOrWhiteSpace(request.Request.PrimaryContactName) ||
+            !string.IsNullOrWhiteSpace(request.Request.PrimaryContactPhone))
+        {
+            var primaryContactName = string.IsNullOrWhiteSpace(request.Request.PrimaryContactName)
+                ? customer.PrimaryContactName
+                : request.Request.PrimaryContactName!;
+            var primaryContactPhone = string.IsNullOrWhiteSpace(request.Request.PrimaryContactPhone)
+                ? customer.PrimaryContactPhone
+                : request.Request.PrimaryContactPhone!;
+
+            customer.UpdatePrimaryContact(
+                primaryContactName,
+                primaryContactPhone);
+        }
+
         // 更新状态
         if (!string.IsNullOrEmpty(request.Request.Status) && customer.Status != request.Request.Status)
         {
@@ -91,6 +108,11 @@ public class UpdateCrmCustomerHandler : IRequestHandler<UpdateCrmCustomerCommand
             Status = customer.Status,
             OwnerUserId = customer.OwnerUserId,
             Remark = customer.Remark,
+            PrimaryContactName = customer.PrimaryContactName,
+            PrimaryContactPhone = customer.PrimaryContactPhone,
+            LastFollowAt = customer.LastFollowAt,
+            LastFollowResult = customer.LastFollowResult,
+            NextFollowAt = customer.NextFollowAt,
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt
         };

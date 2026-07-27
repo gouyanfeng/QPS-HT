@@ -34,7 +34,7 @@ public class GetCrmCustomerHandler : IRequestHandler<GetCrmCustomerQuery, CrmCus
         var customer = await _dbContext.CrmCustomers
             .Include(c => c.ParentCustomer)
             .Include(c => c.Contacts)
-            .FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == request.Id && !c.IsDeleted, cancellationToken);
 
         if (customer == null)
         {
@@ -62,6 +62,11 @@ public class GetCrmCustomerHandler : IRequestHandler<GetCrmCustomerQuery, CrmCus
             Status = customer.Status,
             OwnerUserId = customer.OwnerUserId,
             Remark = customer.Remark,
+            PrimaryContactName = customer.PrimaryContactName,
+            PrimaryContactPhone = customer.PrimaryContactPhone,
+            LastFollowAt = customer.LastFollowAt,
+            LastFollowResult = customer.LastFollowResult,
+            NextFollowAt = customer.NextFollowAt,
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt
         };

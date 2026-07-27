@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -85,20 +84,11 @@ builder.Services.AddSwaggerGen(c =>
 /// <summary>
 /// 配置数据库
 /// </summary>
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=QPS.db";
-var sqliteConnectionStringBuilder = new SqliteConnectionStringBuilder(connectionString);
-
-if (string.IsNullOrWhiteSpace(sqliteConnectionStringBuilder.DataSource) || !System.IO.Path.IsPathRooted(sqliteConnectionStringBuilder.DataSource))
-{
-    sqliteConnectionStringBuilder.DataSource = System.IO.Path.Combine(
-        builder.Environment.ContentRootPath,
-        System.IO.Path.GetFileName(sqliteConnectionStringBuilder.DataSource ?? "QPS.db"));
-}
-
-builder.Configuration["ConnectionStrings:DefaultConnection"] = sqliteConnectionStringBuilder.ConnectionString;
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Server=localhost;Database=QPS_CRM;User Id=sa;Password=123456;TrustServerCertificate=True;Encrypt=False;";
 builder.Services.AddDbContext<AppDbContext>(options =>
     // 使用SQLite数据库，连接字符串从配置中获取
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 /// <summary>
 /// 配置认证
