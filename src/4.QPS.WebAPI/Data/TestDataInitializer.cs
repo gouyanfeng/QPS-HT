@@ -91,6 +91,7 @@ public static class TestDataInitializer
         var dataDictionaryAdd = new SystemPermission("新增", "dataDictionary:add");
         var dataDictionaryEdit = new SystemPermission("编辑", "dataDictionary:edit");
         var dataDictionaryDelete = new SystemPermission("删除", "dataDictionary:delete");
+        var operationLog = new SystemPermission("操作日志", "operationLog");
 
         // CRM 权限
         var crm = new SystemPermission("CRM", "crm");
@@ -116,6 +117,7 @@ public static class TestDataInitializer
         SetParent(dataDictionaryAdd, dataDictionary);
         SetParent(dataDictionaryEdit, dataDictionary);
         SetParent(dataDictionaryDelete, dataDictionary);
+        SetParent(operationLog, system);
 
         // CRM 权限层级
         SetParent(crm, root);
@@ -144,6 +146,7 @@ public static class TestDataInitializer
             dataDictionaryAdd,
             dataDictionaryEdit,
             dataDictionaryDelete,
+            operationLog,
             crm,
             crmCustomer,
             crmCustomerAdd,
