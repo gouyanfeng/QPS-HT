@@ -12,6 +12,9 @@ public interface IDbContext
     DbSet<SystemUserRole> SystemUserRoles { get; }
     DbSet<SystemRolePermission> SystemRolePermissions { get; }
     DbSet<SystemDataDictionary> SystemDataDictionaries { get; }
+    DbSet<SystemRegion> SystemRegions { get; }
+    DbSet<SystemChinaRegion> SystemChinaRegions { get; }
+    DbSet<BusinessEntityAttribute> BusinessEntityAttributes { get; }
     DbSet<SystemErrorLog> SystemErrorLogs { get; }
     DbSet<SystemOperationLog> SystemOperationLogs { get; }
 

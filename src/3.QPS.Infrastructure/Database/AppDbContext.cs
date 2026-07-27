@@ -49,6 +49,9 @@ public class AppDbContext : DbContext, IDbContext
     public DbSet<SystemUserRole> SystemUserRoles { get; set; }
     public DbSet<SystemRolePermission> SystemRolePermissions { get; set; }
     public DbSet<SystemDataDictionary> SystemDataDictionaries { get; set; }
+    public DbSet<SystemRegion> SystemRegions { get; set; }
+    public DbSet<SystemChinaRegion> SystemChinaRegions { get; set; }
+    public DbSet<BusinessEntityAttribute> BusinessEntityAttributes { get; set; }
     public DbSet<SystemErrorLog> SystemErrorLogs { get; set; }
     public DbSet<SystemOperationLog> SystemOperationLogs { get; set; }
 
@@ -70,6 +73,36 @@ public class AppDbContext : DbContext, IDbContext
         {
             entity.Property(customer => customer.Lat).HasPrecision(10, 6);
             entity.Property(customer => customer.Lng).HasPrecision(10, 6);
+        });
+
+        modelBuilder.Entity<BusinessEntityAttribute>(entity =>
+        {
+            entity.HasIndex(attribute => new
+            {
+                attribute.EntityType,
+                attribute.EntityId,
+                attribute.AttributeCode
+            });
+
+            entity.HasIndex(attribute => new
+            {
+                attribute.EntityType,
+                attribute.EntityId,
+                attribute.AttributeCode,
+                attribute.AttributeValue
+            });
+        });
+
+        modelBuilder.Entity<SystemChinaRegion>(entity =>
+        {
+            entity.HasIndex(region => region.Code);
+            entity.HasIndex(region => new { region.Level, region.ParentCode });
+            entity.Property(region => region.Code).HasMaxLength(20);
+            entity.Property(region => region.Name).HasMaxLength(100);
+            entity.Property(region => region.FullName).HasMaxLength(200);
+            entity.Property(region => region.ParentCode).HasMaxLength(20);
+            entity.Property(region => region.ProvinceCode).HasMaxLength(20);
+            entity.Property(region => region.CityCode).HasMaxLength(20);
         });
 
         modelBuilder.Entity<SystemOperationLog>(entity =>
