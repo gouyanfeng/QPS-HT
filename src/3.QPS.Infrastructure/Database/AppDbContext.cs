@@ -1,13 +1,46 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using QPS.Application.Interfaces;
 using QPS.Domain.Common;
 using QPS.Domain.Entities.System;
 using QPS.Domain.Entities.Crm;
+using System.Text.Json;
 
 namespace QPS.Infrastructure.Database;
 
 public class AppDbContext : DbContext, IDbContext
 {
+    private static readonly HashSet<string> IgnoredOperationLogFields = new(StringComparer.OrdinalIgnoreCase)
+    {
+        nameof(BaseEntity.Id),
+        nameof(BaseEntity.CreatedAt),
+        nameof(BaseEntity.CreatedBy),
+        nameof(BaseEntity.UpdatedAt),
+        nameof(BaseEntity.UpdatedBy),
+        nameof(BaseEntity.IsDeleted),
+        "Password",
+        "PasswordHash",
+        "Token",
+        "RefreshToken"
+    };
+
+    private static readonly HashSet<string> StatusFields = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Status",
+        "State",
+        "Enabled",
+        "IsEnabled",
+        "IsActive"
+    };
+
+    private static readonly HashSet<string> OwnerFields = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "OwnerUserId",
+        "AssigneeId",
+        "ResponsibleUserId",
+        "ManagerUserId"
+    };
+
     private readonly ICurrentUserService _currentUserService;
 
     public DbSet<SystemUser> SystemUsers { get; set; }
@@ -58,15 +91,118 @@ public class AppDbContext : DbContext, IDbContext
 
     public override int SaveChanges()
     {
+        var operationLogs = CollectOperationLogs();
         SetAuditFields();
+        SystemOperationLogs.AddRange(operationLogs);
         return base.SaveChanges();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        var operationLogs = CollectOperationLogs();
         SetAuditFields();
+        await SystemOperationLogs.AddRangeAsync(operationLogs, cancellationToken);
         return await base.SaveChangesAsync(cancellationToken);
     }
+
+    private List<SystemOperationLog> CollectOperationLogs()
+    {
+        ChangeTracker.DetectChanges();
+
+        return ChangeTracker.Entries()
+            .Where(entry => entry.Entity is BaseEntity)
+            .Where(entry => entry.Entity is not SystemOperationLog)
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .Select(CreateOperationLog)
+            .Where(log => log is not null)
+            .Cast<SystemOperationLog>()
+            .ToList();
+    }
+
+    private SystemOperationLog? CreateOperationLog(EntityEntry entry)
+    {
+        var changeMap = BuildChangeMap(entry);
+        if (changeMap.Count == 0)
+        {
+            return null;
+        }
+
+        var entity = (BaseEntity)entry.Entity;
+        var actionType = ResolveActionType(entry.State, changeMap.Keys);
+        var changeJson = JsonSerializer.Serialize(changeMap);
+
+        return SystemOperationLog.Create(
+            entry.Metadata.ClrType.Name,
+            entity.Id.ToString(),
+            actionType,
+            changeJson,
+            _currentUserService.UserId ?? string.Empty,
+            _currentUserService.Username ?? "System",
+            _currentUserService.RequestPath ?? string.Empty,
+            _currentUserService.IpAddress ?? string.Empty,
+            _currentUserService.UserAgent ?? string.Empty);
+    }
+
+    private static Dictionary<string, OperationLogChange> BuildChangeMap(EntityEntry entry)
+    {
+        var changes = new Dictionary<string, OperationLogChange>();
+
+        foreach (var property in entry.Properties)
+        {
+            var propertyName = property.Metadata.Name;
+            if (IgnoredOperationLogFields.Contains(propertyName))
+            {
+                continue;
+            }
+
+            if (entry.State == EntityState.Modified && !property.IsModified)
+            {
+                continue;
+            }
+
+            var oldValue = entry.State == EntityState.Added ? null : property.OriginalValue;
+            var newValue = entry.State == EntityState.Deleted ? null : property.CurrentValue;
+
+            if (entry.State == EntityState.Modified && Equals(oldValue, newValue))
+            {
+                continue;
+            }
+
+            changes[propertyName] = new OperationLogChange(oldValue, newValue);
+        }
+
+        return changes;
+    }
+
+    private static string ResolveActionType(EntityState state, IEnumerable<string> changedFields)
+    {
+        if (state == EntityState.Added)
+        {
+            return "Create";
+        }
+
+        if (state == EntityState.Deleted)
+        {
+            return "Delete";
+        }
+
+        var fields = changedFields.ToList();
+        if (fields.Count > 0 && fields.All(StatusFields.Contains))
+        {
+            return "StatusChange";
+        }
+
+        if (fields.Count > 0 && fields.All(OwnerFields.Contains))
+        {
+            return "AssignOwner";
+        }
+
+        return "Update";
+    }
+
+    private sealed record OperationLogChange(
+        [property: System.Text.Json.Serialization.JsonPropertyName("old")] object? Old,
+        [property: System.Text.Json.Serialization.JsonPropertyName("new")] object? New);
 
     private void SetAuditFields()
     {
