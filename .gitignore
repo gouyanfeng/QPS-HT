@@ -26,6 +26,7 @@ coverage/
 # IDE
 .vscode/
 .idea/
+.worktrees/
 *.swp
 *.swo
 
