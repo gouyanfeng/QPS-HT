@@ -437,6 +437,10 @@ public static class TestDataInitializer
                 CREATE INDEX [IX_CrmBusinessEntityAttributes_Entity_Value]
                 ON [CrmBusinessEntityAttributes]([EntityType], [EntityId], [AttributeCode], [AttributeValue]);
             END;
+
+            UPDATE [CrmBusinessEntityAttributes]
+            SET [EntityType] = N'CRM_HERB_BASE'
+            WHERE [EntityType] = N'CRM_CUSTOMER';
             """);
     }
 
