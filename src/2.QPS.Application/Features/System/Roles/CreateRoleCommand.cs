@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using QPS.Application.Contracts.System.Roles;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.System;
@@ -55,3 +55,5 @@ public class CreateRoleHandler : IRequestHandler<CreateRoleCommand, RoleDto>
         };
     }
 }
+
+

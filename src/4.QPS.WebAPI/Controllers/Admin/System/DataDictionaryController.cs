@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QPS.Application.Contracts.System.DataDictionaries;
@@ -82,3 +82,4 @@ public class DataDictionaryController : ControllerBase
         return NoContent();
     }
 }
+

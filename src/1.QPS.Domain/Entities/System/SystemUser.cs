@@ -1,4 +1,4 @@
-using QPS.Domain.Common;
+﻿using QPS.Domain.Common;
 
 namespace QPS.Domain.Entities.System;
 
@@ -38,3 +38,4 @@ public class SystemUser : BaseEntity
     public void Activate() { IsActive = true; }
     public void Deactivate() { IsActive = false; }
 }
+

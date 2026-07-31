@@ -1,4 +1,4 @@
-namespace QPS.Application.Contracts.Crm;
+﻿namespace QPS.Application.Contracts.Crm;
 
 public class CrmFollowRecordDto
 {
@@ -24,3 +24,5 @@ public class CrmFollowRecordDto
 
     public DateTime CreatedAt { get; set; }
 }
+
+

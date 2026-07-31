@@ -4,12 +4,12 @@ using QPS.Application.Contracts.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
 
-namespace QPS.Application.Features.Crm.CrmCustomers;
+namespace QPS.Application.Features.Crm.CrmHerbBases;
 
 /// <summary>
-/// 获取客户详情查询
+/// 获取药材基地详情查询
 /// </summary>
-public class GetCrmCustomerQuery : IRequest<CrmCustomerDto>
+public class GetCrmHerbBaseQuery : IRequest<CrmHerbBaseDto>
 {
     /// <summary>
     /// 客户ID
@@ -18,36 +18,34 @@ public class GetCrmCustomerQuery : IRequest<CrmCustomerDto>
 }
 
 /// <summary>
-/// 获取客户详情处理器
+/// 获取药材基地详情处理器
 /// </summary>
-public class GetCrmCustomerHandler : IRequestHandler<GetCrmCustomerQuery, CrmCustomerDto>
+public class GetCrmHerbBaseHandler : IRequestHandler<GetCrmHerbBaseQuery, CrmHerbBaseDto>
 {
     private readonly IDbContext _dbContext;
 
-    public GetCrmCustomerHandler(IDbContext dbContext)
+    public GetCrmHerbBaseHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
-    public async Task<CrmCustomerDto> Handle(GetCrmCustomerQuery request, CancellationToken cancellationToken)
+    public async Task<CrmHerbBaseDto> Handle(GetCrmHerbBaseQuery request, CancellationToken cancellationToken)
     {
-        var customer = await _dbContext.CrmCustomers
-            .Include(c => c.ParentCustomer)
-            .Include(c => c.Contacts)
+        var customer = await _dbContext.CrmHerbBases
             .FirstOrDefaultAsync(c => c.Id == request.Id && !c.IsDeleted, cancellationToken);
 
         if (customer == null)
         {
-            throw new BusinessException(404, "客户不存在");
+            throw new BusinessException(404, "药材基地不存在");
         }
 
-        return new CrmCustomerDto
+        var dto = new CrmHerbBaseDto
         {
             Id = customer.Id,
-            ParentCustomerId = customer.ParentCustomerId,
-            ParentCustomerName = customer.ParentCustomer?.CustomerName,
-            CustomerName = customer.CustomerName,
-            CustomerType = customer.CustomerType,
+            ParentId = customer.ParentId,
+            BaseName = customer.BaseName,
+            HerbBaseName = customer.BaseName,
+            SubjectName = customer.SubjectName,
             MainProduct = customer.MainProduct,
             Grade = customer.Grade,
             Score = customer.Score,
@@ -58,7 +56,7 @@ public class GetCrmCustomerHandler : IRequestHandler<GetCrmCustomerQuery, CrmCus
             Lat = customer.Lat,
             Lng = customer.Lng,
             SourcePlatform = customer.SourcePlatform,
-            SourceLeadId = customer.SourceLeadId,
+            SourceId = customer.SourceId,
             Status = customer.Status,
             OwnerUserId = customer.OwnerUserId,
             Remark = customer.Remark,
@@ -70,5 +68,13 @@ public class GetCrmCustomerHandler : IRequestHandler<GetCrmCustomerQuery, CrmCus
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt
         };
+
+        await CrmHerbBaseMainProducts.FillAsync(_dbContext, new List<CrmHerbBaseDto> { dto }, cancellationToken);
+        await CrmHerbBaseOwners.FillAsync(_dbContext, new List<CrmHerbBaseDto> { dto }, cancellationToken);
+
+        return dto;
     }
 }
+
+
+

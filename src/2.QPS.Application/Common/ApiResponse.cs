@@ -1,4 +1,4 @@
-namespace QPS.Application.Common;
+﻿namespace QPS.Application.Common;
 
 /// <summary>
 /// API 响应包装类
@@ -52,3 +52,4 @@ public class ApiResponse<T>
         return Fail(500, msg);
     }
 }
+

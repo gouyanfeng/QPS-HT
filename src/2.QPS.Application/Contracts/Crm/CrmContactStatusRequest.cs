@@ -1,4 +1,4 @@
-namespace QPS.Application.Contracts.Crm;
+﻿namespace QPS.Application.Contracts.Crm;
 
 public class CrmContactStatusRequest
 {
@@ -6,3 +6,5 @@ public class CrmContactStatusRequest
 
     public string Remark { get; set; } = string.Empty;
 }
+
+

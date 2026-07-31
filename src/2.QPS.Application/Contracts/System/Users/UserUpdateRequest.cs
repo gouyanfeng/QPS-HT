@@ -1,4 +1,4 @@
-namespace QPS.Application.Contracts.System.Users;
+﻿namespace QPS.Application.Contracts.System.Users;
 
 public class UserUpdateRequest
 {
@@ -7,3 +7,4 @@ public class UserUpdateRequest
     public bool IsActive { get; set; }
     public Guid RoleId { get; set; }
 }
+

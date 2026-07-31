@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Interfaces;
@@ -16,7 +16,8 @@ public class UpdateCrmContactStatusCommand : IRequest<CrmContactDto>
 
 public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactStatusCommand, CrmContactDto>
 {
-    private const string InvalidStatus = "无效";
+    private const string CustomerEntityType = "CRM_HERB_BASE";
+    private const string InvalidStatus = "INVALID";
 
     private readonly IDbContext _dbContext;
 
@@ -35,8 +36,8 @@ public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactSta
             throw new BusinessException(404, "联系人不存在");
         }
 
-        var customer = await _dbContext.CrmCustomers
-            .FirstOrDefaultAsync(c => c.Id == contact.CustomerId && !c.IsDeleted, cancellationToken);
+        var customer = await _dbContext.CrmHerbBases
+            .FirstOrDefaultAsync(c => c.Id == contact.EntityId && contact.EntityType == CustomerEntityType && !c.IsDeleted, cancellationToken);
         if (customer == null)
         {
             throw new BusinessException(404, "客户不存在");
@@ -58,10 +59,10 @@ public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactSta
         return MapToDto(contact);
     }
 
-    private async Task PromoteOldestValidContact(CrmCustomer customer, Guid excludedContactId, CancellationToken cancellationToken)
+    private async Task PromoteOldestValidContact(CrmHerbBase customer, Guid excludedContactId, CancellationToken cancellationToken)
     {
         var replacement = await _dbContext.CrmContacts
-            .Where(c => c.CustomerId == customer.Id && c.Id != excludedContactId && c.Status != InvalidStatus)
+            .Where(c => c.EntityType == CustomerEntityType && c.EntityId == customer.Id && c.Id != excludedContactId && c.Status != InvalidStatus)
             .OrderBy(c => c.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -79,7 +80,8 @@ public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactSta
         return new CrmContactDto
         {
             Id = contact.Id,
-            CustomerId = contact.CustomerId,
+            EntityType = contact.EntityType,
+            EntityId = contact.EntityId,
             ContactName = contact.ContactName,
             Phone = contact.Phone,
             PhoneType = contact.PhoneType,
@@ -93,3 +95,5 @@ public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactSta
         };
     }
 }
+
+

@@ -3,27 +3,32 @@ using QPS.Domain.Common;
 namespace QPS.Domain.Entities.Crm;
 
 /// <summary>
-/// CRM客户，来源于清洗后的线索并用于后续客户管理。
+/// CRM药材基地，来源于清洗后的线索并用于后续药材基地管理。
 /// </summary>
-public class CrmCustomer : BaseEntity
+public class CrmHerbBase : BaseEntity
 {
-    private const string PendingContactStatus = "待联系";
-    private const string FollowingUpStatus = "跟进中";
+    private const string PendingContactStatus = "PENDING";
+    private const string FollowingUpStatus = "FOLLOWING";
 
     /// <summary>
     /// 上级客户ID，用于维护客户层级关系。
     /// </summary>
-    public Guid? ParentCustomerId { get; private set; }
+    public Guid? ParentId { get; private set; }
 
     /// <summary>
-    /// 客户名称，对应清洗线索名称，导入CRM使用。
+    /// 基地名称，对应清洗线索名称，导入CRM使用。
     /// </summary>
-    public string CustomerName { get; private set; } = string.Empty;
+    public string BaseName { get; private set; } = string.Empty;
 
     /// <summary>
-    /// 客户类型，对应线索类型，例如基地、合作社、企业、流通商、疑似无关、待判断。
+    /// 兼容旧接口字段，等同于基地名称。
     /// </summary>
-    public string CustomerType { get; private set; } = string.Empty;
+    public string HerbBaseName => BaseName;
+
+    /// <summary>
+    /// 主体名称，用于记录客户对应的工商或经营主体。
+    /// </summary>
+    public string SubjectName { get; private set; } = string.Empty;
 
     /// <summary>
     /// 主营品类，例如黄芪、党参、天麻。
@@ -31,7 +36,7 @@ public class CrmCustomer : BaseEntity
     public string MainProduct { get; private set; } = string.Empty;
 
     /// <summary>
-    /// 客户等级，例如A、B、C、无效。
+    /// 药材基地等级，例如A、B、C、INVALID。
     /// </summary>
     public string Grade { get; private set; } = string.Empty;
 
@@ -71,17 +76,17 @@ public class CrmCustomer : BaseEntity
     public decimal? Lng { get; private set; }
 
     /// <summary>
-    /// 数据来源平台，默认百度地图。
+    /// 数据来源平台，默认BAIDU_MAP。
     /// </summary>
     public string SourcePlatform { get; private set; } = string.Empty;
 
     /// <summary>
     /// 来源表记录ID，对应BaiduPoiHerbBase.Id。
     /// </summary>
-    public long? SourceLeadId { get; private set; }
+    public long? SourceId { get; private set; }
 
     /// <summary>
-    /// 客户处理状态，例如待联系、跟进中、已成交、已流失。
+    /// 药材基地处理状态，例如PENDING、FOLLOWING、DEAL、LOST。
     /// </summary>
     public string Status { get; private set; } = string.Empty;
 
@@ -108,28 +113,22 @@ public class CrmCustomer : BaseEntity
     /// <summary>
     /// 上级客户。
     /// </summary>
-    public virtual CrmCustomer? ParentCustomer { get; private set; }
+    public virtual CrmHerbBase? ParentHerbBase { get; private set; }
 
     /// <summary>
     /// 下级客户集合。
     /// </summary>
-    public virtual ICollection<CrmCustomer> Children { get; private set; } = new List<CrmCustomer>();
-
-    /// <summary>
-    /// 客户联系人集合。
-    /// </summary>
-    public virtual ICollection<CrmContact> Contacts { get; private set; } = new List<CrmContact>();
+    public virtual ICollection<CrmHerbBase> Children { get; private set; } = new List<CrmHerbBase>();
 
     /// <summary>
     /// 客户跟进记录集合。
     /// </summary>
     public virtual ICollection<CrmFollowRecord> FollowRecords { get; private set; } = new List<CrmFollowRecord>();
 
-    private CrmCustomer() { }
+    private CrmHerbBase() { }
 
-    private CrmCustomer(
-        string customerName,
-        string customerType,
+    private CrmHerbBase(
+        string herbBaseName,
         string mainProduct,
         string grade,
         int score,
@@ -140,13 +139,14 @@ public class CrmCustomer : BaseEntity
         decimal? lat,
         decimal? lng,
         string sourcePlatform,
-        long? sourceLeadId,
+        long? sourceId,
         Guid? ownerUserId,
         string remark,
-        Guid? parentCustomerId)
+        Guid? parentId,
+        string subjectName)
     {
-        CustomerName = customerName;
-        CustomerType = customerType;
+        BaseName = herbBaseName;
+        SubjectName = subjectName;
         MainProduct = mainProduct;
         Grade = grade;
         Score = score;
@@ -157,16 +157,15 @@ public class CrmCustomer : BaseEntity
         Lat = lat;
         Lng = lng;
         SourcePlatform = sourcePlatform;
-        SourceLeadId = sourceLeadId;
+        SourceId = sourceId;
         OwnerUserId = ownerUserId;
         Remark = remark;
-        ParentCustomerId = parentCustomerId;
+        ParentId = parentId;
         Status = PendingContactStatus;
     }
 
-    public static CrmCustomer Create(
-        string customerName,
-        string customerType,
+    public static CrmHerbBase Create(
+        string herbBaseName,
         string mainProduct,
         string grade,
         int score,
@@ -177,14 +176,14 @@ public class CrmCustomer : BaseEntity
         decimal? lat,
         decimal? lng,
         string sourcePlatform,
-        long? sourceLeadId,
+        long? sourceId,
         Guid? ownerUserId,
         string remark,
-        Guid? parentCustomerId = null)
+        Guid? parentId = null,
+        string subjectName = "")
     {
-        return new CrmCustomer(
-            customerName,
-            customerType,
+        return new CrmHerbBase(
+            herbBaseName,
             mainProduct,
             grade,
             score,
@@ -195,15 +194,15 @@ public class CrmCustomer : BaseEntity
             lat,
             lng,
             sourcePlatform,
-            sourceLeadId,
+            sourceId,
             ownerUserId,
             remark,
-            parentCustomerId);
+            parentId,
+            subjectName);
     }
 
     public void UpdateBasicInfo(
-        string customerName,
-        string customerType,
+        string herbBaseName,
         string mainProduct,
         string grade,
         int score,
@@ -213,10 +212,11 @@ public class CrmCustomer : BaseEntity
         string address,
         decimal? lat,
         decimal? lng,
-        string remark)
+        string remark,
+        string subjectName = "")
     {
-        CustomerName = customerName;
-        CustomerType = customerType;
+        BaseName = herbBaseName;
+        SubjectName = subjectName;
         MainProduct = mainProduct;
         Grade = grade;
         Score = score;
@@ -229,9 +229,9 @@ public class CrmCustomer : BaseEntity
         Remark = remark;
     }
 
-    public void SetParent(Guid? parentCustomerId)
+    public void SetParent(Guid? parentId)
     {
-        ParentCustomerId = parentCustomerId;
+        ParentId = parentId;
     }
 
     public void AssignOwner(Guid? ownerUserId)
@@ -243,6 +243,12 @@ public class CrmCustomer : BaseEntity
     {
         PrimaryContactName = contactName;
         PrimaryContactPhone = phone;
+    }
+
+    public void UpdateSource(string sourcePlatform, long? sourceId)
+    {
+        SourcePlatform = sourcePlatform;
+        SourceId = sourceId;
     }
 
     public void ClearPrimaryContact()
@@ -269,3 +275,6 @@ public class CrmCustomer : BaseEntity
         Remark = remark;
     }
 }
+
+
+

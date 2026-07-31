@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using QPS.Application.Interfaces;
 using QPS.Infrastructure.Database;
 using QPS.Infrastructure.Identity;
@@ -15,3 +15,5 @@ public static class DependencyInjection
         return services;
     }
 }
+
+

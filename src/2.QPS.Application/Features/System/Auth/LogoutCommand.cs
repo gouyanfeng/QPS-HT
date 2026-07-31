@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using QPS.Application.Contracts.System.Auth;
 using QPS.Application.Interfaces;
 using System.Threading;
@@ -56,3 +56,4 @@ public class LogoutHandler : IRequestHandler<LogoutCommand, LogoutResponse>
         };
     }
 }
+

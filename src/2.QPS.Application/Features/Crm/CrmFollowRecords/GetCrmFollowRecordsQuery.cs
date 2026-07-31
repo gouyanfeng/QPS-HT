@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Interfaces;
@@ -42,3 +42,5 @@ public class GetCrmFollowRecordsHandler : IRequestHandler<GetCrmFollowRecordsQue
             .ToListAsync(cancellationToken);
     }
 }
+
+

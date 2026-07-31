@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.Roles;
 using QPS.Application.Interfaces;
@@ -71,3 +71,5 @@ public class GetRolesHandler : IRequestHandler<GetRolesQuery, PaginationResponse
         return await dtoQuery.ToPaginationResponseAsync(request);
     }
 }
+
+

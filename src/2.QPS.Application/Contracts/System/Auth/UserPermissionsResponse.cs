@@ -1,4 +1,4 @@
-namespace QPS.Application.Contracts.System.Auth;
+﻿namespace QPS.Application.Contracts.System.Auth;
 
 /// <summary>
 /// 当前用户权限响应
@@ -6,7 +6,9 @@ namespace QPS.Application.Contracts.System.Auth;
 public class UserPermissionsResponse
 {
     /// <summary>
-    /// 权限代码列表（如 ["home", "merchants:add", "orders:view"]）
+    /// 权限代码列表（如 ["HOME", "CRM_HERB_BASE_ADD", "DATA_DICTIONARY_EDIT"]）
     /// </summary>
     public List<string> Permissions { get; set; } = new();
 }
+
+

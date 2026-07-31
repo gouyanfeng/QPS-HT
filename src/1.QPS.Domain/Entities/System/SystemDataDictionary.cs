@@ -1,4 +1,4 @@
-using QPS.Domain.Common;
+﻿using QPS.Domain.Common;
 
 namespace QPS.Domain.Entities.System;
 
@@ -40,8 +40,15 @@ public class SystemDataDictionary : BaseEntity
         ParentId = parentId;
     }
 
+    public void RenameCode(string code)
+    {
+        Code = code;
+    }
+
     public void ToggleStatus()
     {
         IsActive = !IsActive;
     }
 }
+
+

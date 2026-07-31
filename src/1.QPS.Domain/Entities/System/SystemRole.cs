@@ -1,4 +1,4 @@
-using QPS.Domain.Common;
+﻿using QPS.Domain.Common;
 
 namespace QPS.Domain.Entities.System;
 
@@ -19,3 +19,4 @@ public class SystemRole : BaseEntity
         Code = code;
     }
 }
+

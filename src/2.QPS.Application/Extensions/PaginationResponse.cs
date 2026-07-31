@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace QPS.Application.Extensions;
 
@@ -49,3 +49,4 @@ public class PaginationResponse<T>
         TotalPages = (totalCount + pageSize - 1) / pageSize;
     }
 }
+

@@ -1,4 +1,4 @@
-namespace QPS.Application.Contracts.System.Permissions;
+﻿namespace QPS.Application.Contracts.System.Permissions;
 
 /// <summary>
 /// 角色权限映射 DTO
@@ -15,3 +15,5 @@ public class RolePermissionsDto
     /// </summary>
     public List<string> Permissions { get; set; } = new();
 }
+
+

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.DataDictionaries;
 using QPS.Application.Extensions;
@@ -101,3 +101,5 @@ public class GetDataDictionariesQueryHandler : IRequestHandler<GetDataDictionari
         return parent?.Name;
     }
 }
+
+

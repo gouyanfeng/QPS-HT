@@ -4,44 +4,51 @@ using QPS.Application.Contracts.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
 
-namespace QPS.Application.Features.Crm.CrmCustomers;
+namespace QPS.Application.Features.Crm.CrmHerbBases;
 
 /// <summary>
-/// 更新客户命令
+/// 更新药材基地命令
 /// </summary>
-public class UpdateCrmCustomerCommand : IRequest<CrmCustomerDto>
+public class UpdateCrmHerbBaseCommand : IRequest<CrmHerbBaseDto>
 {
     public Guid Id { get; set; }
-    public CrmCustomerUpdateRequest Request { get; set; } = null!;
+    public CrmHerbBaseUpdateRequest Request { get; set; } = null!;
 }
 
 /// <summary>
-/// 更新客户处理器
+/// 更新药材基地处理器
 /// </summary>
-public class UpdateCrmCustomerHandler : IRequestHandler<UpdateCrmCustomerCommand, CrmCustomerDto>
+public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand, CrmHerbBaseDto>
 {
     private readonly IDbContext _dbContext;
 
-    public UpdateCrmCustomerHandler(IDbContext dbContext)
+    public UpdateCrmHerbBaseHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
-    public async Task<CrmCustomerDto> Handle(UpdateCrmCustomerCommand request, CancellationToken cancellationToken)
+    public async Task<CrmHerbBaseDto> Handle(UpdateCrmHerbBaseCommand request, CancellationToken cancellationToken)
     {
-        var customer = await _dbContext.CrmCustomers
+        var mainProducts = CrmHerbBaseMainProducts.Normalize(
+            request.Request.MainProducts,
+            request.Request.MainProduct);
+        var mainProductSummary = CrmHerbBaseMainProducts.BuildSummary(mainProducts);
+        var baseName = string.IsNullOrWhiteSpace(request.Request.BaseName)
+            ? request.Request.HerbBaseName
+            : request.Request.BaseName;
+
+        var customer = await _dbContext.CrmHerbBases
             .FirstOrDefaultAsync(c => c.Id == request.Id && !c.IsDeleted, cancellationToken);
 
         if (customer == null)
         {
-            throw new BusinessException(404, "客户不存在");
+            throw new BusinessException(404, "药材基地不存在");
         }
 
         // 更新基本信息
         customer.UpdateBasicInfo(
-            request.Request.CustomerName,
-            request.Request.CustomerType,
-            request.Request.MainProduct,
+            baseName,
+            mainProductSummary,
             request.Request.Grade,
             request.Request.Score,
             request.Request.Province,
@@ -50,19 +57,28 @@ public class UpdateCrmCustomerHandler : IRequestHandler<UpdateCrmCustomerCommand
             request.Request.Address,
             request.Request.Lat,
             request.Request.Lng,
-            request.Request.Remark
+            request.Request.Remark,
+            request.Request.SubjectName
         );
 
         // 更新上级客户
-        if (customer.ParentCustomerId != request.Request.ParentCustomerId)
+        if (customer.ParentId != request.Request.ParentId)
         {
-            customer.SetParent(request.Request.ParentCustomerId);
+            customer.SetParent(request.Request.ParentId);
         }
 
         // 更新负责人
         if (customer.OwnerUserId != request.Request.OwnerUserId)
         {
             customer.AssignOwner(request.Request.OwnerUserId);
+        }
+
+        if (customer.SourcePlatform != request.Request.SourcePlatform ||
+            customer.SourceId != request.Request.SourceId)
+        {
+            customer.UpdateSource(
+                request.Request.SourcePlatform,
+                request.Request.SourceId);
         }
 
         if (!string.IsNullOrWhiteSpace(request.Request.PrimaryContactName) ||
@@ -86,15 +102,18 @@ public class UpdateCrmCustomerHandler : IRequestHandler<UpdateCrmCustomerCommand
             customer.UpdateStatus(request.Request.Status, request.Request.Remark);
         }
 
+        CrmHerbBaseMainProducts.Sync(_dbContext, customer.Id, mainProducts);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return new CrmCustomerDto
+        var dto = new CrmHerbBaseDto
         {
             Id = customer.Id,
-            ParentCustomerId = customer.ParentCustomerId,
-            CustomerName = customer.CustomerName,
-            CustomerType = customer.CustomerType,
+            ParentId = customer.ParentId,
+            BaseName = customer.BaseName,
+            HerbBaseName = customer.BaseName,
+            SubjectName = customer.SubjectName,
             MainProduct = customer.MainProduct,
+            MainProducts = mainProducts,
             Grade = customer.Grade,
             Score = customer.Score,
             Province = customer.Province,
@@ -104,7 +123,7 @@ public class UpdateCrmCustomerHandler : IRequestHandler<UpdateCrmCustomerCommand
             Lat = customer.Lat,
             Lng = customer.Lng,
             SourcePlatform = customer.SourcePlatform,
-            SourceLeadId = customer.SourceLeadId,
+            SourceId = customer.SourceId,
             Status = customer.Status,
             OwnerUserId = customer.OwnerUserId,
             Remark = customer.Remark,
@@ -116,5 +135,12 @@ public class UpdateCrmCustomerHandler : IRequestHandler<UpdateCrmCustomerCommand
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt
         };
+
+        await CrmHerbBaseOwners.FillAsync(_dbContext, new List<CrmHerbBaseDto> { dto }, cancellationToken);
+
+        return dto;
     }
 }
+
+
+

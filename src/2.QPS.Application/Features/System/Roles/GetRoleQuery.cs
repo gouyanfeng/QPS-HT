@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using QPS.Application.Contracts.System.Roles;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
@@ -57,3 +57,5 @@ public class GetRoleHandler : IRequestHandler<GetRoleQuery, RoleDto>
         };
     }
 }
+
+

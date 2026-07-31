@@ -1,4 +1,4 @@
-using QPS.Domain.Common;
+﻿using QPS.Domain.Common;
 
 namespace QPS.Domain.Entities.System;
 
@@ -24,3 +24,4 @@ public class SystemPermission : BaseEntity
         ParentId = parentId;
     }
 }
+

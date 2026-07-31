@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using QPS.Application.Contracts.System.Auth;
@@ -59,3 +59,4 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 }
+

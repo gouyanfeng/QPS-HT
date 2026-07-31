@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.DataDictionaries;
 using QPS.Application.Interfaces;
@@ -73,3 +73,5 @@ public class CreateDataDictionaryCommandHandler : IRequestHandler<CreateDataDict
         };
     }
 }
+
+

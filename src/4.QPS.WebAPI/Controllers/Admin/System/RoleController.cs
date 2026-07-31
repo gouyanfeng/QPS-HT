@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QPS.Application.Contracts.System.Roles;
 using QPS.Application.Features.System.Roles;
@@ -97,3 +97,4 @@ public class RoleController : ControllerBase
         return Ok(result);
     }
 }
+

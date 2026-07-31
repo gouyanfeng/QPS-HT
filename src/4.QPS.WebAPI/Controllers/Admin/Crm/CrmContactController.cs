@@ -17,6 +17,7 @@ public class CrmContactController : ControllerBase
     }
 
     [HttpGet("customers/{customerId}/contacts")]
+    [HttpGet("herb-bases/{customerId}/contacts")]
     public async Task<ActionResult<List<CrmContactDto>>> GetContacts(Guid customerId)
     {
         var query = new GetCrmContactsQuery { CustomerId = customerId };
@@ -25,11 +26,12 @@ public class CrmContactController : ControllerBase
     }
 
     [HttpPost("customers/{customerId}/contacts")]
+    [HttpPost("herb-bases/{customerId}/contacts")]
     public async Task<ActionResult<CrmContactDto>> CreateContact(Guid customerId, [FromBody] CrmContactCreateRequest request)
     {
         var command = new CreateCrmContactCommand { CustomerId = customerId, Request = request };
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetContacts), new { customerId = result.CustomerId }, result);
+        return CreatedAtAction(nameof(GetContacts), new { customerId }, result);
     }
 
     [HttpPut("contacts/{id}")]

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QPS.Application.Contracts.System.Permissions;
 using QPS.Application.Features.System.Permissions;
@@ -66,3 +66,5 @@ public class PermissionController : ControllerBase
         return Ok(result);
     }
 }
+
+

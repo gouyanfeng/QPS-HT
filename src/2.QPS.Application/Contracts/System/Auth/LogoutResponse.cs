@@ -1,4 +1,4 @@
-namespace QPS.Application.Contracts.System.Auth;
+﻿namespace QPS.Application.Contracts.System.Auth;
 
 /// <summary>
 /// 登出响应
@@ -15,3 +15,4 @@ public class LogoutResponse
     /// </summary>
     public string Message { get; set; }
 }
+

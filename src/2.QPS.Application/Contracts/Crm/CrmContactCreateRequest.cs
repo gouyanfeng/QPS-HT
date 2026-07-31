@@ -1,4 +1,4 @@
-namespace QPS.Application.Contracts.Crm;
+﻿namespace QPS.Application.Contracts.Crm;
 
 public class CrmContactCreateRequest
 {
@@ -6,7 +6,7 @@ public class CrmContactCreateRequest
 
     public string Phone { get; set; } = string.Empty;
 
-    public string PhoneType { get; set; } = "未知";
+    public string PhoneType { get; set; } = "UNKNOWN";
 
     public string Wechat { get; set; } = string.Empty;
 
@@ -16,3 +16,5 @@ public class CrmContactCreateRequest
 
     public string Remark { get; set; } = string.Empty;
 }
+
+

@@ -1,4 +1,4 @@
-namespace QPS.Application.Contracts.System.Auth;
+﻿namespace QPS.Application.Contracts.System.Auth;
 
 public class LoginResponse
 {
@@ -9,3 +9,5 @@ public class LoginResponse
     public string Role { get; set; }
     public Guid RoleId { get; set; }
 }
+
+

@@ -1,4 +1,4 @@
-using QPS.Application.Interfaces;
+﻿using QPS.Application.Interfaces;
 using QPS.Domain.Entities.System;
 
 namespace QPS.Application.Features.System;
@@ -60,3 +60,5 @@ public class ErrorLogService : IErrorLogService
         }
     }
 }
+
+

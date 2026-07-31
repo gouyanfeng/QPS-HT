@@ -1,4 +1,4 @@
-namespace QPS.Application.Contracts.System.Roles;
+﻿namespace QPS.Application.Contracts.System.Roles;
 
 public class RoleDto
 {
@@ -6,3 +6,5 @@ public class RoleDto
     public string Name { get; set; }
     public string Code { get; set; }
 }
+
+

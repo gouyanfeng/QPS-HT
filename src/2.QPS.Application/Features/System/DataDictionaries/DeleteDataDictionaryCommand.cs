@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
@@ -43,3 +43,5 @@ public class DeleteDataDictionaryCommandHandler : IRequestHandler<DeleteDataDict
         return Unit.Value;
     }
 }
+
+

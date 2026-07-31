@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Interfaces;
@@ -16,7 +16,8 @@ public class UpdateCrmContactCommand : IRequest<CrmContactDto>
 
 public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, CrmContactDto>
 {
-    private const string InvalidStatus = "无效";
+    private const string CustomerEntityType = "CRM_HERB_BASE";
+    private const string InvalidStatus = "INVALID";
 
     private readonly IDbContext _dbContext;
 
@@ -46,8 +47,8 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
             throw new BusinessException(400, "无效联系人不能设为主联系人");
         }
 
-        var customer = await _dbContext.CrmCustomers
-            .FirstOrDefaultAsync(c => c.Id == contact.CustomerId && !c.IsDeleted, cancellationToken);
+        var customer = await _dbContext.CrmHerbBases
+            .FirstOrDefaultAsync(c => c.Id == contact.EntityId && contact.EntityType == CustomerEntityType && !c.IsDeleted, cancellationToken);
         if (customer == null)
         {
             throw new BusinessException(404, "客户不存在");
@@ -66,7 +67,7 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
 
         if (contact.IsPrimary)
         {
-            await UnmarkSiblingPrimaryContacts(contact.CustomerId, contact.Id, cancellationToken);
+            await UnmarkSiblingPrimaryContacts(contact.EntityType, contact.EntityId, contact.Id, cancellationToken);
             customer.UpdatePrimaryContact(contact.ContactName, contact.Phone);
         }
         else if (wasPrimary)
@@ -79,10 +80,10 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
         return MapToDto(contact);
     }
 
-    private async Task UnmarkSiblingPrimaryContacts(Guid customerId, Guid contactId, CancellationToken cancellationToken)
+    private async Task UnmarkSiblingPrimaryContacts(string entityType, Guid entityId, Guid contactId, CancellationToken cancellationToken)
     {
         var siblings = await _dbContext.CrmContacts
-            .Where(c => c.CustomerId == customerId && c.Id != contactId && c.IsPrimary)
+            .Where(c => c.EntityType == entityType && c.EntityId == entityId && c.Id != contactId && c.IsPrimary)
             .ToListAsync(cancellationToken);
 
         foreach (var sibling in siblings)
@@ -91,10 +92,10 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
         }
     }
 
-    private async Task PromoteOldestValidContactOrClear(CrmCustomer customer, Guid excludedContactId, CancellationToken cancellationToken)
+    private async Task PromoteOldestValidContactOrClear(CrmHerbBase customer, Guid excludedContactId, CancellationToken cancellationToken)
     {
         var replacement = await _dbContext.CrmContacts
-            .Where(c => c.CustomerId == customer.Id && c.Id != excludedContactId && c.Status != InvalidStatus)
+            .Where(c => c.EntityType == CustomerEntityType && c.EntityId == customer.Id && c.Id != excludedContactId && c.Status != InvalidStatus)
             .OrderBy(c => c.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -113,7 +114,8 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
         return new CrmContactDto
         {
             Id = contact.Id,
-            CustomerId = contact.CustomerId,
+            EntityType = contact.EntityType,
+            EntityId = contact.EntityId,
             ContactName = contact.ContactName,
             Phone = contact.Phone,
             PhoneType = contact.PhoneType,
@@ -127,3 +129,5 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
         };
     }
 }
+
+

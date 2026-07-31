@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
 
@@ -42,3 +42,4 @@ public class ChangePasswordHandler : IRequestHandler<ChangePasswordCommand, bool
         return true;
     }
 }
+

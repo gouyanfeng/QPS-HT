@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using QPS.Application.Contracts.System.Auth;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.System;
@@ -114,3 +114,5 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
         return password == passwordHash;
     }
 }
+
+

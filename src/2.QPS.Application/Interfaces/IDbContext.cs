@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using QPS.Domain.Entities.System;
 using QPS.Domain.Entities.Crm;
 
@@ -12,12 +12,21 @@ public interface IDbContext
     DbSet<SystemUserRole> SystemUserRoles { get; }
     DbSet<SystemRolePermission> SystemRolePermissions { get; }
     DbSet<SystemDataDictionary> SystemDataDictionaries { get; }
+    DbSet<SystemRegion> SystemRegions { get; }
+    DbSet<SystemChinaRegion> SystemChinaRegions { get; }
     DbSet<SystemErrorLog> SystemErrorLogs { get; }
 
     // CRM 模块
-    DbSet<CrmCustomer> CrmCustomers { get; }
+    DbSet<CrmHerbBase> CrmHerbBases { get; }
     DbSet<CrmContact> CrmContacts { get; }
     DbSet<CrmFollowRecord> CrmFollowRecords { get; }
+    DbSet<CrmBusinessEntityAttribute> CrmBusinessEntityAttributes { get; }
+    DbSet<CrmTransferRecord> CrmTransferRecords { get; }
+    DbSet<CrmVendor> CrmVendors { get; }
+    DbSet<CrmVendorPurchasePlan> CrmVendorPurchasePlans { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
+
+
+

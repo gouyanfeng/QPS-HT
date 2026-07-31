@@ -1,4 +1,4 @@
-namespace QPS.Application.Contracts.System.DataDictionaries;
+﻿namespace QPS.Application.Contracts.System.DataDictionaries;
 
 public class DataDictionaryDto
 {
@@ -13,3 +13,5 @@ public class DataDictionaryDto
     public bool IsActive { get; set; }
     public List<DataDictionaryDto> Children { get; set; } = new List<DataDictionaryDto>();
 }
+
+

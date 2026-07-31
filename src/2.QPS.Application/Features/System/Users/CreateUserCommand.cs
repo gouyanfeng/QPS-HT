@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using QPS.Application.Contracts.System.Users;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.System;
@@ -63,3 +63,5 @@ public class CreateUserHandler : IRequestHandler<CreateUserCommand, UserDto>
         };
     }
 }
+
+

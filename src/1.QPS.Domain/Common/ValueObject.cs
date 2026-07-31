@@ -1,4 +1,4 @@
-namespace QPS.Domain.Common;
+﻿namespace QPS.Domain.Common;
 
 public abstract class ValueObject
 {
@@ -22,3 +22,4 @@ public abstract class ValueObject
             .Aggregate((x, y) => x ^ y);
     }
 }
+

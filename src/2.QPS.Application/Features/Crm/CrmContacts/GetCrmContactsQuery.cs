@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Interfaces;
@@ -12,6 +12,8 @@ public class GetCrmContactsQuery : IRequest<List<CrmContactDto>>
 
 public class GetCrmContactsHandler : IRequestHandler<GetCrmContactsQuery, List<CrmContactDto>>
 {
+    private const string CustomerEntityType = "CRM_HERB_BASE";
+
     private readonly IDbContext _dbContext;
 
     public GetCrmContactsHandler(IDbContext dbContext)
@@ -22,13 +24,14 @@ public class GetCrmContactsHandler : IRequestHandler<GetCrmContactsQuery, List<C
     public async Task<List<CrmContactDto>> Handle(GetCrmContactsQuery request, CancellationToken cancellationToken)
     {
         return await _dbContext.CrmContacts
-            .Where(c => c.CustomerId == request.CustomerId)
+            .Where(c => c.EntityType == CustomerEntityType && c.EntityId == request.CustomerId)
             .OrderByDescending(c => c.IsPrimary)
             .ThenBy(c => c.CreatedAt)
             .Select(c => new CrmContactDto
             {
                 Id = c.Id,
-                CustomerId = c.CustomerId,
+                EntityType = c.EntityType,
+                EntityId = c.EntityId,
                 ContactName = c.ContactName,
                 Phone = c.Phone,
                 PhoneType = c.PhoneType,
@@ -43,3 +46,5 @@ public class GetCrmContactsHandler : IRequestHandler<GetCrmContactsQuery, List<C
             .ToListAsync(cancellationToken);
     }
 }
+
+

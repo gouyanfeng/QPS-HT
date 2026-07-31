@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using System;
 using System.Collections.Generic;
 
@@ -63,3 +63,5 @@ public abstract class DomainEvent : INotification
         OccurredOn = DateTime.UtcNow;
     }
 }
+
+

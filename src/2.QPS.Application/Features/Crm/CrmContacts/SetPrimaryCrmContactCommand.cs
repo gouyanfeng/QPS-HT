@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Interfaces;
@@ -14,7 +14,8 @@ public class SetPrimaryCrmContactCommand : IRequest<CrmContactDto>
 
 public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactCommand, CrmContactDto>
 {
-    private const string InvalidStatus = "无效";
+    private const string CustomerEntityType = "CRM_HERB_BASE";
+    private const string InvalidStatus = "INVALID";
 
     private readonly IDbContext _dbContext;
 
@@ -38,15 +39,15 @@ public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactC
             throw new BusinessException(400, "无效联系人不能设为主联系人");
         }
 
-        var customer = await _dbContext.CrmCustomers
-            .FirstOrDefaultAsync(c => c.Id == contact.CustomerId && !c.IsDeleted, cancellationToken);
+        var customer = await _dbContext.CrmHerbBases
+            .FirstOrDefaultAsync(c => c.Id == contact.EntityId && contact.EntityType == CustomerEntityType && !c.IsDeleted, cancellationToken);
         if (customer == null)
         {
             throw new BusinessException(404, "客户不存在");
         }
 
         var siblings = await _dbContext.CrmContacts
-            .Where(c => c.CustomerId == contact.CustomerId && c.Id != contact.Id && c.IsPrimary)
+            .Where(c => c.EntityType == contact.EntityType && c.EntityId == contact.EntityId && c.Id != contact.Id && c.IsPrimary)
             .ToListAsync(cancellationToken);
 
         foreach (var sibling in siblings)
@@ -67,7 +68,8 @@ public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactC
         return new CrmContactDto
         {
             Id = contact.Id,
-            CustomerId = contact.CustomerId,
+            EntityType = contact.EntityType,
+            EntityId = contact.EntityId,
             ContactName = contact.ContactName,
             Phone = contact.Phone,
             PhoneType = contact.PhoneType,
@@ -81,3 +83,5 @@ public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactC
         };
     }
 }
+
+

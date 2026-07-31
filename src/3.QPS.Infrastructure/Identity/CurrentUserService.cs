@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using QPS.Application.Interfaces;
 
 namespace QPS.Infrastructure.Identity;
@@ -16,3 +16,5 @@ public class CurrentUserService : ICurrentUserService
 
     public string? Username => _httpContextAccessor.HttpContext?.User?.FindFirst("username")?.Value;
 }
+
+

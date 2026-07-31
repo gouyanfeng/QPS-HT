@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.Permissions;
 using QPS.Application.Interfaces;
@@ -68,3 +68,4 @@ public class GetRolePermissionsHandler : IRequestHandler<GetRolePermissionsQuery
         return result;
     }
 }
+

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.Users;
 using QPS.Application.Interfaces;
@@ -95,3 +95,5 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginationResponse
         return await dtoQuery.ToPaginationResponseAsync(request);
     }
 }
+
+

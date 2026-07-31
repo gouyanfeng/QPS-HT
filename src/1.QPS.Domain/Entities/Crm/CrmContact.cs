@@ -1,16 +1,21 @@
-using QPS.Domain.Common;
+﻿using QPS.Domain.Common;
 
 namespace QPS.Domain.Entities.Crm;
 
 /// <summary>
-/// CRM客户联系人。
+/// CRM通用业务实体联系人。
 /// </summary>
 public class CrmContact : BaseEntity
 {
     /// <summary>
-    /// 所属客户ID。
+    /// 所属业务实体类型，例如CRM_HERB_BASE、CRM_VENDOR。
     /// </summary>
-    public Guid CustomerId { get; private set; }
+    public string EntityType { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 所属业务实体ID。
+    /// </summary>
+    public Guid EntityId { get; private set; }
 
     /// <summary>
     /// 联系人姓名。
@@ -23,7 +28,7 @@ public class CrmContact : BaseEntity
     public string Phone { get; private set; } = string.Empty;
 
     /// <summary>
-    /// 电话类型，例如手机、座机、未知。
+    /// 电话类型，例如MOBILE、LANDLINE、UNKNOWN。
     /// </summary>
     public string PhoneType { get; private set; } = string.Empty;
 
@@ -43,7 +48,7 @@ public class CrmContact : BaseEntity
     public bool IsPrimary { get; private set; }
 
     /// <summary>
-    /// 联系人状态，例如未验证、有效、无效。
+    /// 联系人状态，例如UNVERIFIED、VALID、INVALID。
     /// </summary>
     public string Status { get; private set; } = string.Empty;
 
@@ -53,11 +58,6 @@ public class CrmContact : BaseEntity
     public string Remark { get; private set; } = string.Empty;
 
     /// <summary>
-    /// 所属客户。
-    /// </summary>
-    public virtual CrmCustomer? Customer { get; private set; }
-
-    /// <summary>
     /// 联系人关联的跟进记录集合。
     /// </summary>
     public virtual ICollection<CrmFollowRecord> FollowRecords { get; private set; } = new List<CrmFollowRecord>();
@@ -65,7 +65,8 @@ public class CrmContact : BaseEntity
     private CrmContact() { }
 
     private CrmContact(
-        Guid customerId,
+        string entityType,
+        Guid entityId,
         string contactName,
         string phone,
         string phoneType,
@@ -74,7 +75,8 @@ public class CrmContact : BaseEntity
         bool isPrimary,
         string remark)
     {
-        CustomerId = customerId;
+        EntityType = entityType;
+        EntityId = entityId;
         ContactName = contactName;
         Phone = phone;
         PhoneType = phoneType;
@@ -82,11 +84,12 @@ public class CrmContact : BaseEntity
         RoleName = roleName;
         IsPrimary = isPrimary;
         Remark = remark;
-        Status = "未验证";
+        Status = "UNVERIFIED";
     }
 
     public static CrmContact Create(
-        Guid customerId,
+        string entityType,
+        Guid entityId,
         string contactName,
         string phone,
         string phoneType,
@@ -95,7 +98,7 @@ public class CrmContact : BaseEntity
         bool isPrimary,
         string remark)
     {
-        return new CrmContact(customerId, contactName, phone, phoneType, wechat, roleName, isPrimary, remark);
+        return new CrmContact(entityType, entityId, contactName, phone, phoneType, wechat, roleName, isPrimary, remark);
     }
 
     public void Update(
@@ -132,3 +135,5 @@ public class CrmContact : BaseEntity
         Remark = remark;
     }
 }
+
+

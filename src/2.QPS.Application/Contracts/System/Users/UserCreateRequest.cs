@@ -1,4 +1,4 @@
-namespace QPS.Application.Contracts.System.Users;
+﻿namespace QPS.Application.Contracts.System.Users;
 
 public class UserCreateRequest
 {
@@ -7,3 +7,4 @@ public class UserCreateRequest
     public string RealName { get; set; }
     public Guid RoleId { get; set; }
 }
+

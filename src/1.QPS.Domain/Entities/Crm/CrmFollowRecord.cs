@@ -1,4 +1,4 @@
-using QPS.Domain.Common;
+﻿using QPS.Domain.Common;
 
 namespace QPS.Domain.Entities.Crm;
 
@@ -50,7 +50,7 @@ public class CrmFollowRecord : BaseEntity
     /// <summary>
     /// 跟进客户。
     /// </summary>
-    public virtual CrmCustomer? Customer { get; private set; }
+    public virtual CrmHerbBase? Customer { get; private set; }
 
     /// <summary>
     /// 跟进联系人。
@@ -112,3 +112,5 @@ public class CrmFollowRecord : BaseEntity
         NextFollowAt = nextFollowAt;
     }
 }
+
+

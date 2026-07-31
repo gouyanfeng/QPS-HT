@@ -1,10 +1,10 @@
-namespace QPS.Application.Contracts.Crm;
+﻿namespace QPS.Application.Contracts.Crm;
 
 public class CrmFollowRecordCreateRequest
 {
     public Guid? ContactId { get; set; }
 
-    public string FollowType { get; set; } = "电话";
+    public string FollowType { get; set; } = "PHONE";
 
     public string FollowResult { get; set; } = string.Empty;
 
@@ -14,3 +14,5 @@ public class CrmFollowRecordCreateRequest
 
     public DateTime? NextFollowAt { get; set; }
 }
+
+

@@ -1,11 +1,11 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Features.Crm.CrmFollowRecords;
 
 namespace QPS.WebAPI.Controllers.Admin.Crm;
 
-[Route("api/admin/crm/customers/{customerId}/follow-records")]
+[Route("api/admin/crm/herb-bases/{customerId}/follow-records")]
 [ApiController]
 public class CrmFollowRecordController : ControllerBase
 {
@@ -34,3 +34,5 @@ public class CrmFollowRecordController : ControllerBase
         return Ok(result);
     }
 }
+
+

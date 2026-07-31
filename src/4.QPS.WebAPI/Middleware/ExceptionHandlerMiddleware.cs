@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using QPS.Application.Features.System;
 using QPS.Domain.Exceptions;
 using System.Text;
@@ -106,3 +106,4 @@ public class ExceptionHandlerMiddleware
         }
     }
 }
+

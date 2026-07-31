@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using QPS.Application.Interfaces;
 using QPS.Domain.Common;
 using QPS.Domain.Entities.System;
@@ -16,12 +16,18 @@ public class AppDbContext : DbContext, IDbContext
     public DbSet<SystemUserRole> SystemUserRoles { get; set; }
     public DbSet<SystemRolePermission> SystemRolePermissions { get; set; }
     public DbSet<SystemDataDictionary> SystemDataDictionaries { get; set; }
+    public DbSet<SystemRegion> SystemRegions { get; set; }
+    public DbSet<SystemChinaRegion> SystemChinaRegions { get; set; }
     public DbSet<SystemErrorLog> SystemErrorLogs { get; set; }
 
     // CRM 模块
-    public DbSet<CrmCustomer> CrmCustomers { get; set; }
+    public DbSet<CrmHerbBase> CrmHerbBases { get; set; }
     public DbSet<CrmContact> CrmContacts { get; set; }
     public DbSet<CrmFollowRecord> CrmFollowRecords { get; set; }
+    public DbSet<CrmBusinessEntityAttribute> CrmBusinessEntityAttributes { get; set; }
+    public DbSet<CrmTransferRecord> CrmTransferRecords { get; set; }
+    public DbSet<CrmVendor> CrmVendors { get; set; }
+    public DbSet<CrmVendorPurchasePlan> CrmVendorPurchasePlans { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUserService currentUserService) : base(options)
     {
@@ -32,10 +38,84 @@ public class AppDbContext : DbContext, IDbContext
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
-        modelBuilder.Entity<CrmCustomer>(entity =>
+        modelBuilder.Entity<CrmHerbBase>(entity =>
         {
-            entity.Property(customer => customer.Lat).HasPrecision(10, 6);
-            entity.Property(customer => customer.Lng).HasPrecision(10, 6);
+            entity.Ignore(herbBase => herbBase.HerbBaseName);
+            entity.Property(herbBase => herbBase.BaseName).HasMaxLength(200);
+            entity.Property(herbBase => herbBase.SubjectName).HasMaxLength(200);
+            entity.Property(herbBase => herbBase.Lat).HasPrecision(10, 6);
+            entity.Property(herbBase => herbBase.Lng).HasPrecision(10, 6);
+            entity.HasOne(herbBase => herbBase.ParentHerbBase)
+                .WithMany(herbBase => herbBase.Children)
+                .HasForeignKey(herbBase => herbBase.ParentId);
+        });
+
+        modelBuilder.Entity<CrmBusinessEntityAttribute>(entity =>
+        {
+            entity.HasIndex(attribute => new
+            {
+                attribute.EntityType,
+                attribute.EntityId,
+                attribute.AttributeCode
+            });
+
+            entity.HasIndex(attribute => new
+            {
+                attribute.EntityType,
+                attribute.EntityId,
+                attribute.AttributeCode,
+                attribute.AttributeValue
+            });
+        });
+
+        modelBuilder.Entity<CrmContact>(entity =>
+        {
+            entity.Property(contact => contact.EntityType).HasMaxLength(64);
+            entity.Property(contact => contact.ContactName).HasMaxLength(200);
+            entity.Property(contact => contact.Phone).HasMaxLength(100);
+            entity.Property(contact => contact.PhoneType).HasMaxLength(50);
+            entity.Property(contact => contact.Wechat).HasMaxLength(100);
+            entity.Property(contact => contact.RoleName).HasMaxLength(100);
+            entity.Property(contact => contact.Status).HasMaxLength(50);
+            entity.HasIndex(contact => new { contact.EntityType, contact.EntityId });
+            entity.HasIndex(contact => new { contact.EntityType, contact.EntityId, contact.Phone });
+        });
+
+        modelBuilder.Entity<CrmVendor>(entity =>
+        {
+            entity.Property(vendor => vendor.VendorName).HasMaxLength(200);
+            entity.Property(vendor => vendor.NormalizedVendorName).HasMaxLength(200);
+            entity.Property(vendor => vendor.PriorityLevel).HasMaxLength(20);
+            entity.HasIndex(vendor => vendor.NormalizedVendorName).IsUnique();
+            entity.HasIndex(vendor => vendor.PriorityLevel);
+            entity.HasIndex(vendor => vendor.LatestPurchaseTime);
+        });
+
+        modelBuilder.Entity<CrmVendorPurchasePlan>(entity =>
+        {
+            entity.Property(plan => plan.PurchasePlanName).HasMaxLength(500);
+            entity.Property(plan => plan.PageUrl).HasMaxLength(500);
+            entity.HasIndex(plan => plan.VendorId);
+            entity.HasIndex(plan => plan.PurchaseTime);
+            entity.HasIndex(plan => plan.PageUrl).IsUnique();
+        });
+
+        modelBuilder.Entity<CrmTransferRecord>(entity =>
+        {
+            entity.Property(record => record.EntityType).HasMaxLength(64);
+            entity.HasIndex(record => new { record.EntityType, record.EntityId, record.CreatedAt });
+        });
+
+        modelBuilder.Entity<SystemChinaRegion>(entity =>
+        {
+            entity.HasIndex(region => region.Code);
+            entity.HasIndex(region => new { region.Level, region.ParentCode });
+            entity.Property(region => region.Code).HasMaxLength(20);
+            entity.Property(region => region.Name).HasMaxLength(100);
+            entity.Property(region => region.FullName).HasMaxLength(200);
+            entity.Property(region => region.ParentCode).HasMaxLength(20);
+            entity.Property(region => region.ProvinceCode).HasMaxLength(20);
+            entity.Property(region => region.CityCode).HasMaxLength(20);
         });
     }
 
@@ -74,3 +154,7 @@ public class AppDbContext : DbContext, IDbContext
         }
     }
 }
+
+
+
+

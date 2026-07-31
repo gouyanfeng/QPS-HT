@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Interfaces;
@@ -16,6 +16,8 @@ public class CreateCrmFollowRecordCommand : IRequest<CrmFollowRecordDto>
 
 public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecordCommand, CrmFollowRecordDto>
 {
+    private const string CustomerEntityType = "CRM_HERB_BASE";
+
     private readonly IDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
 
@@ -32,7 +34,7 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
             throw new BusinessException(400, "沟通结果不能为空");
         }
 
-        var customer = await _dbContext.CrmCustomers
+        var customer = await _dbContext.CrmHerbBases
             .FirstOrDefaultAsync(c => c.Id == request.CustomerId && !c.IsDeleted, cancellationToken);
         if (customer == null)
         {
@@ -45,7 +47,7 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
             contact = await _dbContext.CrmContacts
                 .FirstOrDefaultAsync(c => c.Id == request.Request.ContactId.Value, cancellationToken);
 
-            if (contact == null || contact.CustomerId != request.CustomerId)
+            if (contact == null || contact.EntityType != CustomerEntityType || contact.EntityId != request.CustomerId)
             {
                 throw new BusinessException(404, "联系人不存在");
             }
@@ -91,3 +93,5 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
         };
     }
 }
+
+

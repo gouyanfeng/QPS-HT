@@ -1,4 +1,4 @@
-namespace QPS.Application.Contracts.System.DataDictionaries;
+﻿namespace QPS.Application.Contracts.System.DataDictionaries;
 
 public class DataDictionaryCreateRequest
 {
@@ -10,3 +10,4 @@ public class DataDictionaryCreateRequest
     public int SortOrder { get; set; } = 0;
     public bool IsActive { get; set; } = true;
 }
+

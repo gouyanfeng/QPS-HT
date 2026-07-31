@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Interfaces;
@@ -16,6 +16,8 @@ public class CreateCrmContactCommand : IRequest<CrmContactDto>
 
 public class CreateCrmContactHandler : IRequestHandler<CreateCrmContactCommand, CrmContactDto>
 {
+    private const string CustomerEntityType = "CRM_HERB_BASE";
+
     private readonly IDbContext _dbContext;
 
     public CreateCrmContactHandler(IDbContext dbContext)
@@ -31,7 +33,7 @@ public class CreateCrmContactHandler : IRequestHandler<CreateCrmContactCommand, 
             throw new BusinessException(400, "联系人姓名和电话至少填写一项");
         }
 
-        var customer = await _dbContext.CrmCustomers
+        var customer = await _dbContext.CrmHerbBases
             .FirstOrDefaultAsync(c => c.Id == request.CustomerId && !c.IsDeleted, cancellationToken);
         if (customer == null)
         {
@@ -43,6 +45,7 @@ public class CreateCrmContactHandler : IRequestHandler<CreateCrmContactCommand, 
                 string.IsNullOrWhiteSpace(customer.PrimaryContactPhone));
 
         var contact = CrmContact.Create(
+            CustomerEntityType,
             request.CustomerId,
             request.Request.ContactName,
             request.Request.Phone,
@@ -67,7 +70,7 @@ public class CreateCrmContactHandler : IRequestHandler<CreateCrmContactCommand, 
     private async Task UnmarkSiblingPrimaryContacts(Guid customerId, Guid contactId, CancellationToken cancellationToken)
     {
         var siblings = await _dbContext.CrmContacts
-            .Where(c => c.CustomerId == customerId && c.Id != contactId && c.IsPrimary)
+            .Where(c => c.EntityType == CustomerEntityType && c.EntityId == customerId && c.Id != contactId && c.IsPrimary)
             .ToListAsync(cancellationToken);
 
         foreach (var sibling in siblings)
@@ -81,7 +84,8 @@ public class CreateCrmContactHandler : IRequestHandler<CreateCrmContactCommand, 
         return new CrmContactDto
         {
             Id = contact.Id,
-            CustomerId = contact.CustomerId,
+            EntityType = contact.EntityType,
+            EntityId = contact.EntityId,
             ContactName = contact.ContactName,
             Phone = contact.Phone,
             PhoneType = contact.PhoneType,
@@ -95,3 +99,5 @@ public class CreateCrmContactHandler : IRequestHandler<CreateCrmContactCommand, 
         };
     }
 }
+
+

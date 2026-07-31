@@ -4,34 +4,33 @@ using QPS.Application.Contracts.Crm;
 using QPS.Application.Interfaces;
 using QPS.Application.Extensions;
 
-namespace QPS.Application.Features.Crm.CrmCustomers;
+namespace QPS.Application.Features.Crm.CrmHerbBases;
 
 /// <summary>
-/// 获取客户列表查询
+/// 获取药材基地列表查询
 /// </summary>
-public class GetCrmCustomersQuery : PaginationRequest, IRequest<PaginationResponse<CrmCustomerDto>>
+public class GetCrmHerbBasesQuery : PaginationRequest, IRequest<PaginationResponse<CrmHerbBaseDto>>
 {
     /// <summary>
     /// 客户名称
     /// </summary>
-    public string? CustomerName { get; set; }
+    public string? HerbBaseName { get; set; }
+
+    public string? BaseName { get; set; }
 
     public string? Keyword { get; set; }
 
     /// <summary>
-    /// 客户类型
-    /// </summary>
-    public string? CustomerType { get; set; }
-
-    /// <summary>
-    /// 客户等级
+    /// 药材基地等级
     /// </summary>
     public string? Grade { get; set; }
 
     /// <summary>
-    /// 客户状态
+    /// 药材基地状态
     /// </summary>
     public string? Status { get; set; }
+
+    public string? SourcePlatform { get; set; }
 
     /// <summary>
     /// 负责人ID
@@ -39,6 +38,8 @@ public class GetCrmCustomersQuery : PaginationRequest, IRequest<PaginationRespon
     public Guid? OwnerUserId { get; set; }
 
     public string? MainProduct { get; set; }
+
+    public List<string>? MainProducts { get; set; }
 
     public string? Province { get; set; }
 
@@ -54,47 +55,64 @@ public class GetCrmCustomersQuery : PaginationRequest, IRequest<PaginationRespon
 }
 
 /// <summary>
-/// 获取客户列表处理器
+/// 获取药材基地列表处理器
 /// </summary>
-public class GetCrmCustomersHandler : IRequestHandler<GetCrmCustomersQuery, PaginationResponse<CrmCustomerDto>>
+public class GetCrmHerbBasesHandler : IRequestHandler<GetCrmHerbBasesQuery, PaginationResponse<CrmHerbBaseDto>>
 {
     private readonly IDbContext _dbContext;
 
-    public GetCrmCustomersHandler(IDbContext dbContext)
+    public GetCrmHerbBasesHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
-    public async Task<PaginationResponse<CrmCustomerDto>> Handle(GetCrmCustomersQuery request, CancellationToken cancellationToken)
+    public async Task<PaginationResponse<CrmHerbBaseDto>> Handle(GetCrmHerbBasesQuery request, CancellationToken cancellationToken)
     {
-        var query = _dbContext.CrmCustomers
+        var query = _dbContext.CrmHerbBases
             .Where(c => !c.IsDeleted)
             .AsQueryable();
 
         // 应用查询条件
-        if (!string.IsNullOrEmpty(request.CustomerName))
+        var baseNameFilter = string.IsNullOrWhiteSpace(request.BaseName)
+            ? request.HerbBaseName
+            : request.BaseName;
+
+        if (!string.IsNullOrEmpty(baseNameFilter))
         {
-            query = query.Where(c => c.CustomerName.Contains(request.CustomerName));
+            query = query.Where(c => c.BaseName.Contains(baseNameFilter));
         }
 
         if (!string.IsNullOrWhiteSpace(request.Keyword))
         {
             var keyword = request.Keyword!;
             query = query.Where(c =>
-                c.CustomerName.Contains(keyword) ||
+                c.BaseName.Contains(keyword) ||
+                c.SubjectName.Contains(keyword) ||
                 c.PrimaryContactName.Contains(keyword) ||
                 c.PrimaryContactPhone.Contains(keyword));
         }
 
-        if (!string.IsNullOrEmpty(request.CustomerType))
+        var mainProducts = CrmHerbBaseMainProducts.Normalize(request.MainProducts, request.MainProduct);
+        if (mainProducts.Count == 1)
         {
-            query = query.Where(c => c.CustomerType == request.CustomerType);
+            var mainProduct = mainProducts[0];
+            query = query.Where(c =>
+                _dbContext.CrmBusinessEntityAttributes.Any(attribute =>
+                    !attribute.IsDeleted &&
+                    attribute.EntityType == CrmHerbBaseMainProducts.CustomerEntityType &&
+                    attribute.EntityId == c.Id &&
+                    attribute.AttributeCode == CrmHerbBaseMainProducts.MainProductAttributeCode &&
+                    attribute.AttributeValue == mainProduct) ||
+                c.MainProduct.Contains(mainProduct));
         }
-
-        if (!string.IsNullOrWhiteSpace(request.MainProduct))
+        else if (mainProducts.Count > 1)
         {
-            var mainProduct = request.MainProduct!;
-            query = query.Where(c => c.MainProduct.Contains(mainProduct));
+            query = query.Where(c => _dbContext.CrmBusinessEntityAttributes.Any(attribute =>
+                !attribute.IsDeleted &&
+                attribute.EntityType == CrmHerbBaseMainProducts.CustomerEntityType &&
+                attribute.EntityId == c.Id &&
+                attribute.AttributeCode == CrmHerbBaseMainProducts.MainProductAttributeCode &&
+                mainProducts.Contains(attribute.AttributeValue)));
         }
 
         if (!string.IsNullOrWhiteSpace(request.Province))
@@ -117,6 +135,11 @@ public class GetCrmCustomersHandler : IRequestHandler<GetCrmCustomersQuery, Pagi
         if (!string.IsNullOrEmpty(request.Status))
         {
             query = query.Where(c => c.Status == request.Status);
+        }
+
+        if (!string.IsNullOrEmpty(request.SourcePlatform))
+        {
+            query = query.Where(c => c.SourcePlatform == request.SourcePlatform);
         }
 
         if (request.OwnerUserId.HasValue)
@@ -146,12 +169,13 @@ public class GetCrmCustomersHandler : IRequestHandler<GetCrmCustomersQuery, Pagi
         }
 
         // 转换为DTO
-        var dtoQuery = query.Select(c => new CrmCustomerDto
+        var dtoQuery = query.Select(c => new CrmHerbBaseDto
         {
             Id = c.Id,
-            ParentCustomerId = c.ParentCustomerId,
-            CustomerName = c.CustomerName,
-            CustomerType = c.CustomerType,
+            ParentId = c.ParentId,
+            BaseName = c.BaseName,
+            HerbBaseName = c.BaseName,
+            SubjectName = c.SubjectName,
             MainProduct = c.MainProduct,
             Grade = c.Grade,
             Score = c.Score,
@@ -162,7 +186,7 @@ public class GetCrmCustomersHandler : IRequestHandler<GetCrmCustomersQuery, Pagi
             Lat = c.Lat,
             Lng = c.Lng,
             SourcePlatform = c.SourcePlatform,
-            SourceLeadId = c.SourceLeadId,
+            SourceId = c.SourceId,
             Status = c.Status,
             OwnerUserId = c.OwnerUserId,
             Remark = c.Remark,
@@ -176,6 +200,13 @@ public class GetCrmCustomersHandler : IRequestHandler<GetCrmCustomersQuery, Pagi
         });
 
         // 执行分页查询
-        return await dtoQuery.ToPaginationResponseAsync(request);
+        var response = await dtoQuery.ToPaginationResponseAsync(request);
+        await CrmHerbBaseMainProducts.FillAsync(_dbContext, response.List, cancellationToken);
+        await CrmHerbBaseOwners.FillAsync(_dbContext, response.List, cancellationToken);
+
+        return response;
     }
 }
+
+
+

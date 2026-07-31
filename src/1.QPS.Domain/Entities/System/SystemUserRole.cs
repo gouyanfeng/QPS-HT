@@ -1,4 +1,4 @@
-using QPS.Domain.Common;
+﻿using QPS.Domain.Common;
 
 namespace QPS.Domain.Entities.System;
 
@@ -15,3 +15,4 @@ public class SystemUserRole : BaseEntity
         RoleId = roleId;
     }
 }
+

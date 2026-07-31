@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace QPS.Application.Contracts.System.Users;
 
@@ -11,3 +11,5 @@ public class UserDto
     public bool IsActive { get; set; }
     public string RoleName { get; set; }
 }
+
+

@@ -1,4 +1,4 @@
-namespace QPS.Domain.Exceptions;
+﻿namespace QPS.Domain.Exceptions;
 
 public class BusinessException : Exception
 {
@@ -14,3 +14,4 @@ public class BusinessException : Exception
         ErrorCode = errorCode;
     }
 }
+

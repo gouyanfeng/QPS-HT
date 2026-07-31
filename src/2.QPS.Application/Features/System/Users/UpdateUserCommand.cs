@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using QPS.Application.Contracts.System.Users;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
@@ -87,3 +87,5 @@ public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, UserDto>
         };
     }
 }
+
+

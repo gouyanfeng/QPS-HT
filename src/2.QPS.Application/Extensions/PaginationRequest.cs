@@ -1,4 +1,4 @@
-namespace QPS.Application.Extensions;
+﻿namespace QPS.Application.Extensions;
 
 /// <summary>
 /// 分页请求基类
@@ -25,3 +25,4 @@ public class PaginationRequest
     /// </summary>
     public string SortDirection { get; set; } = "Descending";
 }
+

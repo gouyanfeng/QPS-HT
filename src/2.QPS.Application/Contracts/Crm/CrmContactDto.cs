@@ -1,10 +1,12 @@
-namespace QPS.Application.Contracts.Crm;
+﻿namespace QPS.Application.Contracts.Crm;
 
 public class CrmContactDto
 {
     public Guid Id { get; set; }
 
-    public Guid CustomerId { get; set; }
+    public string EntityType { get; set; } = string.Empty;
+
+    public Guid EntityId { get; set; }
 
     public string ContactName { get; set; } = string.Empty;
 
@@ -26,3 +28,5 @@ public class CrmContactDto
 
     public DateTime UpdatedAt { get; set; }
 }
+
+

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -99,3 +99,4 @@ public static class PaginationExtensions
         return new PaginationResponse<T>(data, totalCount, request.Page, request.PageSize);
     }
 }
+

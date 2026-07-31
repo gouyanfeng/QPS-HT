@@ -1,41 +1,45 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QPS.Application.Contracts.Crm;
-using QPS.Application.Features.Crm.CrmCustomers;
+using QPS.Application.Features.Crm.CrmHerbBases;
 using QPS.Application.Extensions;
 
 namespace QPS.WebAPI.Controllers.Admin.Crm;
 
 /// <summary>
-/// 客户控制器
+/// 药材基地控制器
 /// </summary>
-[Route("api/admin/crm/customers")]
+[Route("api/admin/crm/herb-bases")]
 [ApiController]
-public class CrmCustomerController : ControllerBase
+public class CrmHerbBaseController : ControllerBase
 {
+    private const string HerbBaseEntityType = "CRM_HERB_BASE";
+
     private readonly IMediator _mediator;
 
-    public CrmCustomerController(IMediator mediator)
+    public CrmHerbBaseController(IMediator mediator)
     {
         _mediator = mediator;
     }
 
     /// <summary>
-    /// 获取客户列表
+    /// 获取药材基地列表
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<PaginationResponse<CrmCustomerDto>>> GetCustomers(
+    public async Task<ActionResult<PaginationResponse<CrmHerbBaseDto>>> GetCustomers(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string sortField = "CreatedAt",
         [FromQuery] string sortDirection = "Descending",
-        [FromQuery] string? customerName = null,
+        [FromQuery] string? baseName = null,
+        [FromQuery] string? herbBaseName = null,
         [FromQuery] string? keyword = null,
-        [FromQuery] string? customerType = null,
         [FromQuery] string? grade = null,
         [FromQuery] string? status = null,
+        [FromQuery] string? sourcePlatform = null,
         [FromQuery] Guid? ownerUserId = null,
         [FromQuery] string? mainProduct = null,
+        [FromQuery] List<string>? mainProducts = null,
         [FromQuery] string? province = null,
         [FromQuery] string? city = null,
         [FromQuery] DateTime? nextFollowFrom = null,
@@ -43,19 +47,21 @@ public class CrmCustomerController : ControllerBase
         [FromQuery] bool? onlyOverdue = null,
         [FromQuery] bool? onlyNoNextFollow = null)
     {
-        var query = new GetCrmCustomersQuery
+        var query = new GetCrmHerbBasesQuery
         {
             Page = page,
             PageSize = pageSize,
             SortField = sortField,
             SortDirection = sortDirection,
-            CustomerName = customerName,
+            BaseName = baseName,
+            HerbBaseName = herbBaseName,
             Keyword = keyword,
-            CustomerType = customerType,
             Grade = grade,
             Status = status,
+            SourcePlatform = sourcePlatform,
             OwnerUserId = ownerUserId,
             MainProduct = mainProduct,
+            MainProducts = mainProducts,
             Province = province,
             City = city,
             NextFollowFrom = nextFollowFrom,
@@ -69,46 +75,66 @@ public class CrmCustomerController : ControllerBase
     }
 
     /// <summary>
-    /// 获取客户详情
+    /// 获取药材基地详情
     /// </summary>
     [HttpGet("{id}")]
-    public async Task<ActionResult<CrmCustomerDto>> GetCustomer(Guid id)
+    public async Task<ActionResult<CrmHerbBaseDto>> GetCustomer(Guid id)
     {
-        var query = new GetCrmCustomerQuery { Id = id };
+        var query = new GetCrmHerbBaseQuery { Id = id };
         var result = await _mediator.Send(query);
         return Ok(result);
     }
 
+    [HttpGet("{id}/owner-transfers")]
+    public async Task<ActionResult<List<CrmTransferRecordDto>>> GetTransferRecords(Guid id)
+    {
+        var query = new GetCrmTransferRecordsQuery { EntityType = HerbBaseEntityType, EntityId = id };
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpPatch("assign-owner")]
+    public async Task<ActionResult<List<CrmHerbBaseDto>>> AssignOwner([FromBody] CrmHerbBaseAssignOwnerRequest request)
+    {
+        var command = new AssignCrmHerbBaseOwnerCommand { Request = request };
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
     /// <summary>
-    /// 创建客户
+    /// 创建药材基地
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<CrmCustomerDto>> CreateCustomer([FromBody] CrmCustomerCreateRequest request)
+    public async Task<ActionResult<CrmHerbBaseDto>> CreateCustomer([FromBody] CrmHerbBaseCreateRequest request)
     {
-        var command = new CreateCrmCustomerCommand { Request = request };
+        var command = new CreateCrmHerbBaseCommand { Request = request };
         var result = await _mediator.Send(command);
         return CreatedAtAction(nameof(GetCustomer), new { id = result.Id }, result);
     }
 
     /// <summary>
-    /// 更新客户
+    /// 更新药材基地
     /// </summary>
     [HttpPut("{id}")]
-    public async Task<ActionResult<CrmCustomerDto>> UpdateCustomer(Guid id, [FromBody] CrmCustomerUpdateRequest request)
+    public async Task<ActionResult<CrmHerbBaseDto>> UpdateCustomer(Guid id, [FromBody] CrmHerbBaseUpdateRequest request)
     {
-        var command = new UpdateCrmCustomerCommand { Id = id, Request = request };
+        var command = new UpdateCrmHerbBaseCommand { Id = id, Request = request };
         var result = await _mediator.Send(command);
         return Ok(result);
     }
 
     /// <summary>
-    /// 删除客户
+    /// 删除药材基地
     /// </summary>
     [HttpDelete("{id}")]
     public async Task<ActionResult<bool>> DeleteCustomer(Guid id)
     {
-        var command = new DeleteCrmCustomerCommand { Id = id };
+        var command = new DeleteCrmHerbBaseCommand { Id = id };
         var result = await _mediator.Send(command);
         return Ok(result);
     }
 }
+
+
+
+
