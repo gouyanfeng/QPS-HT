@@ -43,7 +43,7 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
             customer => customer.NextFollowAt >= todayStart && customer.NextFollowAt < tomorrowStart,
             cancellationToken);
         var overdueFollowCount = await activeCustomers.CountAsync(
-            customer => customer.NextFollowAt.HasValue && customer.NextFollowAt.Value < todayStart,
+            customer => customer.NextFollowAt.HasValue && customer.NextFollowAt.Value < now,
             cancellationToken);
         var myCustomerCount = await myCustomers.CountAsync(cancellationToken);
         var highIntentCustomerCount = await activeCustomers.CountAsync(
