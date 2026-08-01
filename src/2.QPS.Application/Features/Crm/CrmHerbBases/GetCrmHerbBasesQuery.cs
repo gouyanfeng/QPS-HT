@@ -60,13 +60,21 @@ public class GetCrmHerbBasesHandler : IRequestHandler<GetCrmHerbBasesQuery, Pagi
 {
     private readonly IDbContext _dbContext;
 
+    /// <summary>
+    /// 获取药材基地列表处理器。
+    /// </summary>
     public GetCrmHerbBasesHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
+    /// <summary>
+    /// 编排查询药材基地列表用例。
+    /// </summary>
     public async Task<PaginationResponse<CrmHerbBaseDto>> Handle(GetCrmHerbBasesQuery request, CancellationToken cancellationToken)
     {
+        // 编排查询药材基地列表用例：
+        // 构建过滤条件、分页映射 DTO、补齐主营品类。
         var query = _dbContext.CrmHerbBases
             .Where(c => !c.IsDeleted)
             .AsQueryable();
@@ -208,6 +216,9 @@ public class GetCrmHerbBasesHandler : IRequestHandler<GetCrmHerbBasesQuery, Pagi
         return response;
     }
 
+    /// <summary>
+    /// 规范化主营品类筛选值。
+    /// </summary>
     private static List<string> NormalizeMainProducts(IEnumerable<string>? mainProducts)
     {
         return (mainProducts ?? Enumerable.Empty<string>())
@@ -217,6 +228,9 @@ public class GetCrmHerbBasesHandler : IRequestHandler<GetCrmHerbBasesQuery, Pagi
             .ToList();
     }
 
+    /// <summary>
+    /// 补齐列表中的主营品类。
+    /// </summary>
     private async Task FillMainProductsAsync(List<CrmHerbBaseDto> herbBases, CancellationToken cancellationToken)
     {
         var herbBaseIds = herbBases.Select(herbBase => herbBase.Id).ToList();

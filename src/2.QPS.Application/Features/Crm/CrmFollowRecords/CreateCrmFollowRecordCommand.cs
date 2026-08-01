@@ -22,58 +22,113 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
     private readonly IDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
 
+    /// <summary>
+    /// 创建客户沟通记录处理器。
+    /// </summary>
     public CreateCrmFollowRecordHandler(IDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
         _currentUserService = currentUserService;
     }
 
+    /// <summary>
+    /// 编排新增沟通记录用例。
+    /// </summary>
     public async Task<bool> Handle(CreateCrmFollowRecordCommand request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Request.FollowResult))
-        {
-            throw new BusinessException(400, "沟通结果不能为空");
-        }
+        // 编排新增沟通记录用例：
+        // 校验沟通结果、确认客户与联系人、创建记录、同步客户跟进摘要。
+        EnsureFollowResult(request.Request.FollowResult);
 
-        var customer = await _dbContext.CrmHerbBases
-            .FirstOrDefaultAsync(c => c.Id == request.CustomerId && !c.IsDeleted, cancellationToken);
-        if (customer == null)
-        {
-            throw new BusinessException(404, "客户不存在");
-        }
+        var customer = await GetCustomer(request.CustomerId, cancellationToken);
 
-        CrmContact? contact = null;
-        if (request.Request.ContactId.HasValue)
-        {
-            contact = await _dbContext.CrmContacts
-                .FirstOrDefaultAsync(c => c.Id == request.Request.ContactId.Value, cancellationToken);
+        await EnsureContactBelongsToCustomer(request, cancellationToken);
 
-            if (contact == null || contact.EntityType != CustomerEntityType || contact.EntityId != request.CustomerId)
-            {
-                throw new BusinessException(404, "联系人不存在");
-            }
-        }
-
-        var operatorUserId = Guid.TryParse(_currentUserService.UserId, out var parsedUserId)
-            ? parsedUserId
-            : (Guid?)null;
-
-        var record = CrmFollowRecord.Create(
-            request.CustomerId,
-            request.Request.ContactId,
-            request.Request.FollowType,
-            request.Request.FollowResult,
-            request.Request.IntentLevel,
-            request.Request.Content,
-            request.Request.NextFollowAt,
-            operatorUserId);
+        var record = CreateFollowRecord(request);
 
         _dbContext.CrmFollowRecords.Add(record);
+        
         customer.UpdateFollowSummary(DateTime.Now, request.Request.FollowResult, request.Request.NextFollowAt);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
+    }
+
+    /// <summary>
+    /// 校验沟通结果。
+    /// </summary>
+    private static void EnsureFollowResult(string followResult)
+    {
+        if (string.IsNullOrWhiteSpace(followResult))
+        {
+            throw new BusinessException(400, "沟通结果不能为空");
+        }
+    }
+
+    /// <summary>
+    /// 获取沟通记录所属客户。
+    /// </summary>
+    private async Task<CrmHerbBase> GetCustomer(Guid customerId, CancellationToken cancellationToken)
+    {
+        var customer = await _dbContext.CrmHerbBases
+            .FirstOrDefaultAsync(c => c.Id == customerId && !c.IsDeleted, cancellationToken);
+
+        if (customer == null)
+        {
+            throw new BusinessException(404, "客户不存在");
+        }
+
+        return customer;
+    }
+
+    /// <summary>
+    /// 确认联系人属于当前客户。
+    /// </summary>
+    private async Task EnsureContactBelongsToCustomer(CreateCrmFollowRecordCommand command, CancellationToken cancellationToken)
+    {
+        if (!command.Request.ContactId.HasValue)
+        {
+            return;
+        }
+
+        var contact = await _dbContext.CrmContacts
+            .FirstOrDefaultAsync(c => c.Id == command.Request.ContactId.Value, cancellationToken);
+
+        if (contact == null ||
+            contact.EntityType != CustomerEntityType ||
+            contact.EntityId != command.CustomerId)
+        {
+            throw new BusinessException(404, "联系人不存在");
+        }
+    }
+
+    /// <summary>
+    /// 根据请求创建沟通记录实体。
+    /// </summary>
+    private CrmFollowRecord CreateFollowRecord(CreateCrmFollowRecordCommand command)
+    {
+        var operatorUserId = GetOperatorUserId();
+
+        return CrmFollowRecord.Create(
+            command.CustomerId,
+            command.Request.ContactId,
+            command.Request.FollowType,
+            command.Request.FollowResult,
+            command.Request.IntentLevel,
+            command.Request.Content,
+            command.Request.NextFollowAt,
+            operatorUserId);
+    }
+
+    /// <summary>
+    /// 获取当前操作人编号。
+    /// </summary>
+    private Guid? GetOperatorUserId()
+    {
+        return Guid.TryParse(_currentUserService.UserId, out var parsedUserId)
+            ? parsedUserId
+            : null;
     }
 }
 

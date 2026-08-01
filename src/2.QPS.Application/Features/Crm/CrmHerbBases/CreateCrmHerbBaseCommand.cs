@@ -20,47 +20,81 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
 {
     private readonly IDbContext _dbContext;
 
+    /// <summary>
+    /// 创建药材基地处理器。
+    /// </summary>
     public CreateCrmHerbBaseHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
+    /// <summary>
+    /// 编排创建药材基地用例。
+    /// </summary>
     public async Task<bool> Handle(CreateCrmHerbBaseCommand request, CancellationToken cancellationToken)
     {
-        var baseName = string.IsNullOrWhiteSpace(request.Request.BaseName)
-            ? request.Request.HerbBaseName
-            : request.Request.BaseName;
+        // 编排创建药材基地用例：
+        // 创建客户实体、同步主联系人摘要、保存。
+        var customer = CreateCustomer(request.Request);
 
-        var customer = CrmHerbBase.Create(
-            baseName,
-            request.Request.Grade,
-            request.Request.Score,
-            request.Request.Province,
-            request.Request.City,
-            request.Request.Area,
-            request.Request.Address,
-            request.Request.Lat,
-            request.Request.Lng,
-            request.Request.SourcePlatform,
-            request.Request.SourceId,
-            request.Request.OwnerUserId,
-            request.Request.Remark,
-            request.Request.ParentId,
-            request.Request.SubjectName
-        );
-
-        if (!string.IsNullOrWhiteSpace(request.Request.PrimaryContactName) ||
-            !string.IsNullOrWhiteSpace(request.Request.PrimaryContactPhone))
-        {
-            customer.UpdatePrimaryContact(
-                request.Request.PrimaryContactName ?? string.Empty,
-                request.Request.PrimaryContactPhone ?? string.Empty);
-        }
+        ApplyPrimaryContact(customer, request.Request);
 
         _dbContext.CrmHerbBases.Add(customer);
+        
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
+    }
+
+    /// <summary>
+    /// 根据请求创建药材基地实体。
+    /// </summary>
+    private static CrmHerbBase CreateCustomer(CrmHerbBaseCreateRequest request)
+    {
+        var baseName = GetBaseName(request.BaseName, request.HerbBaseName);
+
+        return CrmHerbBase.Create(
+            baseName,
+            request.Grade,
+            request.Score,
+            request.Province,
+            request.City,
+            request.Area,
+            request.Address,
+            request.Lat,
+            request.Lng,
+            request.SourcePlatform,
+            request.SourceId,
+            request.OwnerUserId,
+            request.Remark,
+            request.ParentId,
+            request.SubjectName);
+    }
+
+    /// <summary>
+    /// 取兼容旧字段后的基地名称。
+    /// </summary>
+    private static string GetBaseName(string? baseName, string herbBaseName)
+    {
+        return string.IsNullOrWhiteSpace(baseName)
+            ? herbBaseName
+            : baseName;
+    }
+
+    /// <summary>
+    /// 请求带主联系人时同步客户主联系人摘要。
+    /// </summary>
+    private static void ApplyPrimaryContact(CrmHerbBase customer, CrmHerbBaseCreateRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.PrimaryContactName) &&
+            string.IsNullOrWhiteSpace(request.PrimaryContactPhone))
+        {
+            return;
+        }
+
+        customer.UpdatePrimaryContact(
+            request.PrimaryContactName ?? string.Empty,
+            request.PrimaryContactPhone ?? string.Empty);
     }
 }
 

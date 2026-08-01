@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Interfaces;
+using QPS.Domain.Entities.Crm;
 
 namespace QPS.Application.Features.Crm.CrmBusinessEntityAttributes;
 
@@ -18,23 +19,22 @@ public class GetCrmBusinessEntityAttributesHandler : IRequestHandler<GetCrmBusin
 {
     private readonly IDbContext _dbContext;
 
+    /// <summary>
+    /// 查询 CRM 业务实体属性处理器。
+    /// </summary>
     public GetCrmBusinessEntityAttributesHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
+    /// <summary>
+    /// 编排查询业务实体属性用例。
+    /// </summary>
     public async Task<List<CrmBusinessEntityAttributeDto>> Handle(GetCrmBusinessEntityAttributesQuery request, CancellationToken cancellationToken)
     {
-        var query = _dbContext.CrmBusinessEntityAttributes
-            .Where(attribute =>
-                !attribute.IsDeleted &&
-                attribute.EntityType == request.EntityType &&
-                attribute.EntityId == request.EntityId);
-
-        if (!string.IsNullOrWhiteSpace(request.AttributeCode))
-        {
-            query = query.Where(attribute => attribute.AttributeCode == request.AttributeCode);
-        }
+        // 编排查询业务实体属性用例：
+        // 构建查询条件、排序并映射 DTO。
+        var query = BuildQuery(request);
 
         return await query
             .OrderBy(attribute => attribute.AttributeCode)
@@ -51,5 +51,24 @@ public class GetCrmBusinessEntityAttributesHandler : IRequestHandler<GetCrmBusin
                 Remark = attribute.Remark
             })
             .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// 构建业务实体属性查询。
+    /// </summary>
+    private IQueryable<CrmBusinessEntityAttribute> BuildQuery(GetCrmBusinessEntityAttributesQuery request)
+    {
+        var query = _dbContext.CrmBusinessEntityAttributes
+            .Where(attribute =>
+                !attribute.IsDeleted &&
+                attribute.EntityType == request.EntityType &&
+                attribute.EntityId == request.EntityId);
+
+        if (!string.IsNullOrWhiteSpace(request.AttributeCode))
+        {
+            query = query.Where(attribute => attribute.AttributeCode == request.AttributeCode);
+        }
+
+        return query;
     }
 }

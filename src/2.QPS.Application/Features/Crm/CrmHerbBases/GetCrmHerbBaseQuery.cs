@@ -25,18 +25,38 @@ public class GetCrmHerbBaseHandler : IRequestHandler<GetCrmHerbBaseQuery, CrmHer
 {
     private readonly IDbContext _dbContext;
 
+    /// <summary>
+    /// 获取药材基地详情处理器。
+    /// </summary>
     public GetCrmHerbBaseHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
+    /// <summary>
+    /// 编排查询药材基地详情用例。
+    /// </summary>
     public async Task<CrmHerbBaseDto> Handle(GetCrmHerbBaseQuery request, CancellationToken cancellationToken)
+    {
+        // 编排查询药材基地详情用例：
+        // 查询基础资料、校验存在、补齐主营品类。
+        var dto = await GetCustomerDto(request.Id, cancellationToken);
+
+        dto.MainProducts = await GetMainProducts(dto.Id, cancellationToken);
+
+        return dto;
+    }
+
+    /// <summary>
+    /// 查询药材基地详情 DTO。
+    /// </summary>
+    private async Task<CrmHerbBaseDto> GetCustomerDto(Guid customerId, CancellationToken cancellationToken)
     {
         var dto = await (
             from customer in _dbContext.CrmHerbBases
             join owner in _dbContext.SystemUsers on customer.OwnerUserId equals owner.Id into ownerGroup
             from owner in ownerGroup.DefaultIfEmpty()
-            where customer.Id == request.Id && !customer.IsDeleted
+            where customer.Id == customerId && !customer.IsDeleted
             select new CrmHerbBaseDto
             {
                 Id = customer.Id,
@@ -73,20 +93,23 @@ public class GetCrmHerbBaseHandler : IRequestHandler<GetCrmHerbBaseQuery, CrmHer
             throw new BusinessException(404, "药材基地不存在");
         }
 
-        dto.MainProducts = await _dbContext.CrmBusinessEntityAttributes
+        return dto;
+    }
+
+    /// <summary>
+    /// 查询药材基地主营品类。
+    /// </summary>
+    private async Task<List<string>> GetMainProducts(Guid customerId, CancellationToken cancellationToken)
+    {
+        return await _dbContext.CrmBusinessEntityAttributes
             .Where(attribute =>
                 !attribute.IsDeleted &&
                 attribute.EntityType == CrmCodes.HerbBaseEntityType &&
-                attribute.EntityId == dto.Id &&
+                attribute.EntityId == customerId &&
                 attribute.AttributeCode == CrmCodes.MainProductAttributeCode)
             .OrderBy(attribute => attribute.SortOrder)
             .ThenBy(attribute => attribute.CreatedAt)
             .Select(attribute => attribute.AttributeValue)
             .ToListAsync(cancellationToken);
-
-        return dto;
     }
 }
-
-
-

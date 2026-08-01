@@ -20,25 +20,58 @@ public class AssignCrmHerbBaseOwnerHandler : IRequestHandler<AssignCrmHerbBaseOw
     private readonly IDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
 
+    /// <summary>
+    /// 分配药材基地负责人处理器。
+    /// </summary>
     public AssignCrmHerbBaseOwnerHandler(IDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
         _currentUserService = currentUserService;
     }
 
+    /// <summary>
+    /// 编排分配药材基地负责人用例。
+    /// </summary>
     public async Task<bool> Handle(AssignCrmHerbBaseOwnerCommand request, CancellationToken cancellationToken)
     {
-        var ownerUserId = request.Request.OwnerUserId;
-        var herbBaseIds = request.Request.HerbBaseIds
+        // 编排分配药材基地负责人用例：
+        // 规范化客户编号、获取客户、确认负责人、写入分配记录。
+        var herbBaseIds = NormalizeHerbBaseIds(request.Request.HerbBaseIds);
+
+        var customers = await GetCustomers(herbBaseIds, cancellationToken);
+
+        await EnsureTargetOwnerExists(request.Request.OwnerUserId, cancellationToken);
+
+        AssignOwners(customers, request.Request.OwnerUserId, request.Request.Remark);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    /// <summary>
+    /// 规范化待分配的药材基地编号。
+    /// </summary>
+    private static List<Guid> NormalizeHerbBaseIds(IEnumerable<Guid> herbBaseIds)
+    {
+        var normalizedIds = herbBaseIds
             .Where(id => id != Guid.Empty)
             .Distinct()
             .ToList();
 
-        if (herbBaseIds.Count == 0)
+        if (normalizedIds.Count == 0)
         {
             throw new BusinessException(400, "请选择要分配的药材基地");
         }
 
+        return normalizedIds;
+    }
+
+    /// <summary>
+    /// 获取待分配的药材基地客户。
+    /// </summary>
+    private async Task<List<CrmHerbBase>> GetCustomers(List<Guid> herbBaseIds, CancellationToken cancellationToken)
+    {
         var customers = await _dbContext.CrmHerbBases
             .Where(customer => herbBaseIds.Contains(customer.Id) && !customer.IsDeleted)
             .ToListAsync(cancellationToken);
@@ -48,29 +81,12 @@ public class AssignCrmHerbBaseOwnerHandler : IRequestHandler<AssignCrmHerbBaseOw
             throw new BusinessException(404, "药材基地不存在");
         }
 
-        await EnsureTargetOwnerExists(ownerUserId, cancellationToken);
-        var operatorUserId = GetOperatorUserId();
-        var remark = request.Request.Remark?.Trim() ?? string.Empty;
-
-        foreach (var customer in customers)
-        {
-            var fromOwnerUserId = customer.OwnerUserId;
-
-            customer.AssignOwner(ownerUserId);
-            _dbContext.CrmTransferRecords.Add(CrmTransferRecord.Create(
-                HerbBaseEntityType,
-                customer.Id,
-                fromOwnerUserId,
-                ownerUserId,
-                operatorUserId,
-                remark));
-        }
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        return true;
+        return customers;
     }
 
+    /// <summary>
+    /// 请求带负责人时确认负责人存在。
+    /// </summary>
     private async Task EnsureTargetOwnerExists(Guid? ownerUserId, CancellationToken cancellationToken)
     {
         if (!ownerUserId.HasValue)
@@ -88,6 +104,32 @@ public class AssignCrmHerbBaseOwnerHandler : IRequestHandler<AssignCrmHerbBaseOw
         }
     }
 
+    /// <summary>
+    /// 批量分配负责人并记录流转。
+    /// </summary>
+    private void AssignOwners(List<CrmHerbBase> customers, Guid? ownerUserId, string? remark)
+    {
+        var operatorUserId = GetOperatorUserId();
+        var normalizedRemark = remark?.Trim() ?? string.Empty;
+
+        foreach (var customer in customers)
+        {
+            var fromOwnerUserId = customer.OwnerUserId;
+
+            customer.AssignOwner(ownerUserId);
+            _dbContext.CrmTransferRecords.Add(CrmTransferRecord.Create(
+                HerbBaseEntityType,
+                customer.Id,
+                fromOwnerUserId,
+                ownerUserId,
+                operatorUserId,
+                normalizedRemark));
+        }
+    }
+
+    /// <summary>
+    /// 获取当前操作人编号。
+    /// </summary>
     private Guid? GetOperatorUserId()
     {
         return Guid.TryParse(_currentUserService.UserId, out var operatorUserId)
@@ -95,7 +137,3 @@ public class AssignCrmHerbBaseOwnerHandler : IRequestHandler<AssignCrmHerbBaseOw
             : null;
     }
 }
-
-
-
-

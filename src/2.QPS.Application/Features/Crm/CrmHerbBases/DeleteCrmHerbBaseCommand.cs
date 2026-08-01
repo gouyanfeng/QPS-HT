@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Interfaces;
+using QPS.Domain.Entities.Crm;
 using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.Crm.CrmHerbBases;
@@ -20,25 +21,44 @@ public class DeleteCrmHerbBaseHandler : IRequestHandler<DeleteCrmHerbBaseCommand
 {
     private readonly IDbContext _dbContext;
 
+    /// <summary>
+    /// 删除药材基地处理器。
+    /// </summary>
     public DeleteCrmHerbBaseHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
+    /// <summary>
+    /// 编排删除药材基地用例。
+    /// </summary>
     public async Task<bool> Handle(DeleteCrmHerbBaseCommand request, CancellationToken cancellationToken)
     {
+        // 编排删除药材基地用例：
+        // 获取客户、标记删除、保存。
+        var customer = await GetCustomer(request.Id, cancellationToken);
+
+        customer.IsDeleted = true;
+        
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    /// <summary>
+    /// 获取要删除的药材基地客户。
+    /// </summary>
+    private async Task<CrmHerbBase> GetCustomer(Guid customerId, CancellationToken cancellationToken)
+    {
         var customer = await _dbContext.CrmHerbBases
-            .FirstOrDefaultAsync(c => c.Id == request.Id && !c.IsDeleted, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == customerId && !c.IsDeleted, cancellationToken);
 
         if (customer == null)
         {
             throw new BusinessException(404, "药材基地不存在");
         }
 
-        customer.IsDeleted = true;
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        return true;
+        return customer;
     }
 }
 

@@ -14,13 +14,21 @@ public class GetCrmFollowRecordsHandler : IRequestHandler<GetCrmFollowRecordsQue
 {
     private readonly IDbContext _dbContext;
 
+    /// <summary>
+    /// 查询客户沟通记录处理器。
+    /// </summary>
     public GetCrmFollowRecordsHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
+    /// <summary>
+    /// 编排查询客户沟通记录用例。
+    /// </summary>
     public async Task<List<CrmFollowRecordDto>> Handle(GetCrmFollowRecordsQuery request, CancellationToken cancellationToken)
     {
+        // 编排查询客户沟通记录用例：
+        // 按客户编号过滤、加载联系人、按创建时间倒序映射 DTO。
         return await _dbContext.CrmFollowRecords
             .Include(r => r.Contact)
             .Where(r => r.CustomerId == request.CustomerId)
@@ -42,5 +50,3 @@ public class GetCrmFollowRecordsHandler : IRequestHandler<GetCrmFollowRecordsQue
             .ToListAsync(cancellationToken);
     }
 }
-
-
