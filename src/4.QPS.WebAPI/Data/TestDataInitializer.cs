@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using QPS.Domain.Entities.System;
 using QPS.Domain.Entities.Crm;
 using QPS.Infrastructure.Database;
@@ -149,6 +149,11 @@ public static class TestDataInitializer
         EnsurePermission(dbContext, permissions, "编辑", "CRM_HERB_BASE_EDIT", crmHerbBase.Id);
         EnsurePermission(dbContext, permissions, "删除", "CRM_HERB_BASE_DELETE", crmHerbBase.Id);
         EnsurePermission(dbContext, permissions, "分配", "CRM_HERB_BASE_ASSIGN", crmHerbBase.Id);
+        EnsurePermission(dbContext, permissions, "记录沟通", "CRM_HERB_BASE_FOLLOW", crmHerbBase.Id);
+        EnsurePermission(dbContext, permissions, "新增联系人", "CRM_HERB_BASE_CONTACT_ADD", crmHerbBase.Id);
+        EnsurePermission(dbContext, permissions, "编辑联系人", "CRM_HERB_BASE_CONTACT_EDIT", crmHerbBase.Id);
+        EnsurePermission(dbContext, permissions, "设置主联系人", "CRM_HERB_BASE_CONTACT_PRIMARY", crmHerbBase.Id);
+        EnsurePermission(dbContext, permissions, "标记状态", "CRM_HERB_BASE_STATUS", crmHerbBase.Id);
         var crmVendor = EnsurePermission(dbContext, permissions, "厂商管理", "CRM_VENDOR", root.Id);
         EnsurePermission(dbContext, permissions, "新增", "CRM_VENDOR_ADD", crmVendor.Id);
         EnsurePermission(dbContext, permissions, "编辑", "CRM_VENDOR_EDIT", crmVendor.Id);
@@ -181,10 +186,81 @@ public static class TestDataInitializer
             {
                 dbContext.SystemRolePermissions.Add(new SystemRolePermission(userRole.Id, home.Id));
             }
+
+            RemoveDefaultUserButtonPermissions(dbContext, userRole.Id);
         }
 
         dbContext.SaveChanges();
+        RemoveRetiredPermissions(dbContext);
         return permissions;
+    }
+
+    private static void RemoveRetiredPermissions(AppDbContext dbContext)
+    {
+        var retiredPermissionCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "CRM_HERB_BASE_CONTACT_INVALID"
+        };
+
+        var retiredPermissions = dbContext.SystemPermissions
+            .Where(permission => retiredPermissionCodes.Contains(permission.Code))
+            .ToList();
+        if (retiredPermissions.Count == 0)
+        {
+            return;
+        }
+
+        var retiredPermissionIds = retiredPermissions.Select(permission => permission.Id).ToHashSet();
+        var rolePermissions = dbContext.SystemRolePermissions
+            .Where(rolePermission => retiredPermissionIds.Contains(rolePermission.PermissionId))
+            .ToList();
+
+        dbContext.SystemRolePermissions.RemoveRange(rolePermissions);
+        dbContext.SystemPermissions.RemoveRange(retiredPermissions);
+        dbContext.SaveChanges();
+    }
+
+    private static void RemoveDefaultUserButtonPermissions(AppDbContext dbContext, Guid userRoleId)
+    {
+        var removablePermissionCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "CRM_HERB_BASE_ADD",
+            "CRM_HERB_BASE_EDIT",
+            "CRM_HERB_BASE_DELETE",
+            "CRM_HERB_BASE_ASSIGN",
+            "CRM_HERB_BASE_FOLLOW",
+            "CRM_HERB_BASE_CONTACT_ADD",
+            "CRM_HERB_BASE_CONTACT_EDIT",
+            "CRM_HERB_BASE_CONTACT_PRIMARY",
+            "CRM_HERB_BASE_STATUS",
+            "CRM_VENDOR_ADD",
+            "CRM_VENDOR_EDIT",
+            "CRM_VENDOR_DELETE",
+            "CRM_VENDOR_ASSIGN",
+            "SYSTEM_ROLE_ADD",
+            "SYSTEM_ROLE_EDIT",
+            "SYSTEM_ROLE_DELETE",
+            "SYSTEM_PERMISSION_ADD",
+            "SYSTEM_PERMISSION_EDIT",
+            "SYSTEM_PERMISSION_DELETE",
+            "SYSTEM_USER_ADD",
+            "SYSTEM_USER_EDIT",
+            "SYSTEM_DATA_DICTIONARY_ADD",
+            "SYSTEM_DATA_DICTIONARY_EDIT",
+            "SYSTEM_DATA_DICTIONARY_DELETE",
+            "SYSTEM_REGION_ADD",
+            "SYSTEM_REGION_EDIT",
+            "SYSTEM_REGION_DELETE"
+        };
+
+        var rolePermissions = (
+            from rolePermission in dbContext.SystemRolePermissions
+            join permission in dbContext.SystemPermissions on rolePermission.PermissionId equals permission.Id
+            where rolePermission.RoleId == userRoleId && removablePermissionCodes.Contains(permission.Code)
+            select rolePermission)
+            .ToList();
+
+        dbContext.SystemRolePermissions.RemoveRange(rolePermissions);
     }
 
     private static SystemPermission EnsurePermission(
@@ -324,6 +400,11 @@ public static class TestDataInitializer
             "CRM_HERB_BASE_EDIT",
             "CRM_HERB_BASE_DELETE",
             "CRM_HERB_BASE_ASSIGN",
+            "CRM_HERB_BASE_FOLLOW",
+            "CRM_HERB_BASE_CONTACT_ADD",
+            "CRM_HERB_BASE_CONTACT_EDIT",
+            "CRM_HERB_BASE_CONTACT_PRIMARY",
+            "CRM_HERB_BASE_STATUS",
             "CRM_VENDOR",
             "CRM_VENDOR_ADD",
             "CRM_VENDOR_EDIT",
@@ -355,6 +436,11 @@ public static class TestDataInitializer
             ["REGION_DELETE"] = "SYSTEM_REGION_DELETE",
             ["OPERATION_LOG"] = "SYSTEM_OPERATION_LOG",
             ["CRM"] = "CRM_HERB_BASE",
+            ["CRM_CUSTOMER"] = "CRM_HERB_BASE",
+            ["CRM_CUSTOMER_ADD"] = "CRM_HERB_BASE_ADD",
+            ["CRM_CUSTOMER_EDIT"] = "CRM_HERB_BASE_EDIT",
+            ["CRM_CUSTOMER_DELETE"] = "CRM_HERB_BASE_DELETE",
+            ["CRM_CUSTOMER_ASSIGN"] = "CRM_HERB_BASE_ASSIGN",
             ["VENDOR"] = "CRM_VENDOR",
             ["CRM_VENDOR_MANAGEMENT"] = "CRM_VENDOR"
         };
@@ -454,11 +540,8 @@ public static class TestDataInitializer
                     [EntityType] nvarchar(64) NOT NULL,
                     [EntityId] uniqueidentifier NOT NULL,
                     [FromOwnerUserId] uniqueidentifier NULL,
-                    [FromOwnerUserName] nvarchar(100) NOT NULL,
                     [ToOwnerUserId] uniqueidentifier NULL,
-                    [ToOwnerUserName] nvarchar(100) NOT NULL,
                     [OperatorUserId] uniqueidentifier NULL,
-                    [OperatorUserName] nvarchar(100) NOT NULL,
                     [Remark] nvarchar(500) NOT NULL,
                     [CreatedAt] datetime2 NOT NULL,
                     [CreatedBy] nvarchar(max) NOT NULL,
@@ -477,6 +560,16 @@ public static class TestDataInitializer
             BEGIN
                 CREATE INDEX [IX_CrmTransferRecords_Entity_CreatedAt]
                 ON [CrmTransferRecords]([EntityType], [EntityId], [CreatedAt]);
+            END;
+
+            IF OBJECT_ID(N'[CrmTransferRecords]', N'U') IS NOT NULL
+            BEGIN
+                IF COL_LENGTH(N'dbo.CrmTransferRecords', N'FromOwnerUserName') IS NOT NULL
+                    ALTER TABLE [CrmTransferRecords] DROP COLUMN [FromOwnerUserName];
+                IF COL_LENGTH(N'dbo.CrmTransferRecords', N'ToOwnerUserName') IS NOT NULL
+                    ALTER TABLE [CrmTransferRecords] DROP COLUMN [ToOwnerUserName];
+                IF COL_LENGTH(N'dbo.CrmTransferRecords', N'OperatorUserName') IS NOT NULL
+                    ALTER TABLE [CrmTransferRecords] DROP COLUMN [OperatorUserName];
             END;
             """);
     }
@@ -801,8 +894,9 @@ public static class TestDataInitializer
                 {
                     new DataDictionaryItemSeed("CRM_HERB_BASE_STATUS_PENDING", "待联系", "PENDING", "尚未联系", 1, "crm_customer_status_pending"),
                     new DataDictionaryItemSeed("CRM_HERB_BASE_STATUS_FOLLOWING", "跟进中", "FOLLOWING", "正在销售跟进", 2, "crm_customer_status_following"),
-                    new DataDictionaryItemSeed("CRM_HERB_BASE_STATUS_DEAL", "已成交", "DEAL", "已达成合作或成交", 3, "crm_customer_status_deal"),
-                    new DataDictionaryItemSeed("CRM_HERB_BASE_STATUS_LOST", "已流失", "LOST", "药材基地已流失", 4, "crm_customer_status_lost")
+                    new DataDictionaryItemSeed("CRM_HERB_BASE_STATUS_INTERESTED", "有意向", "INTERESTED", "客户已表达合作意向", 3, "crm_customer_status_interested"),
+                    new DataDictionaryItemSeed("CRM_HERB_BASE_STATUS_DEAL", "已成交", "DEAL", "已达成合作或成交", 4, "crm_customer_status_deal"),
+                    new DataDictionaryItemSeed("CRM_HERB_BASE_STATUS_LOST", "已流失", "LOST", "药材基地已流失", 5, "crm_customer_status_lost")
                 },
                 "crm_customer_status"),
             new(
@@ -1108,7 +1202,6 @@ public static class TestDataInitializer
         {
             CrmHerbBase.Create(
                 herbBaseName: "陇西黄芪种植合作社",
-                mainProduct: "黄芪",
                 grade: "A",
                 score: 92,
                 province: "甘肃省",
@@ -1125,7 +1218,6 @@ public static class TestDataInitializer
             ),
             CrmHerbBase.Create(
                 herbBaseName: "岷县当归基地",
-                mainProduct: "当归",
                 grade: "B",
                 score: 85,
                 province: "甘肃省",
@@ -1142,7 +1234,6 @@ public static class TestDataInitializer
             ),
             CrmHerbBase.Create(
                 herbBaseName: "亳州药材流通商",
-                mainProduct: "多品类",
                 grade: "B",
                 score: 71,
                 province: "安徽省",
@@ -1160,6 +1251,12 @@ public static class TestDataInitializer
         };
 
         dbContext.CrmHerbBases.AddRange(customers);
+        dbContext.SaveChanges();
+
+        dbContext.CrmBusinessEntityAttributes.AddRange(
+            new CrmBusinessEntityAttribute("CRM_HERB_BASE", customers[0].Id, "CRM_MAIN_PRODUCT", "HUANG_QI", 1),
+            new CrmBusinessEntityAttribute("CRM_HERB_BASE", customers[1].Id, "CRM_MAIN_PRODUCT", "DANG_GUI", 1),
+            new CrmBusinessEntityAttribute("CRM_HERB_BASE", customers[2].Id, "CRM_MAIN_PRODUCT", "OTHER", 1));
         dbContext.SaveChanges();
 
         var contacts = new List<CrmContact>
@@ -1248,6 +1345,7 @@ public static class TestDataInitializer
                 [Status] = CASE [Status]
                     WHEN N'待联系' THEN N'PENDING'
                     WHEN N'跟进中' THEN N'FOLLOWING'
+                    WHEN N'有意向' THEN N'INTERESTED'
                     WHEN N'已成交' THEN N'DEAL'
                     WHEN N'已流失' THEN N'LOST'
                     ELSE [Status]
@@ -1307,84 +1405,63 @@ public static class TestDataInitializer
     private static void NormalizeCrmMainProducts(AppDbContext dbContext)
     {
         dbContext.Database.ExecuteSqlRaw("""
-            INSERT INTO [CrmBusinessEntityAttributes] (
-                [Id],
-                [EntityType],
-                [EntityId],
-                [AttributeCode],
-                [AttributeValue],
-                [SortOrder],
-                [Remark],
-                [CreatedAt],
-                [CreatedBy],
-                [UpdatedAt],
-                [UpdatedBy],
-                [IsDeleted]
-            )
-            SELECT
-                NEWID(),
-                N'CRM_HERB_BASE',
-                [Id],
-                N'CRM_MAIN_PRODUCT',
-                [AttributeValue],
-                1,
-                N'Migrated from CrmHerbBases.MainProduct',
-                SYSUTCDATETIME(),
-                N'System',
-                SYSUTCDATETIME(),
-                N'System',
-                0
-            FROM (
-                SELECT
-                    [Id],
-                    CASE
-                        WHEN [MainProduct] IN (N'HUANG_QI', N'黄芪', N'黃芪') THEN N'HUANG_QI'
-                        WHEN [MainProduct] IN (N'DANG_GUI', N'当归', N'當歸') THEN N'DANG_GUI'
-                        WHEN [MainProduct] IN (N'DANG_SHEN', N'党参', N'黨參') THEN N'DANG_SHEN'
-                        WHEN [MainProduct] IN (N'TIAN_MA', N'天麻') THEN N'TIAN_MA'
-                        WHEN [MainProduct] IN (N'OTHER', N'多品类', N'多品類', N'其他') THEN N'OTHER'
-                        ELSE NULL
-                    END AS [AttributeValue]
-                FROM [CrmHerbBases]
-                WHERE [IsDeleted] = 0 AND ISNULL([MainProduct], N'') <> N''
-            ) AS [Source]
-            WHERE [AttributeValue] IS NOT NULL
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM [CrmBusinessEntityAttributes] AS [Existing]
-                    WHERE [Existing].[EntityType] = N'CRM_HERB_BASE'
-                        AND [Existing].[EntityId] = [Source].[Id]
-                        AND [Existing].[AttributeCode] = N'CRM_MAIN_PRODUCT'
-                        AND [Existing].[AttributeValue] = [Source].[AttributeValue]
-                        AND [Existing].[IsDeleted] = 0
+            IF OBJECT_ID(N'[CrmHerbBases]', N'U') IS NULL
+                OR COL_LENGTH(N'dbo.CrmHerbBases', N'MainProduct') IS NULL
+            BEGIN
+                RETURN;
+            END;
+
+            UPDATE [CrmBusinessEntityAttributes]
+            SET
+                [AttributeValue] = CASE
+                    WHEN [AttributeValue] IN (N'黄芪', N'黃芪') THEN N'HUANG_QI'
+                    WHEN [AttributeValue] IN (N'当归', N'當歸') THEN N'DANG_GUI'
+                    WHEN [AttributeValue] IN (N'党参', N'黨參') THEN N'DANG_SHEN'
+                    WHEN [AttributeValue] = N'天麻' THEN N'TIAN_MA'
+                    WHEN [AttributeValue] IN (N'多品类', N'多品類', N'其他') THEN N'OTHER'
+                    ELSE [AttributeValue]
+                END,
+                [UpdatedAt] = SYSUTCDATETIME(),
+                [UpdatedBy] = N'System'
+            WHERE [EntityType] = N'CRM_HERB_BASE'
+                AND [AttributeCode] = N'CRM_MAIN_PRODUCT'
+                AND [IsDeleted] = 0
+                AND [AttributeValue] IN (
+                    N'黄芪',
+                    N'黃芪',
+                    N'当归',
+                    N'當歸',
+                    N'党参',
+                    N'黨參',
+                    N'天麻',
+                    N'多品类',
+                    N'多品類',
+                    N'其他'
                 );
 
-            UPDATE [CrmHerbBases]
-            SET [MainProduct] = CASE [MainProduct]
-                WHEN N'黄芪' THEN N'HUANG_QI'
-                WHEN N'黃芪' THEN N'HUANG_QI'
-                WHEN N'当归' THEN N'DANG_GUI'
-                WHEN N'當歸' THEN N'DANG_GUI'
-                WHEN N'党参' THEN N'DANG_SHEN'
-                WHEN N'黨參' THEN N'DANG_SHEN'
-                WHEN N'天麻' THEN N'TIAN_MA'
-                WHEN N'多品类' THEN N'OTHER'
-                WHEN N'多品類' THEN N'OTHER'
-                WHEN N'其他' THEN N'OTHER'
-                ELSE [MainProduct]
-            END
-            WHERE [MainProduct] IN (
-                N'黄芪',
-                N'黃芪',
-                N'当归',
-                N'當歸',
-                N'党参',
-                N'黨參',
-                N'天麻',
-                N'多品类',
-                N'多品類',
-                N'其他'
-            );
+            WITH [DuplicatedAttributes] AS (
+                SELECT
+                    [Id],
+                    ROW_NUMBER() OVER (
+                        PARTITION BY [EntityType], [EntityId], [AttributeCode], [AttributeValue]
+                        ORDER BY [SortOrder], [CreatedAt], [Id]
+                    ) AS [RowNumber]
+                FROM [CrmBusinessEntityAttributes]
+                WHERE [EntityType] = N'CRM_HERB_BASE'
+                    AND [AttributeCode] = N'CRM_MAIN_PRODUCT'
+                    AND [IsDeleted] = 0
+            )
+            UPDATE [Attribute]
+            SET
+                [IsDeleted] = 1,
+                [UpdatedAt] = SYSUTCDATETIME(),
+                [UpdatedBy] = N'System'
+            FROM [CrmBusinessEntityAttributes] AS [Attribute]
+            INNER JOIN [DuplicatedAttributes] AS [Duplicated]
+                ON [Duplicated].[Id] = [Attribute].[Id]
+            WHERE [Duplicated].[RowNumber] > 1;
+
+            ALTER TABLE [CrmHerbBases] DROP COLUMN [MainProduct];
             """);
     }
 
@@ -1410,6 +1487,7 @@ public static class TestDataInitializer
             """);
     }
 }
+
 
 
 

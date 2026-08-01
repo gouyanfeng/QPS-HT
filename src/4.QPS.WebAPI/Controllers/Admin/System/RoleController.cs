@@ -74,13 +74,13 @@ public class RoleController : ControllerBase
     /// 创建角色
     /// </summary>
     /// <param name="request">创建角色请求</param>
-    /// <returns>创建的角色</returns>
+    /// <returns>是否成功</returns>
     [HttpPost]
-    public async Task<ActionResult<RoleDto>> CreateRole([FromBody] RoleCreateRequest request)
+    public async Task<ActionResult<bool>> CreateRole([FromBody] RoleCreateRequest request)
     {
         var command = new CreateRoleCommand { Request = request };
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetRole), new { id = result.Id }, result);
+        return Ok(result);
     }
 
     /// <summary>
@@ -88,9 +88,9 @@ public class RoleController : ControllerBase
     /// </summary>
     /// <param name="id">角色ID</param>
     /// <param name="request">更新角色请求</param>
-    /// <returns>更新后的角色</returns>
+    /// <returns>是否成功</returns>
     [HttpPut("{id}")]
-    public async Task<ActionResult<RoleDto>> UpdateRole(Guid id, [FromBody] RoleUpdateRequest request)
+    public async Task<ActionResult<bool>> UpdateRole(Guid id, [FromBody] RoleUpdateRequest request)
     {
         var command = new UpdateRoleCommand { Id = id, Request = request };
         var result = await _mediator.Send(command);

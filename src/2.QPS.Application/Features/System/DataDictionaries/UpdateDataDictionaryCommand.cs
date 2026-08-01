@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.DataDictionaries;
 using QPS.Application.Interfaces;
@@ -7,13 +7,13 @@ using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.System.DataDictionaries;
 
-public record UpdateDataDictionaryCommand : IRequest<DataDictionaryDto>
+public record UpdateDataDictionaryCommand : IRequest<bool>
 {
     public Guid Id { get; set; }
     public DataDictionaryUpdateRequest Request { get; set; }
 }
 
-public class UpdateDataDictionaryCommandHandler : IRequestHandler<UpdateDataDictionaryCommand, DataDictionaryDto>
+public class UpdateDataDictionaryCommandHandler : IRequestHandler<UpdateDataDictionaryCommand, bool>
 {
     private readonly IDbContext _dbContext;
 
@@ -22,7 +22,7 @@ public class UpdateDataDictionaryCommandHandler : IRequestHandler<UpdateDataDict
         _dbContext = dbContext;
     }
 
-    public async Task<DataDictionaryDto> Handle(UpdateDataDictionaryCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(UpdateDataDictionaryCommand request, CancellationToken cancellationToken)
     {
         var dataDictionary = await _dbContext.SystemDataDictionaries
             .FirstOrDefaultAsync(d => d.Id == request.Id, cancellationToken);
@@ -53,22 +53,7 @@ public class UpdateDataDictionaryCommandHandler : IRequestHandler<UpdateDataDict
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return ToDto(dataDictionary);
-    }
-
-    private static DataDictionaryDto ToDto(SystemDataDictionary dataDictionary)
-    {
-        return new DataDictionaryDto
-        {
-            Id = dataDictionary.Id,
-            ParentId = dataDictionary.ParentId,
-            Code = dataDictionary.Code,
-            Name = dataDictionary.Name,
-            Value = dataDictionary.Value,
-            Description = dataDictionary.Description,
-            SortOrder = dataDictionary.SortOrder,
-            IsActive = dataDictionary.IsActive
-        };
+        return true;
     }
 }
 

@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using QPS.Application.Contracts.System.Users;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
@@ -27,6 +27,7 @@ public class GetUserHandler : IRequestHandler<GetUserQuery, UserDto>
     /// 构造函数
     /// </summary>
     /// <param name="dbContext">数据库上下文</param>
+
     public GetUserHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
@@ -38,6 +39,7 @@ public class GetUserHandler : IRequestHandler<GetUserQuery, UserDto>
     /// <param name="request">获取用户详情查询</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>用户DTO</returns>
+
     public async Task<UserDto> Handle(GetUserQuery request, CancellationToken cancellationToken)
     {
         // 查询用户

@@ -1,20 +1,21 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.Crm;
 using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.Crm.CrmContacts;
 
-public class SetPrimaryCrmContactCommand : IRequest<CrmContactDto>
+public class SetPrimaryCrmContactCommand : IRequest<bool>
 {
     public Guid Id { get; set; }
 }
 
-public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactCommand, CrmContactDto>
+public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactCommand, bool>
 {
-    private const string CustomerEntityType = "CRM_HERB_BASE";
+    private const string CustomerEntityType = CrmCodes.HerbBaseEntityType;
     private const string InvalidStatus = "INVALID";
 
     private readonly IDbContext _dbContext;
@@ -24,7 +25,7 @@ public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactC
         _dbContext = dbContext;
     }
 
-    public async Task<CrmContactDto> Handle(SetPrimaryCrmContactCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(SetPrimaryCrmContactCommand request, CancellationToken cancellationToken)
     {
         var contact = await _dbContext.CrmContacts
             .FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken);
@@ -60,28 +61,6 @@ public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactC
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return MapToDto(contact);
-    }
-
-    private static CrmContactDto MapToDto(CrmContact contact)
-    {
-        return new CrmContactDto
-        {
-            Id = contact.Id,
-            EntityType = contact.EntityType,
-            EntityId = contact.EntityId,
-            ContactName = contact.ContactName,
-            Phone = contact.Phone,
-            PhoneType = contact.PhoneType,
-            Wechat = contact.Wechat,
-            RoleName = contact.RoleName,
-            IsPrimary = contact.IsPrimary,
-            Status = contact.Status,
-            Remark = contact.Remark,
-            CreatedAt = contact.CreatedAt,
-            UpdatedAt = contact.UpdatedAt
-        };
+        return true;
     }
 }
-
-

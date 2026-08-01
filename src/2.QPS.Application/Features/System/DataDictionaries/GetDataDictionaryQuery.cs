@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.DataDictionaries;
 using QPS.Application.Interfaces;
@@ -34,6 +34,9 @@ public class GetDataDictionaryQueryHandler : IRequestHandler<GetDataDictionaryQu
         return ToDto(dataDictionary);
     }
 
+    /// <summary>
+    /// 转换为 DTO。
+    /// </summary>
     private static DataDictionaryDto ToDto(SystemDataDictionary dataDictionary)
     {
         return new DataDictionaryDto

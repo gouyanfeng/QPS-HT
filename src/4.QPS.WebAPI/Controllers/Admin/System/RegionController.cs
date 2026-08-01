@@ -55,24 +55,24 @@ public class RegionController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<RegionDto>> CreateRegion([FromBody] RegionCreateRequest request)
+    public async Task<ActionResult<bool>> CreateRegion([FromBody] RegionCreateRequest request)
     {
         var result = await _mediator.Send(new CreateRegionCommand { Request = request });
-        return CreatedAtAction(nameof(GetRegion), new { id = result.Id }, result);
+        return Ok(result);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<RegionDto>> UpdateRegion(Guid id, [FromBody] RegionUpdateRequest request)
+    public async Task<ActionResult<bool>> UpdateRegion(Guid id, [FromBody] RegionUpdateRequest request)
     {
         var result = await _mediator.Send(new UpdateRegionCommand { Id = id, Request = request });
         return Ok(result);
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteRegion(Guid id)
+    public async Task<ActionResult<bool>> DeleteRegion(Guid id)
     {
-        await _mediator.Send(new DeleteRegionCommand { Id = id });
-        return NoContent();
+        var result = await _mediator.Send(new DeleteRegionCommand { Id = id });
+        return Ok(result);
     }
 }
 

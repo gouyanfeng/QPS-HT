@@ -6,6 +6,7 @@ namespace QPS.Application.Features.Crm.CrmVendors;
 
 public static class CrmVendorOwners
 {
+
     public static async Task FillAsync(IDbContext dbContext, List<CrmVendorDto> vendors, CancellationToken cancellationToken)
     {
         var ownerIds = vendors

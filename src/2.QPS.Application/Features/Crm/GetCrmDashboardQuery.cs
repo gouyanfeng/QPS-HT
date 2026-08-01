@@ -1,19 +1,16 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using QPS.Application.Contracts.Dashboard;
+using QPS.Application.Contracts.Crm;
 using QPS.Application.Interfaces;
 
-namespace QPS.Application.Features.Dashboard;
+namespace QPS.Application.Features.Crm;
 
 public class GetCrmDashboardQuery : IRequest<CrmDashboardDto>;
 
 public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmDashboardDto>
 {
-    private const string CustomerEntityType = "CRM_HERB_BASE";
-    private const string MainProductAttributeCode = "CRM_MAIN_PRODUCT";
-    private static readonly string[] ClosedStatuses = ["DEAL", "LOST", "已成交", "已流失"];
-    private static readonly string[] HighGrades = ["高", "A"];
-    private static readonly string[] EffectiveFollowResults = ["CONNECTED", "INTERESTED", "已接通", "有意向"];
+    private static readonly string[] ClosedStatuses = [CrmCodes.Status.Deal, CrmCodes.Status.Lost, "已成交", "已流失"];
+    private static readonly string[] EffectiveFollowResults = [CrmCodes.FollowResult.Connected, CrmCodes.FollowResult.Interested, "已接通", "有意向"];
 
     private readonly IDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
@@ -47,12 +44,12 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
             cancellationToken);
         var myCustomerCount = await myCustomers.CountAsync(cancellationToken);
         var highIntentCustomerCount = await activeCustomers.CountAsync(
-            customer => HighGrades.Contains(customer.Grade), cancellationToken);
+            customer => customer.Status == CrmCodes.Status.Interested, cancellationToken);
 
         var todayFollowCustomers = await activeCustomers
             .Where(customer => customer.NextFollowAt.HasValue && customer.NextFollowAt.Value < tomorrowStart)
             .OrderBy(customer => customer.NextFollowAt >= now)
-            .ThenByDescending(customer => HighGrades.Contains(customer.Grade))
+            .ThenByDescending(customer => customer.Status == CrmCodes.Status.Interested)
             .ThenBy(customer => customer.NextFollowAt)
             .Take(10)
             .Select(customer => new CrmDashboardFollowCustomerDto
@@ -60,7 +57,6 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
                 Id = customer.Id,
                 BaseName = customer.BaseName,
                 SubjectName = customer.SubjectName,
-                MainProduct = customer.MainProduct,
                 Grade = customer.Grade,
                 Province = customer.Province,
                 City = customer.City,
@@ -94,35 +90,30 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
 
         var funnelStatuses = new[]
         {
-            new { Code = "PENDING", Name = "待联系" },
-            new { Code = "FOLLOWING", Name = "跟进中" },
-            new { Code = "INTERESTED", Name = "有意向" },
-            new { Code = "DEAL", Name = "成交" },
-            new { Code = "LOST", Name = "流失" }
+            new { Code = CrmCodes.Status.Pending, Name = "待联系" },
+            new { Code = CrmCodes.Status.Following, Name = "跟进中" },
+            new { Code = CrmCodes.Status.Interested, Name = "有意向" },
+            new { Code = CrmCodes.Status.Deal, Name = "成交" },
+            new { Code = CrmCodes.Status.Lost, Name = "流失" }
         };
         var statusCounts = await myCustomers
             .GroupBy(customer => customer.Status)
             .Select(group => new { Status = group.Key, Count = group.Count() })
             .ToListAsync(cancellationToken);
-        var interestedCount = await myCustomers.CountAsync(
-            customer => customer.LastFollowResult == "INTERESTED" || customer.LastFollowResult == "有意向",
-            cancellationToken);
         var followFunnel = funnelStatuses
             .Select(status => new CrmDashboardChartItemDto
             {
                 Code = status.Code,
                 Name = status.Name,
-                Value = status.Code == "INTERESTED"
-                    ? interestedCount
-                    : statusCounts.FirstOrDefault(item => item.Status == status.Code)?.Count ?? 0
+                Value = statusCounts.FirstOrDefault(item => item.Status == status.Code)?.Count ?? 0
             })
             .ToList();
 
         var productAttributes = await _dbContext.CrmBusinessEntityAttributes
             .Where(attribute =>
                 !attribute.IsDeleted &&
-                attribute.EntityType == CustomerEntityType &&
-                attribute.AttributeCode == MainProductAttributeCode &&
+                attribute.EntityType == CrmCodes.HerbBaseEntityType &&
+                attribute.AttributeCode == CrmCodes.MainProductAttributeCode &&
                 myCustomers.Select(customer => customer.Id).Contains(attribute.EntityId))
             .GroupBy(attribute => attribute.AttributeValue)
             .Select(group => new { Code = group.Key, Count = group.Count() })
@@ -184,11 +175,11 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
         {
             FollowFunnel =
             [
-                new() { Code = "PENDING", Name = "待联系", Value = 0 },
-                new() { Code = "FOLLOWING", Name = "跟进中", Value = 0 },
-                new() { Code = "INTERESTED", Name = "有意向", Value = 0 },
-                new() { Code = "DEAL", Name = "成交", Value = 0 },
-                new() { Code = "LOST", Name = "流失", Value = 0 }
+                new() { Code = CrmCodes.Status.Pending, Name = "待联系", Value = 0 },
+                new() { Code = CrmCodes.Status.Following, Name = "跟进中", Value = 0 },
+                new() { Code = CrmCodes.Status.Interested, Name = "有意向", Value = 0 },
+                new() { Code = CrmCodes.Status.Deal, Name = "成交", Value = 0 },
+                new() { Code = CrmCodes.Status.Lost, Name = "流失", Value = 0 }
             ],
             FollowTrend = Enumerable.Range(0, 7)
                 .Select(offset => DateTime.Today.AddDays(-6 + offset))
@@ -209,8 +200,8 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
             .Where(attribute =>
                 !attribute.IsDeleted &&
                 customerIds.Contains(attribute.EntityId) &&
-                attribute.EntityType == CustomerEntityType &&
-                attribute.AttributeCode == MainProductAttributeCode)
+                attribute.EntityType == CrmCodes.HerbBaseEntityType &&
+                attribute.AttributeCode == CrmCodes.MainProductAttributeCode)
             .OrderBy(attribute => attribute.SortOrder)
             .ThenBy(attribute => attribute.CreatedAt)
             .Select(attribute => new { attribute.EntityId, attribute.AttributeValue })
@@ -223,17 +214,8 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
         {
             customer.MainProducts = lookup.TryGetValue(customer.Id, out var mainProducts)
                 ? mainProducts
-                : SplitMainProducts(customer.MainProduct);
+                : new List<string>();
         }
-    }
-
-    private static List<string> SplitMainProducts(string mainProduct)
-    {
-        return mainProduct.Split(',', '，', ';', '；', '/', '、')
-            .Select(value => value.Trim())
-            .Where(value => !string.IsNullOrWhiteSpace(value))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
     }
 
     private static string FormatMainProduct(string code)

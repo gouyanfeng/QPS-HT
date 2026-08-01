@@ -27,15 +27,15 @@ public class CrmContactController : ControllerBase
 
     [HttpPost("customers/{customerId}/contacts")]
     [HttpPost("herb-bases/{customerId}/contacts")]
-    public async Task<ActionResult<CrmContactDto>> CreateContact(Guid customerId, [FromBody] CrmContactCreateRequest request)
+    public async Task<ActionResult<bool>> CreateContact(Guid customerId, [FromBody] CrmContactCreateRequest request)
     {
         var command = new CreateCrmContactCommand { CustomerId = customerId, Request = request };
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetContacts), new { customerId }, result);
+        return Ok(result);
     }
 
     [HttpPut("contacts/{id}")]
-    public async Task<ActionResult<CrmContactDto>> UpdateContact(Guid id, [FromBody] CrmContactUpdateRequest request)
+    public async Task<ActionResult<bool>> UpdateContact(Guid id, [FromBody] CrmContactUpdateRequest request)
     {
         var command = new UpdateCrmContactCommand { Id = id, Request = request };
         var result = await _mediator.Send(command);
@@ -43,7 +43,7 @@ public class CrmContactController : ControllerBase
     }
 
     [HttpPatch("contacts/{id}/primary")]
-    public async Task<ActionResult<CrmContactDto>> SetPrimary(Guid id)
+    public async Task<ActionResult<bool>> SetPrimary(Guid id)
     {
         var command = new SetPrimaryCrmContactCommand { Id = id };
         var result = await _mediator.Send(command);
@@ -51,7 +51,7 @@ public class CrmContactController : ControllerBase
     }
 
     [HttpPatch("contacts/{id}/status")]
-    public async Task<ActionResult<CrmContactDto>> UpdateStatus(Guid id, [FromBody] CrmContactStatusRequest request)
+    public async Task<ActionResult<bool>> UpdateStatus(Guid id, [FromBody] CrmContactStatusRequest request)
     {
         var command = new UpdateCrmContactStatusCommand { Id = id, Request = request };
         var result = await _mediator.Send(command);

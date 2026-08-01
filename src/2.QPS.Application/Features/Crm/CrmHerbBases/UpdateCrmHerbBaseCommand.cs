@@ -9,7 +9,7 @@ namespace QPS.Application.Features.Crm.CrmHerbBases;
 /// <summary>
 /// 更新药材基地命令
 /// </summary>
-public class UpdateCrmHerbBaseCommand : IRequest<CrmHerbBaseDto>
+public class UpdateCrmHerbBaseCommand : IRequest<bool>
 {
     public Guid Id { get; set; }
     public CrmHerbBaseUpdateRequest Request { get; set; } = null!;
@@ -18,7 +18,7 @@ public class UpdateCrmHerbBaseCommand : IRequest<CrmHerbBaseDto>
 /// <summary>
 /// 更新药材基地处理器
 /// </summary>
-public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand, CrmHerbBaseDto>
+public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand, bool>
 {
     private readonly IDbContext _dbContext;
 
@@ -27,12 +27,8 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
         _dbContext = dbContext;
     }
 
-    public async Task<CrmHerbBaseDto> Handle(UpdateCrmHerbBaseCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(UpdateCrmHerbBaseCommand request, CancellationToken cancellationToken)
     {
-        var mainProducts = CrmHerbBaseMainProducts.Normalize(
-            request.Request.MainProducts,
-            request.Request.MainProduct);
-        var mainProductSummary = CrmHerbBaseMainProducts.BuildSummary(mainProducts);
         var baseName = string.IsNullOrWhiteSpace(request.Request.BaseName)
             ? request.Request.HerbBaseName
             : request.Request.BaseName;
@@ -48,7 +44,6 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
         // 更新基本信息
         customer.UpdateBasicInfo(
             baseName,
-            mainProductSummary,
             request.Request.Grade,
             request.Request.Score,
             request.Request.Province,
@@ -102,43 +97,9 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
             customer.UpdateStatus(request.Request.Status, request.Request.Remark);
         }
 
-        CrmHerbBaseMainProducts.Sync(_dbContext, customer.Id, mainProducts);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        var dto = new CrmHerbBaseDto
-        {
-            Id = customer.Id,
-            ParentId = customer.ParentId,
-            BaseName = customer.BaseName,
-            HerbBaseName = customer.BaseName,
-            SubjectName = customer.SubjectName,
-            MainProduct = customer.MainProduct,
-            MainProducts = mainProducts,
-            Grade = customer.Grade,
-            Score = customer.Score,
-            Province = customer.Province,
-            City = customer.City,
-            Area = customer.Area,
-            Address = customer.Address,
-            Lat = customer.Lat,
-            Lng = customer.Lng,
-            SourcePlatform = customer.SourcePlatform,
-            SourceId = customer.SourceId,
-            Status = customer.Status,
-            OwnerUserId = customer.OwnerUserId,
-            Remark = customer.Remark,
-            PrimaryContactName = customer.PrimaryContactName,
-            PrimaryContactPhone = customer.PrimaryContactPhone,
-            LastFollowAt = customer.LastFollowAt,
-            LastFollowResult = customer.LastFollowResult,
-            NextFollowAt = customer.NextFollowAt,
-            CreatedAt = customer.CreatedAt,
-            UpdatedAt = customer.UpdatedAt
-        };
-
-        await CrmHerbBaseOwners.FillAsync(_dbContext, new List<CrmHerbBaseDto> { dto }, cancellationToken);
-
-        return dto;
+        return true;
     }
 }
 

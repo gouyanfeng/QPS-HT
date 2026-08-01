@@ -1,16 +1,16 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.System.Regions;
 
-public record DeleteRegionCommand : IRequest<Unit>
+public record DeleteRegionCommand : IRequest<bool>
 {
     public Guid Id { get; set; }
 }
 
-public class DeleteRegionCommandHandler : IRequestHandler<DeleteRegionCommand, Unit>
+public class DeleteRegionCommandHandler : IRequestHandler<DeleteRegionCommand, bool>
 {
     private readonly IDbContext _dbContext;
 
@@ -19,7 +19,7 @@ public class DeleteRegionCommandHandler : IRequestHandler<DeleteRegionCommand, U
         _dbContext = dbContext;
     }
 
-    public async Task<Unit> Handle(DeleteRegionCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(DeleteRegionCommand request, CancellationToken cancellationToken)
     {
         var region = await _dbContext.SystemRegions
             .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
@@ -40,7 +40,7 @@ public class DeleteRegionCommandHandler : IRequestHandler<DeleteRegionCommand, U
         _dbContext.SystemRegions.Remove(region);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return Unit.Value;
+        return true;
     }
 }
 

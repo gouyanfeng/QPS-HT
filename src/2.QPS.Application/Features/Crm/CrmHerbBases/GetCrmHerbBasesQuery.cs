@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Application.Extensions;
 
@@ -36,8 +37,6 @@ public class GetCrmHerbBasesQuery : PaginationRequest, IRequest<PaginationRespon
     /// 负责人ID
     /// </summary>
     public Guid? OwnerUserId { get; set; }
-
-    public string? MainProduct { get; set; }
 
     public List<string>? MainProducts { get; set; }
 
@@ -92,26 +91,25 @@ public class GetCrmHerbBasesHandler : IRequestHandler<GetCrmHerbBasesQuery, Pagi
                 c.PrimaryContactPhone.Contains(keyword));
         }
 
-        var mainProducts = CrmHerbBaseMainProducts.Normalize(request.MainProducts, request.MainProduct);
+        var mainProducts = NormalizeMainProducts(request.MainProducts);
         if (mainProducts.Count == 1)
         {
             var mainProduct = mainProducts[0];
             query = query.Where(c =>
                 _dbContext.CrmBusinessEntityAttributes.Any(attribute =>
                     !attribute.IsDeleted &&
-                    attribute.EntityType == CrmHerbBaseMainProducts.CustomerEntityType &&
+                    attribute.EntityType == CrmCodes.HerbBaseEntityType &&
                     attribute.EntityId == c.Id &&
-                    attribute.AttributeCode == CrmHerbBaseMainProducts.MainProductAttributeCode &&
-                    attribute.AttributeValue == mainProduct) ||
-                c.MainProduct.Contains(mainProduct));
+                    attribute.AttributeCode == CrmCodes.MainProductAttributeCode &&
+                    attribute.AttributeValue == mainProduct));
         }
         else if (mainProducts.Count > 1)
         {
             query = query.Where(c => _dbContext.CrmBusinessEntityAttributes.Any(attribute =>
                 !attribute.IsDeleted &&
-                attribute.EntityType == CrmHerbBaseMainProducts.CustomerEntityType &&
+                attribute.EntityType == CrmCodes.HerbBaseEntityType &&
                 attribute.EntityId == c.Id &&
-                attribute.AttributeCode == CrmHerbBaseMainProducts.MainProductAttributeCode &&
+                attribute.AttributeCode == CrmCodes.MainProductAttributeCode &&
                 mainProducts.Contains(attribute.AttributeValue)));
         }
 
@@ -169,42 +167,86 @@ public class GetCrmHerbBasesHandler : IRequestHandler<GetCrmHerbBasesQuery, Pagi
         }
 
         // 转换为DTO
-        var dtoQuery = query.Select(c => new CrmHerbBaseDto
-        {
-            Id = c.Id,
-            ParentId = c.ParentId,
-            BaseName = c.BaseName,
-            HerbBaseName = c.BaseName,
-            SubjectName = c.SubjectName,
-            MainProduct = c.MainProduct,
-            Grade = c.Grade,
-            Score = c.Score,
-            Province = c.Province,
-            City = c.City,
-            Area = c.Area,
-            Address = c.Address,
-            Lat = c.Lat,
-            Lng = c.Lng,
-            SourcePlatform = c.SourcePlatform,
-            SourceId = c.SourceId,
-            Status = c.Status,
-            OwnerUserId = c.OwnerUserId,
-            Remark = c.Remark,
-            PrimaryContactName = c.PrimaryContactName,
-            PrimaryContactPhone = c.PrimaryContactPhone,
-            LastFollowAt = c.LastFollowAt,
-            LastFollowResult = c.LastFollowResult,
-            NextFollowAt = c.NextFollowAt,
-            CreatedAt = c.CreatedAt,
-            UpdatedAt = c.UpdatedAt
-        });
+        var dtoQuery =
+            from c in query
+            join owner in _dbContext.SystemUsers on c.OwnerUserId equals owner.Id into ownerGroup
+            from owner in ownerGroup.DefaultIfEmpty()
+            select new CrmHerbBaseDto
+            {
+                Id = c.Id,
+                ParentId = c.ParentId,
+                BaseName = c.BaseName,
+                HerbBaseName = c.BaseName,
+                SubjectName = c.SubjectName,
+                Grade = c.Grade,
+                Score = c.Score,
+                Province = c.Province,
+                City = c.City,
+                Area = c.Area,
+                Address = c.Address,
+                Lat = c.Lat,
+                Lng = c.Lng,
+                SourcePlatform = c.SourcePlatform,
+                SourceId = c.SourceId,
+                Status = c.Status,
+                OwnerUserId = c.OwnerUserId,
+                OwnerUserName = owner == null ? null : owner.RealName != string.Empty ? owner.RealName : owner.Username,
+                Remark = c.Remark,
+                PrimaryContactName = c.PrimaryContactName,
+                PrimaryContactPhone = c.PrimaryContactPhone,
+                LastFollowAt = c.LastFollowAt,
+                LastFollowResult = c.LastFollowResult,
+                NextFollowAt = c.NextFollowAt,
+                CreatedAt = c.CreatedAt,
+                UpdatedAt = c.UpdatedAt
+            };
 
         // 执行分页查询
         var response = await dtoQuery.ToPaginationResponseAsync(request);
-        await CrmHerbBaseMainProducts.FillAsync(_dbContext, response.List, cancellationToken);
-        await CrmHerbBaseOwners.FillAsync(_dbContext, response.List, cancellationToken);
+        await FillMainProductsAsync(response.List, cancellationToken);
 
         return response;
+    }
+
+    private static List<string> NormalizeMainProducts(IEnumerable<string>? mainProducts)
+    {
+        return (mainProducts ?? Enumerable.Empty<string>())
+            .Select(value => value.Trim())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private async Task FillMainProductsAsync(List<CrmHerbBaseDto> herbBases, CancellationToken cancellationToken)
+    {
+        var herbBaseIds = herbBases.Select(herbBase => herbBase.Id).ToList();
+        if (herbBaseIds.Count == 0)
+        {
+            return;
+        }
+
+        var attributes = await _dbContext.CrmBusinessEntityAttributes
+            .Where(attribute =>
+                !attribute.IsDeleted &&
+                attribute.EntityType == CrmCodes.HerbBaseEntityType &&
+                attribute.AttributeCode == CrmCodes.MainProductAttributeCode &&
+                herbBaseIds.Contains(attribute.EntityId))
+            .OrderBy(attribute => attribute.SortOrder)
+            .ThenBy(attribute => attribute.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var lookup = attributes
+            .GroupBy(attribute => attribute.EntityId)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Select(attribute => attribute.AttributeValue).ToList());
+
+        foreach (var herbBase in herbBases)
+        {
+            herbBase.MainProducts = lookup.TryGetValue(herbBase.Id, out var mainProducts)
+                ? mainProducts
+                : new List<string>();
+        }
     }
 }
 

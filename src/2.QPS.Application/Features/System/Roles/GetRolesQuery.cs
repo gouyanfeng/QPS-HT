@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.Roles;
 using QPS.Application.Interfaces;
@@ -33,6 +33,7 @@ public class GetRolesHandler : IRequestHandler<GetRolesQuery, PaginationResponse
     /// 构造函数
     /// </summary>
     /// <param name="dbContext">数据库上下文</param>
+
     public GetRolesHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
@@ -44,6 +45,7 @@ public class GetRolesHandler : IRequestHandler<GetRolesQuery, PaginationResponse
     /// <param name="request">获取角色列表查询</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>角色DTO分页响应</returns>
+
     public async Task<PaginationResponse<RoleDto>> Handle(GetRolesQuery request, CancellationToken cancellationToken)
     {
         var query = _dbContext.SystemRoles.AsQueryable();

@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using QPS.Application.Contracts.System.Auth;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.System;
@@ -31,6 +31,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
     /// </summary>
     /// <param name="dbContext">数据库上下文</param>
     /// <param name="jwtGenerator">JWT生成器</param>
+
     public LoginHandler(IDbContext dbContext, IJwtGenerator jwtGenerator)
     {
         _dbContext = dbContext;
@@ -43,6 +44,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
     /// <param name="request">登录命令</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>登录响应</returns>
+
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         // 验证用户名和密码
@@ -82,6 +84,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
     /// <param name="password">密码</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>验证通过的用户</returns>
+
     private async Task<SystemUser> ValidateUserAsync(string username, string password, CancellationToken cancellationToken)
     {
         var user = await _dbContext.SystemUsers
@@ -107,6 +110,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
     /// <param name="password">密码</param>
     /// <param name="passwordHash">密码哈希</param>
     /// <returns>验证结果</returns>
+
     private bool VerifyPassword(string password, string passwordHash)
     {
         // 这里应该使用密码哈希验证，例如使用BCrypt

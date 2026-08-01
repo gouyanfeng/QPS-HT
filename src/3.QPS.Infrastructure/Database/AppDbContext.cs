@@ -3,6 +3,7 @@ using QPS.Application.Interfaces;
 using QPS.Domain.Common;
 using QPS.Domain.Entities.System;
 using QPS.Domain.Entities.Crm;
+using System.Linq.Expressions;
 
 namespace QPS.Infrastructure.Database;
 
@@ -117,6 +118,8 @@ public class AppDbContext : DbContext, IDbContext
             entity.Property(region => region.ProvinceCode).HasMaxLength(20);
             entity.Property(region => region.CityCode).HasMaxLength(20);
         });
+
+        ApplySoftDeleteQueryFilters(modelBuilder);
     }
 
     public override int SaveChanges()
@@ -151,6 +154,19 @@ public class AppDbContext : DbContext, IDbContext
 
             entity.UpdatedAt = now;
             entity.UpdatedBy = currentUser;
+        }
+    }
+
+    private static void ApplySoftDeleteQueryFilters(ModelBuilder modelBuilder)
+    {
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+                     .Where(entityType => typeof(BaseEntity).IsAssignableFrom(entityType.ClrType)))
+        {
+            var parameter = Expression.Parameter(entityType.ClrType, "entity");
+            var isDeleted = Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
+            var filter = Expression.Lambda(Expression.Equal(isDeleted, Expression.Constant(false)), parameter);
+
+            modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
         }
     }
 }

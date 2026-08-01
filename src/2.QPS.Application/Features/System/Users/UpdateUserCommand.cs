@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using QPS.Application.Contracts.System.Users;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
@@ -8,7 +8,7 @@ namespace QPS.Application.Features.System.Users;
 /// <summary>
 /// 更新用户命令
 /// </summary>
-public class UpdateUserCommand : IRequest<UserDto>
+public class UpdateUserCommand : IRequest<bool>
 {
     /// <summary>
     /// 用户ID
@@ -24,7 +24,7 @@ public class UpdateUserCommand : IRequest<UserDto>
 /// <summary>
 /// 更新用户处理器
 /// </summary>
-public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, UserDto>
+public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, bool>
 {
     private readonly IDbContext _dbContext;
 
@@ -32,6 +32,7 @@ public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, UserDto>
     /// 构造函数
     /// </summary>
     /// <param name="dbContext">数据库上下文</param>
+
     public UpdateUserHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
@@ -42,8 +43,9 @@ public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, UserDto>
     /// </summary>
     /// <param name="request">更新用户命令</param>
     /// <param name="cancellationToken">取消令牌</param>
-    /// <returns>用户DTO</returns>
-    public async Task<UserDto> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
+    /// <returns>是否成功</returns>
+
+    public async Task<bool> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
         // 查询用户
         var user = await _dbContext.SystemUsers.FindAsync(request.Id, cancellationToken);
@@ -76,15 +78,7 @@ public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, UserDto>
         // 保存到数据库
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        // 转换为DTO
-        return new UserDto
-        {
-            Id = user.Id,
-            RoleId = user.RoleId,
-            Username = user.Username,
-            RealName = user.RealName,
-            IsActive = user.IsActive
-        };
+        return true;
     }
 }
 

@@ -1,6 +1,7 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 
 namespace QPS.Application.Features.Crm.CrmContacts;
@@ -12,7 +13,7 @@ public class GetCrmContactsQuery : IRequest<List<CrmContactDto>>
 
 public class GetCrmContactsHandler : IRequestHandler<GetCrmContactsQuery, List<CrmContactDto>>
 {
-    private const string CustomerEntityType = "CRM_HERB_BASE";
+    private const string CustomerEntityType = CrmCodes.HerbBaseEntityType;
 
     private readonly IDbContext _dbContext;
 
@@ -46,5 +47,3 @@ public class GetCrmContactsHandler : IRequestHandler<GetCrmContactsQuery, List<C
             .ToListAsync(cancellationToken);
     }
 }
-
-

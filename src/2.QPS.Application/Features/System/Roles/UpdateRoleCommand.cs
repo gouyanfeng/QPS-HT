@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using QPS.Application.Contracts.System.Roles;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
@@ -8,7 +8,7 @@ namespace QPS.Application.Features.System.Roles;
 /// <summary>
 /// 更新角色命令
 /// </summary>
-public class UpdateRoleCommand : IRequest<RoleDto>
+public class UpdateRoleCommand : IRequest<bool>
 {
     /// <summary>
     /// 角色ID
@@ -24,7 +24,7 @@ public class UpdateRoleCommand : IRequest<RoleDto>
 /// <summary>
 /// 更新角色处理器
 /// </summary>
-public class UpdateRoleHandler : IRequestHandler<UpdateRoleCommand, RoleDto>
+public class UpdateRoleHandler : IRequestHandler<UpdateRoleCommand, bool>
 {
     private readonly IDbContext _dbContext;
 
@@ -32,6 +32,7 @@ public class UpdateRoleHandler : IRequestHandler<UpdateRoleCommand, RoleDto>
     /// 构造函数
     /// </summary>
     /// <param name="dbContext">数据库上下文</param>
+
     public UpdateRoleHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
@@ -42,8 +43,9 @@ public class UpdateRoleHandler : IRequestHandler<UpdateRoleCommand, RoleDto>
     /// </summary>
     /// <param name="request">更新角色命令</param>
     /// <param name="cancellationToken">取消令牌</param>
-    /// <returns>角色DTO</returns>
-    public async Task<RoleDto> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
+    /// <returns>是否成功</returns>
+
+    public async Task<bool> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
     {
         // 查询角色
         var role = await _dbContext.SystemRoles.FindAsync(request.Id, cancellationToken);
@@ -59,13 +61,7 @@ public class UpdateRoleHandler : IRequestHandler<UpdateRoleCommand, RoleDto>
         // 保存到数据库
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        // 转换为DTO
-        return new RoleDto
-        {
-            Id = role.Id,
-            Name = role.Name,
-            Code = role.Code
-        };
+        return true;
     }
 }
 

@@ -53,7 +53,7 @@ public class CrmVendorController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<CrmVendorDto>> CreateVendor([FromBody] CrmVendorCreateRequest request)
+    public async Task<ActionResult<bool>> CreateVendor([FromBody] CrmVendorCreateRequest request)
     {
         var command = new CreateCrmVendorCommand { Request = request };
         var result = await _mediator.Send(command);
@@ -61,7 +61,7 @@ public class CrmVendorController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<CrmVendorDto>> UpdateVendor(Guid id, [FromBody] CrmVendorUpdateRequest request)
+    public async Task<ActionResult<bool>> UpdateVendor(Guid id, [FromBody] CrmVendorUpdateRequest request)
     {
         var command = new UpdateCrmVendorCommand { Id = id, Request = request };
         var result = await _mediator.Send(command);
@@ -69,7 +69,7 @@ public class CrmVendorController : ControllerBase
     }
 
     [HttpPatch("assign-owner")]
-    public async Task<ActionResult<List<CrmVendorDto>>> AssignOwner([FromBody] CrmVendorAssignOwnerRequest request)
+    public async Task<ActionResult<bool>> AssignOwner([FromBody] CrmVendorAssignOwnerRequest request)
     {
         var command = new AssignCrmVendorOwnerCommand { Request = request };
         var result = await _mediator.Send(command);

@@ -1,6 +1,7 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
 
@@ -15,7 +16,7 @@ public class GetCrmTransferRecordsQuery : IRequest<List<CrmTransferRecordDto>>
 
 public class GetCrmTransferRecordsHandler : IRequestHandler<GetCrmTransferRecordsQuery, List<CrmTransferRecordDto>>
 {
-    private const string HerbBaseEntityType = "CRM_HERB_BASE";
+    private const string HerbBaseEntityType = CrmCodes.HerbBaseEntityType;
 
     private readonly IDbContext _dbContext;
 
@@ -36,7 +37,7 @@ public class GetCrmTransferRecordsHandler : IRequestHandler<GetCrmTransferRecord
             }
         }
 
-        return await _dbContext.CrmTransferRecords
+        var records = await _dbContext.CrmTransferRecords
             .AsNoTracking()
             .Where(record =>
                 record.EntityType == request.EntityType &&
@@ -49,15 +50,52 @@ public class GetCrmTransferRecordsHandler : IRequestHandler<GetCrmTransferRecord
                 EntityType = record.EntityType,
                 EntityId = record.EntityId,
                 FromOwnerUserId = record.FromOwnerUserId,
-                FromOwnerUserName = record.FromOwnerUserName,
                 ToOwnerUserId = record.ToOwnerUserId,
-                ToOwnerUserName = record.ToOwnerUserName,
                 OperatorUserId = record.OperatorUserId,
-                OperatorUserName = record.OperatorUserName,
                 Remark = record.Remark,
                 CreatedAt = record.CreatedAt
             })
             .ToListAsync(cancellationToken);
+
+        await FillUserNames(records, cancellationToken);
+        return records;
+    }
+
+    private async Task FillUserNames(List<CrmTransferRecordDto> records, CancellationToken cancellationToken)
+    {
+        var userIds = records
+            .SelectMany(record => new[] { record.FromOwnerUserId, record.ToOwnerUserId, record.OperatorUserId })
+            .Where(userId => userId.HasValue)
+            .Select(userId => userId!.Value)
+            .Distinct()
+            .ToList();
+
+        if (userIds.Count == 0)
+        {
+            return;
+        }
+
+        var userNameLookup = await _dbContext.SystemUsers
+            .AsNoTracking()
+            .Where(user => userIds.Contains(user.Id))
+            .ToDictionaryAsync(
+                user => user.Id,
+                user => string.IsNullOrWhiteSpace(user.RealName) ? user.Username : user.RealName,
+                cancellationToken);
+
+        foreach (var record in records)
+        {
+            record.FromOwnerUserName = GetUserName(userNameLookup, record.FromOwnerUserId);
+            record.ToOwnerUserName = GetUserName(userNameLookup, record.ToOwnerUserId);
+            record.OperatorUserName = GetUserName(userNameLookup, record.OperatorUserId);
+        }
+    }
+
+    private static string GetUserName(Dictionary<Guid, string> userNameLookup, Guid? userId)
+    {
+        return userId.HasValue && userNameLookup.TryGetValue(userId.Value, out var userName)
+            ? userName
+            : string.Empty;
     }
 }
 

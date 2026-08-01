@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using QPS.Application.Contracts.System.Roles;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
@@ -27,6 +27,7 @@ public class GetRoleHandler : IRequestHandler<GetRoleQuery, RoleDto>
     /// 构造函数
     /// </summary>
     /// <param name="dbContext">数据库上下文</param>
+
     public GetRoleHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
@@ -38,6 +39,7 @@ public class GetRoleHandler : IRequestHandler<GetRoleQuery, RoleDto>
     /// <param name="request">获取角色详情查询</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>角色DTO</returns>
+
     public async Task<RoleDto> Handle(GetRoleQuery request, CancellationToken cancellationToken)
     {
         // 查询角色

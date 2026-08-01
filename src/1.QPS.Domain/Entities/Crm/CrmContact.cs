@@ -1,4 +1,5 @@
 ﻿using QPS.Domain.Common;
+using QPS.Domain.Exceptions;
 
 namespace QPS.Domain.Entities.Crm;
 
@@ -62,8 +63,14 @@ public class CrmContact : BaseEntity
     /// </summary>
     public virtual ICollection<CrmFollowRecord> FollowRecords { get; private set; } = new List<CrmFollowRecord>();
 
+    /// <summary>
+    /// EF Core 使用的无参构造函数。
+    /// </summary>
     private CrmContact() { }
 
+    /// <summary>
+    /// 初始化联系人实体。
+    /// </summary>
     private CrmContact(
         string entityType,
         Guid entityId,
@@ -87,6 +94,9 @@ public class CrmContact : BaseEntity
         Status = "UNVERIFIED";
     }
 
+    /// <summary>
+    /// 创建联系人。
+    /// </summary>
     public static CrmContact Create(
         string entityType,
         Guid entityId,
@@ -98,9 +108,14 @@ public class CrmContact : BaseEntity
         bool isPrimary,
         string remark)
     {
+        EnsureContactNameOrPhone(contactName, phone);
+
         return new CrmContact(entityType, entityId, contactName, phone, phoneType, wechat, roleName, isPrimary, remark);
     }
 
+    /// <summary>
+    /// 更新联系人基础信息。
+    /// </summary>
     public void Update(
         string contactName,
         string phone,
@@ -110,6 +125,8 @@ public class CrmContact : BaseEntity
         bool isPrimary,
         string remark)
     {
+        EnsureContactNameOrPhone(contactName, phone);
+
         ContactName = contactName;
         Phone = phone;
         PhoneType = phoneType;
@@ -119,16 +136,36 @@ public class CrmContact : BaseEntity
         Remark = remark;
     }
 
+    /// <summary>
+    /// 校验联系人姓名和电话不能同时为空。
+    /// </summary>
+    private static void EnsureContactNameOrPhone(string contactName, string phone)
+    {
+        if (string.IsNullOrWhiteSpace(contactName) && string.IsNullOrWhiteSpace(phone))
+        {
+            throw new BusinessException(400, "联系人姓名和电话至少填写一项");
+        }
+    }
+
+    /// <summary>
+    /// 标记为主联系人。
+    /// </summary>
     public void MarkPrimary()
     {
         IsPrimary = true;
     }
 
+    /// <summary>
+    /// 取消主联系人标记。
+    /// </summary>
     public void UnmarkPrimary()
     {
         IsPrimary = false;
     }
 
+    /// <summary>
+    /// 更新联系人状态和备注。
+    /// </summary>
     public void MarkStatus(string status, string remark)
     {
         Status = status;

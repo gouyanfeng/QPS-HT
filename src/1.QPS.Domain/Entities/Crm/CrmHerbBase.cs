@@ -9,6 +9,7 @@ public class CrmHerbBase : BaseEntity
 {
     private const string PendingContactStatus = "PENDING";
     private const string FollowingUpStatus = "FOLLOWING";
+    private const string InterestedStatus = "INTERESTED";
 
     /// <summary>
     /// 上级客户ID，用于维护客户层级关系。
@@ -29,11 +30,6 @@ public class CrmHerbBase : BaseEntity
     /// 主体名称，用于记录客户对应的工商或经营主体。
     /// </summary>
     public string SubjectName { get; private set; } = string.Empty;
-
-    /// <summary>
-    /// 主营品类，例如黄芪、党参、天麻。
-    /// </summary>
-    public string MainProduct { get; private set; } = string.Empty;
 
     /// <summary>
     /// 药材基地等级，例如A、B、C、INVALID。
@@ -86,7 +82,7 @@ public class CrmHerbBase : BaseEntity
     public long? SourceId { get; private set; }
 
     /// <summary>
-    /// 药材基地处理状态，例如PENDING、FOLLOWING、DEAL、LOST。
+    /// 药材基地处理状态，例如PENDING、FOLLOWING、INTERESTED、DEAL、LOST。
     /// </summary>
     public string Status { get; private set; } = string.Empty;
 
@@ -129,7 +125,6 @@ public class CrmHerbBase : BaseEntity
 
     private CrmHerbBase(
         string herbBaseName,
-        string mainProduct,
         string grade,
         int score,
         string province,
@@ -147,7 +142,6 @@ public class CrmHerbBase : BaseEntity
     {
         BaseName = herbBaseName;
         SubjectName = subjectName;
-        MainProduct = mainProduct;
         Grade = grade;
         Score = score;
         Province = province;
@@ -166,7 +160,6 @@ public class CrmHerbBase : BaseEntity
 
     public static CrmHerbBase Create(
         string herbBaseName,
-        string mainProduct,
         string grade,
         int score,
         string province,
@@ -184,7 +177,6 @@ public class CrmHerbBase : BaseEntity
     {
         return new CrmHerbBase(
             herbBaseName,
-            mainProduct,
             grade,
             score,
             province,
@@ -203,7 +195,6 @@ public class CrmHerbBase : BaseEntity
 
     public void UpdateBasicInfo(
         string herbBaseName,
-        string mainProduct,
         string grade,
         int score,
         string province,
@@ -217,7 +208,6 @@ public class CrmHerbBase : BaseEntity
     {
         BaseName = herbBaseName;
         SubjectName = subjectName;
-        MainProduct = mainProduct;
         Grade = grade;
         Score = score;
         Province = province;
@@ -263,7 +253,11 @@ public class CrmHerbBase : BaseEntity
         LastFollowResult = followResult;
         NextFollowAt = nextFollowAt;
 
-        if (Status == PendingContactStatus)
+        if (followResult == InterestedStatus || followResult == "有意向")
+        {
+            Status = InterestedStatus;
+        }
+        else if (Status == PendingContactStatus)
         {
             Status = FollowingUpStatus;
         }

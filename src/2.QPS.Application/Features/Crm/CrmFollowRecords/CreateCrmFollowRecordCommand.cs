@@ -1,22 +1,23 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.Crm;
 using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.Crm.CrmFollowRecords;
 
-public class CreateCrmFollowRecordCommand : IRequest<CrmFollowRecordDto>
+public class CreateCrmFollowRecordCommand : IRequest<bool>
 {
     public Guid CustomerId { get; set; }
 
     public CrmFollowRecordCreateRequest Request { get; set; } = null!;
 }
 
-public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecordCommand, CrmFollowRecordDto>
+public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecordCommand, bool>
 {
-    private const string CustomerEntityType = "CRM_HERB_BASE";
+    private const string CustomerEntityType = CrmCodes.HerbBaseEntityType;
 
     private readonly IDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
@@ -27,7 +28,7 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
         _currentUserService = currentUserService;
     }
 
-    public async Task<CrmFollowRecordDto> Handle(CreateCrmFollowRecordCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(CreateCrmFollowRecordCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Request.FollowResult))
         {
@@ -72,25 +73,7 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return MapToDto(record, contact?.ContactName);
-    }
-
-    private static CrmFollowRecordDto MapToDto(CrmFollowRecord record, string? contactName)
-    {
-        return new CrmFollowRecordDto
-        {
-            Id = record.Id,
-            CustomerId = record.CustomerId,
-            ContactId = record.ContactId,
-            ContactName = contactName,
-            FollowType = record.FollowType,
-            FollowResult = record.FollowResult,
-            IntentLevel = record.IntentLevel,
-            Content = record.Content,
-            NextFollowAt = record.NextFollowAt,
-            OperatorUserId = record.OperatorUserId,
-            CreatedAt = record.CreatedAt
-        };
+        return true;
     }
 }
 

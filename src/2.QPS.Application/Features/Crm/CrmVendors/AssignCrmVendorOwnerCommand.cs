@@ -1,20 +1,21 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.Crm;
 using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.Crm.CrmVendors;
 
-public class AssignCrmVendorOwnerCommand : IRequest<List<CrmVendorDto>>
+public class AssignCrmVendorOwnerCommand : IRequest<bool>
 {
     public CrmVendorAssignOwnerRequest Request { get; set; } = null!;
 }
 
-public class AssignCrmVendorOwnerHandler : IRequestHandler<AssignCrmVendorOwnerCommand, List<CrmVendorDto>>
+public class AssignCrmVendorOwnerHandler : IRequestHandler<AssignCrmVendorOwnerCommand, bool>
 {
-    private const string VendorEntityType = "CRM_VENDOR";
+    private const string VendorEntityType = CrmCodes.VendorEntityType;
 
     private readonly IDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
@@ -25,7 +26,7 @@ public class AssignCrmVendorOwnerHandler : IRequestHandler<AssignCrmVendorOwnerC
         _currentUserService = currentUserService;
     }
 
-    public async Task<List<CrmVendorDto>> Handle(AssignCrmVendorOwnerCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(AssignCrmVendorOwnerCommand request, CancellationToken cancellationToken)
     {
         var vendorIds = request.Request.VendorIds
             .Where(id => id != Guid.Empty)
@@ -46,83 +47,39 @@ public class AssignCrmVendorOwnerHandler : IRequestHandler<AssignCrmVendorOwnerC
             throw new BusinessException(404, "厂商不存在");
         }
 
-        string toOwnerUserName = string.Empty;
         if (request.Request.OwnerUserId.HasValue)
         {
-            var owner = await _dbContext.SystemUsers
+            var ownerExists = await _dbContext.SystemUsers
                 .AsNoTracking()
-                .FirstOrDefaultAsync(user => user.Id == request.Request.OwnerUserId.Value && user.IsActive, cancellationToken);
-            if (owner is null)
+                .AnyAsync(user => user.Id == request.Request.OwnerUserId.Value && user.IsActive, cancellationToken);
+            if (!ownerExists)
             {
                 throw new BusinessException(404, "负责人不存在");
             }
-
-            toOwnerUserName = owner.RealName;
         }
-
-        var fromOwnerIds = vendors
-            .Where(vendor => vendor.OwnerUserId.HasValue)
-            .Select(vendor => vendor.OwnerUserId!.Value)
-            .Distinct()
-            .ToList();
-        var fromOwnerLookup = await _dbContext.SystemUsers
-            .AsNoTracking()
-            .Where(user => fromOwnerIds.Contains(user.Id))
-            .ToDictionaryAsync(user => user.Id, user => user.RealName, cancellationToken);
 
         var operatorUserId = Guid.TryParse(_currentUserService.UserId, out var parsedUserId)
             ? parsedUserId
             : (Guid?)null;
-        var operatorUserName = _currentUserService.Username ?? string.Empty;
-        if (operatorUserId.HasValue)
-        {
-            operatorUserName = await _dbContext.SystemUsers
-                .AsNoTracking()
-                .Where(user => user.Id == operatorUserId.Value)
-                .Select(user => user.RealName)
-                .FirstOrDefaultAsync(cancellationToken) ?? operatorUserName;
-        }
 
         var remark = request.Request.Remark?.Trim() ?? string.Empty;
 
         foreach (var vendor in vendors)
         {
             var fromOwnerUserId = vendor.OwnerUserId;
-            var fromOwnerUserName = fromOwnerUserId.HasValue &&
-                fromOwnerLookup.TryGetValue(fromOwnerUserId.Value, out var ownerUserName)
-                ? ownerUserName
-                : string.Empty;
 
             vendor.AssignOwner(request.Request.OwnerUserId);
             _dbContext.CrmTransferRecords.Add(CrmTransferRecord.Create(
                 VendorEntityType,
                 vendor.Id,
                 fromOwnerUserId,
-                fromOwnerUserName,
                 request.Request.OwnerUserId,
-                toOwnerUserName,
                 operatorUserId,
-                operatorUserName,
                 remark));
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        var dtos = vendors.Select(vendor => new CrmVendorDto
-        {
-            Id = vendor.Id,
-            VendorName = vendor.VendorName,
-            NormalizedVendorName = vendor.NormalizedVendorName,
-            PriorityLevel = vendor.PriorityLevel,
-            LatestPurchaseTime = vendor.LatestPurchaseTime,
-            LatestPurchasePlanName = vendor.LatestPurchasePlanName,
-            Remark = vendor.Remark,
-            OwnerUserId = vendor.OwnerUserId,
-            CreatedAt = vendor.CreatedAt,
-            UpdatedAt = vendor.UpdatedAt
-        }).ToList();
-
-        await CrmVendorOwners.FillAsync(_dbContext, dtos, cancellationToken);
-        return dtos;
+        return true;
     }
 }

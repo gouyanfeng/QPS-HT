@@ -1,4 +1,4 @@
-using QPS.Domain.Entities.System;
+﻿using QPS.Domain.Entities.System;
 using Xunit;
 
 namespace QPS.UnitTests.Domain.Entities.System;
@@ -29,3 +29,6 @@ public class SystemDataDictionaryTests
         Assert.Equal(newParentId, dictionary.ParentId);
     }
 }
+
+
+

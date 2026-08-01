@@ -1,4 +1,4 @@
-namespace QPS.Application.Contracts.Dashboard;
+namespace QPS.Application.Contracts.Crm;
 
 public class CrmDashboardDto
 {
@@ -23,7 +23,6 @@ public class CrmDashboardFollowCustomerDto
     public Guid Id { get; set; }
     public string BaseName { get; set; } = string.Empty;
     public string SubjectName { get; set; } = string.Empty;
-    public string MainProduct { get; set; } = string.Empty;
     public List<string> MainProducts { get; set; } = new();
     public string Grade { get; set; } = string.Empty;
     public string Province { get; set; } = string.Empty;

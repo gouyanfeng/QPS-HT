@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
 

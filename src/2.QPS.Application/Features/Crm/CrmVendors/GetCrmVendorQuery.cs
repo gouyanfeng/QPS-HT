@@ -1,6 +1,7 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
 
@@ -13,7 +14,7 @@ public class GetCrmVendorQuery : IRequest<CrmVendorDto>
 
 public class GetCrmVendorHandler : IRequestHandler<GetCrmVendorQuery, CrmVendorDto>
 {
-    private const string VendorEntityType = "CRM_VENDOR";
+    private const string VendorEntityType = CrmCodes.VendorEntityType;
     private const string PurchaseProductAttributeCode = "PURCHASE_PRODUCT";
 
     private readonly IDbContext _dbContext;

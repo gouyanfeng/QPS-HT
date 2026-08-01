@@ -38,7 +38,6 @@ public class CrmHerbBaseController : ControllerBase
         [FromQuery] string? status = null,
         [FromQuery] string? sourcePlatform = null,
         [FromQuery] Guid? ownerUserId = null,
-        [FromQuery] string? mainProduct = null,
         [FromQuery] List<string>? mainProducts = null,
         [FromQuery] string? province = null,
         [FromQuery] string? city = null,
@@ -60,7 +59,6 @@ public class CrmHerbBaseController : ControllerBase
             Status = status,
             SourcePlatform = sourcePlatform,
             OwnerUserId = ownerUserId,
-            MainProduct = mainProduct,
             MainProducts = mainProducts,
             Province = province,
             City = city,
@@ -94,7 +92,7 @@ public class CrmHerbBaseController : ControllerBase
     }
 
     [HttpPatch("assign-owner")]
-    public async Task<ActionResult<List<CrmHerbBaseDto>>> AssignOwner([FromBody] CrmHerbBaseAssignOwnerRequest request)
+    public async Task<ActionResult<bool>> AssignOwner([FromBody] CrmHerbBaseAssignOwnerRequest request)
     {
         var command = new AssignCrmHerbBaseOwnerCommand { Request = request };
         var result = await _mediator.Send(command);
@@ -105,18 +103,18 @@ public class CrmHerbBaseController : ControllerBase
     /// 创建药材基地
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<CrmHerbBaseDto>> CreateCustomer([FromBody] CrmHerbBaseCreateRequest request)
+    public async Task<ActionResult<bool>> CreateCustomer([FromBody] CrmHerbBaseCreateRequest request)
     {
         var command = new CreateCrmHerbBaseCommand { Request = request };
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetCustomer), new { id = result.Id }, result);
+        return Ok(result);
     }
 
     /// <summary>
     /// 更新药材基地
     /// </summary>
     [HttpPut("{id}")]
-    public async Task<ActionResult<CrmHerbBaseDto>> UpdateCustomer(Guid id, [FromBody] CrmHerbBaseUpdateRequest request)
+    public async Task<ActionResult<bool>> UpdateCustomer(Guid id, [FromBody] CrmHerbBaseUpdateRequest request)
     {
         var command = new UpdateCrmHerbBaseCommand { Id = id, Request = request };
         var result = await _mediator.Send(command);

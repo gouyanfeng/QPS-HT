@@ -130,7 +130,6 @@ builder.Services.AddScoped<IJwtGenerator>(_ => new JwtGenerator(
 ));
 
 // 注册错误日志服务
-builder.Services.AddInfrastructure();
 builder.Services.AddScoped<IErrorLogService, ErrorLogService>();
 
 /// <summary>

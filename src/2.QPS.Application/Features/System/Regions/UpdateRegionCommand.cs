@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.Regions;
 using QPS.Application.Interfaces;
@@ -6,13 +6,13 @@ using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.System.Regions;
 
-public record UpdateRegionCommand : IRequest<RegionDto>
+public record UpdateRegionCommand : IRequest<bool>
 {
     public Guid Id { get; set; }
     public RegionUpdateRequest Request { get; set; }
 }
 
-public class UpdateRegionCommandHandler : IRequestHandler<UpdateRegionCommand, RegionDto>
+public class UpdateRegionCommandHandler : IRequestHandler<UpdateRegionCommand, bool>
 {
     private readonly IDbContext _dbContext;
 
@@ -21,7 +21,7 @@ public class UpdateRegionCommandHandler : IRequestHandler<UpdateRegionCommand, R
         _dbContext = dbContext;
     }
 
-    public async Task<RegionDto> Handle(UpdateRegionCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(UpdateRegionCommand request, CancellationToken cancellationToken)
     {
         var region = await _dbContext.SystemRegions
             .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
@@ -43,7 +43,7 @@ public class UpdateRegionCommandHandler : IRequestHandler<UpdateRegionCommand, R
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return RegionMapper.ToDto(region);
+        return true;
     }
 
     private async Task ValidateRegionAsync(Guid? parentId, string code, int level, Guid id, CancellationToken cancellationToken)

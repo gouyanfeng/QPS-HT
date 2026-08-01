@@ -1,10 +1,14 @@
-﻿using QPS.Application.Contracts.System.Regions;
+using QPS.Application.Contracts.System.Regions;
 using QPS.Domain.Entities.System;
 
 namespace QPS.Application.Features.System.Regions;
 
 internal static class RegionMapper
 {
+
+    /// <summary>
+    /// 转换为 DTO。
+    /// </summary>
     public static RegionDto ToDto(SystemRegion region, string? parentName = null)
     {
         return new RegionDto

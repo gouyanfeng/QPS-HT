@@ -25,7 +25,7 @@ public class CrmFollowRecordController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<CrmFollowRecordDto>> CreateFollowRecord(
+    public async Task<ActionResult<bool>> CreateFollowRecord(
         Guid customerId,
         [FromBody] CrmFollowRecordCreateRequest request)
     {

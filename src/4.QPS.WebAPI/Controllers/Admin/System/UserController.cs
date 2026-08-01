@@ -52,17 +52,17 @@ public class UserController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<UserDto>> CreateUser([FromBody] UserCreateRequest request)
+    public async Task<ActionResult<bool>> CreateUser([FromBody] UserCreateRequest request)
     {
-        var user = await _mediator.Send(new CreateUserCommand { Request = request });
-        return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+        var result = await _mediator.Send(new CreateUserCommand { Request = request });
+        return Ok(result);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<UserDto>> UpdateUser(Guid id, [FromBody] UserUpdateRequest request)
+    public async Task<ActionResult<bool>> UpdateUser(Guid id, [FromBody] UserUpdateRequest request)
     {
-        var user = await _mediator.Send(new UpdateUserCommand { Id = id, Request = request });
-        return Ok(user);
+        var result = await _mediator.Send(new UpdateUserCommand { Id = id, Request = request });
+        return Ok(result);
     }
 
 

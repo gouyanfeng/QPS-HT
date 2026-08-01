@@ -1,22 +1,23 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.Crm;
 using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.Crm.CrmContacts;
 
-public class UpdateCrmContactStatusCommand : IRequest<CrmContactDto>
+public class UpdateCrmContactStatusCommand : IRequest<bool>
 {
     public Guid Id { get; set; }
 
     public CrmContactStatusRequest Request { get; set; } = null!;
 }
 
-public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactStatusCommand, CrmContactDto>
+public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactStatusCommand, bool>
 {
-    private const string CustomerEntityType = "CRM_HERB_BASE";
+    private const string CustomerEntityType = CrmCodes.HerbBaseEntityType;
     private const string InvalidStatus = "INVALID";
 
     private readonly IDbContext _dbContext;
@@ -26,7 +27,7 @@ public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactSta
         _dbContext = dbContext;
     }
 
-    public async Task<CrmContactDto> Handle(UpdateCrmContactStatusCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(UpdateCrmContactStatusCommand request, CancellationToken cancellationToken)
     {
         var contact = await _dbContext.CrmContacts
             .FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken);
@@ -56,7 +57,7 @@ public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactSta
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return MapToDto(contact);
+        return true;
     }
 
     private async Task PromoteOldestValidContact(CrmHerbBase customer, Guid excludedContactId, CancellationToken cancellationToken)
@@ -74,26 +75,4 @@ public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactSta
         replacement.MarkPrimary();
         customer.UpdatePrimaryContact(replacement.ContactName, replacement.Phone);
     }
-
-    private static CrmContactDto MapToDto(CrmContact contact)
-    {
-        return new CrmContactDto
-        {
-            Id = contact.Id,
-            EntityType = contact.EntityType,
-            EntityId = contact.EntityId,
-            ContactName = contact.ContactName,
-            Phone = contact.Phone,
-            PhoneType = contact.PhoneType,
-            Wechat = contact.Wechat,
-            RoleName = contact.RoleName,
-            IsPrimary = contact.IsPrimary,
-            Status = contact.Status,
-            Remark = contact.Remark,
-            CreatedAt = contact.CreatedAt,
-            UpdatedAt = contact.UpdatedAt
-        };
-    }
 }
-
-

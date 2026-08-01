@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using QPS.Application.Contracts.System.Roles;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.System;
@@ -8,7 +8,7 @@ namespace QPS.Application.Features.System.Roles;
 /// <summary>
 /// 创建角色命令
 /// </summary>
-public class CreateRoleCommand : IRequest<RoleDto>
+public class CreateRoleCommand : IRequest<bool>
 {
     /// <summary>
     /// 创建角色请求
@@ -19,7 +19,7 @@ public class CreateRoleCommand : IRequest<RoleDto>
 /// <summary>
 /// 创建角色处理器
 /// </summary>
-public class CreateRoleHandler : IRequestHandler<CreateRoleCommand, RoleDto>
+public class CreateRoleHandler : IRequestHandler<CreateRoleCommand, bool>
 {
     private readonly IDbContext _dbContext;
 
@@ -27,6 +27,7 @@ public class CreateRoleHandler : IRequestHandler<CreateRoleCommand, RoleDto>
     /// 构造函数
     /// </summary>
     /// <param name="dbContext">数据库上下文</param>
+
     public CreateRoleHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
@@ -37,8 +38,9 @@ public class CreateRoleHandler : IRequestHandler<CreateRoleCommand, RoleDto>
     /// </summary>
     /// <param name="request">创建角色命令</param>
     /// <param name="cancellationToken">取消令牌</param>
-    /// <returns>角色DTO</returns>
-    public async Task<RoleDto> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
+    /// <returns>是否成功</returns>
+
+    public async Task<bool> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
         var role = new SystemRole(request.Request.Name, request.Request.Code);
 
@@ -46,13 +48,7 @@ public class CreateRoleHandler : IRequestHandler<CreateRoleCommand, RoleDto>
         _dbContext.SystemRoles.Add(role);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        // 转换为DTO
-        return new RoleDto
-        {
-            Id = role.Id,
-            Name = role.Name,
-            Code = role.Code
-        };
+        return true;
     }
 }
 

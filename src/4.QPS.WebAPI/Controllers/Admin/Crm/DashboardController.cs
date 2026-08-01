@@ -1,9 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using QPS.Application.Contracts.Dashboard;
-using QPS.Application.Features.Dashboard;
+using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 
-namespace QPS.WebAPI.Controllers.Admin.Dashboard;
+namespace QPS.WebAPI.Controllers.Admin.Crm;
 
 [Route("api/admin/dashboard")]
 [ApiController]

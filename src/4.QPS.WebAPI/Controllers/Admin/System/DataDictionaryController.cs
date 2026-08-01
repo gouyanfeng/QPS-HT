@@ -60,15 +60,15 @@ public class DataDictionaryController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<DataDictionaryDto>> CreateDataDictionary([FromBody] DataDictionaryCreateRequest request)
+    public async Task<ActionResult<bool>> CreateDataDictionary([FromBody] DataDictionaryCreateRequest request)
     {
         var command = new CreateDataDictionaryCommand { Request = request };
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetDataDictionary), new { id = result.Id }, result);
+        return Ok(result);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<DataDictionaryDto>> UpdateDataDictionary(Guid id, [FromBody] DataDictionaryUpdateRequest request)
+    public async Task<ActionResult<bool>> UpdateDataDictionary(Guid id, [FromBody] DataDictionaryUpdateRequest request)
     {
         var command = new UpdateDataDictionaryCommand { Id = id, Request = request };
         var result = await _mediator.Send(command);
@@ -76,10 +76,10 @@ public class DataDictionaryController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteDataDictionary(Guid id)
+    public async Task<ActionResult<bool>> DeleteDataDictionary(Guid id)
     {
-        await _mediator.Send(new DeleteDataDictionaryCommand { Id = id });
-        return NoContent();
+        var result = await _mediator.Send(new DeleteDataDictionaryCommand { Id = id });
+        return Ok(result);
     }
 }
 

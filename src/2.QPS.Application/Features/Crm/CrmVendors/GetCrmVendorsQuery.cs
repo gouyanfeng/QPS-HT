@@ -1,7 +1,8 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Extensions;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 
 namespace QPS.Application.Features.Crm.CrmVendors;
@@ -19,7 +20,7 @@ public class GetCrmVendorsQuery : PaginationRequest, IRequest<PaginationResponse
 
 public class GetCrmVendorsHandler : IRequestHandler<GetCrmVendorsQuery, PaginationResponse<CrmVendorDto>>
 {
-    private const string VendorEntityType = "CRM_VENDOR";
+    private const string VendorEntityType = CrmCodes.VendorEntityType;
     private const string PurchaseProductAttributeCode = "PURCHASE_PRODUCT";
 
     private readonly IDbContext _dbContext;

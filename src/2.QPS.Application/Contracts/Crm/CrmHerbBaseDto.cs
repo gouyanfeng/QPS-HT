@@ -30,11 +30,6 @@ public class CrmHerbBaseDto
     /// </summary>
     public string SubjectName { get; set; } = string.Empty;
 
-    /// <summary>
-    /// 主营品类，例如黄芪、党参、天麻。
-    /// </summary>
-    public string MainProduct { get; set; } = string.Empty;
-
     public List<string> MainProducts { get; set; } = new();
 
     /// <summary>
@@ -88,7 +83,7 @@ public class CrmHerbBaseDto
     public long? SourceId { get; set; }
 
     /// <summary>
-    /// 药材基地处理状态，例如待联系、跟进中、已成交、已流失。
+    /// 药材基地处理状态，例如待联系、跟进中、有意向、已成交、已流失。
     /// </summary>
     public string Status { get; set; } = string.Empty;
 

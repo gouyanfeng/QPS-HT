@@ -26,7 +26,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("logout")]
-    public async Task<ActionResult<LogoutResponse>> Logout([FromBody] LogoutRequest request)
+    public async Task<ActionResult<bool>> Logout([FromBody] LogoutRequest request)
     {
         var command = new LogoutCommand { Request = request };
         var response = await _mediator.Send(command);

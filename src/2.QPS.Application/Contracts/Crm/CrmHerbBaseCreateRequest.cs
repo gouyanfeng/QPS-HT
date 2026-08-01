@@ -25,11 +25,6 @@ public class CrmHerbBaseCreateRequest
     /// </summary>
     public string SubjectName { get; set; } = string.Empty;
 
-    /// <summary>
-    /// 主营品类，例如黄芪、党参、天麻。
-    /// </summary>
-    public string MainProduct { get; set; } = string.Empty;
-
     public List<string> MainProducts { get; set; } = new();
 
     /// <summary>

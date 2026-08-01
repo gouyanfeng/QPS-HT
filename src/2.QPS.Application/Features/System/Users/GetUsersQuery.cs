@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.Users;
 using QPS.Application.Interfaces;
@@ -38,6 +38,7 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginationResponse
     /// 构造函数
     /// </summary>
     /// <param name="dbContext">数据库上下文</param>
+
     public GetUsersHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
@@ -49,6 +50,7 @@ public class GetUsersHandler : IRequestHandler<GetUsersQuery, PaginationResponse
     /// <param name="request">获取用户列表查询</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>用户DTO分页响应</returns>
+
     public async Task<PaginationResponse<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
         var query = from a in _dbContext.SystemUsers.AsNoTracking()

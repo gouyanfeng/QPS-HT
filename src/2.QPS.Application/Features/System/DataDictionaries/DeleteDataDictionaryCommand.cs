@@ -1,16 +1,16 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.System.DataDictionaries;
 
-public record DeleteDataDictionaryCommand : IRequest<Unit>
+public record DeleteDataDictionaryCommand : IRequest<bool>
 {
     public Guid Id { get; set; }
 }
 
-public class DeleteDataDictionaryCommandHandler : IRequestHandler<DeleteDataDictionaryCommand, Unit>
+public class DeleteDataDictionaryCommandHandler : IRequestHandler<DeleteDataDictionaryCommand, bool>
 {
     private readonly IDbContext _dbContext;
 
@@ -19,7 +19,7 @@ public class DeleteDataDictionaryCommandHandler : IRequestHandler<DeleteDataDict
         _dbContext = dbContext;
     }
 
-    public async Task<Unit> Handle(DeleteDataDictionaryCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(DeleteDataDictionaryCommand request, CancellationToken cancellationToken)
     {
         var dataDictionary = await _dbContext.SystemDataDictionaries
             .FirstOrDefaultAsync(d => d.Id == request.Id, cancellationToken);
@@ -40,7 +40,7 @@ public class DeleteDataDictionaryCommandHandler : IRequestHandler<DeleteDataDict
         _dbContext.SystemDataDictionaries.Remove(dataDictionary);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return Unit.Value;
+        return true;
     }
 }
 

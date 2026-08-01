@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.System.DataDictionaries;
 using QPS.Application.Interfaces;
@@ -7,12 +7,12 @@ using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.System.DataDictionaries;
 
-public record CreateDataDictionaryCommand : IRequest<DataDictionaryDto>
+public record CreateDataDictionaryCommand : IRequest<bool>
 {
     public DataDictionaryCreateRequest Request { get; set; }
 }
 
-public class CreateDataDictionaryCommandHandler : IRequestHandler<CreateDataDictionaryCommand, DataDictionaryDto>
+public class CreateDataDictionaryCommandHandler : IRequestHandler<CreateDataDictionaryCommand, bool>
 {
     private readonly IDbContext _dbContext;
 
@@ -21,7 +21,7 @@ public class CreateDataDictionaryCommandHandler : IRequestHandler<CreateDataDict
         _dbContext = dbContext;
     }
 
-    public async Task<DataDictionaryDto> Handle(CreateDataDictionaryCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(CreateDataDictionaryCommand request, CancellationToken cancellationToken)
     {
         if (request.Request.ParentId.HasValue)
         {
@@ -55,22 +55,7 @@ public class CreateDataDictionaryCommandHandler : IRequestHandler<CreateDataDict
         await _dbContext.SystemDataDictionaries.AddAsync(dataDictionary, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return ToDto(dataDictionary);
-    }
-
-    private static DataDictionaryDto ToDto(SystemDataDictionary dataDictionary)
-    {
-        return new DataDictionaryDto
-        {
-            Id = dataDictionary.Id,
-            ParentId = dataDictionary.ParentId,
-            Code = dataDictionary.Code,
-            Name = dataDictionary.Name,
-            Value = dataDictionary.Value,
-            Description = dataDictionary.Description,
-            SortOrder = dataDictionary.SortOrder,
-            IsActive = dataDictionary.IsActive
-        };
+        return true;
     }
 }
 

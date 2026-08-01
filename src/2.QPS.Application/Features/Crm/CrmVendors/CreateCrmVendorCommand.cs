@@ -7,12 +7,12 @@ using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.Crm.CrmVendors;
 
-public class CreateCrmVendorCommand : IRequest<CrmVendorDto>
+public class CreateCrmVendorCommand : IRequest<bool>
 {
     public CrmVendorCreateRequest Request { get; set; } = null!;
 }
 
-public class CreateCrmVendorHandler : IRequestHandler<CreateCrmVendorCommand, CrmVendorDto>
+public class CreateCrmVendorHandler : IRequestHandler<CreateCrmVendorCommand, bool>
 {
     private readonly IDbContext _dbContext;
 
@@ -21,7 +21,7 @@ public class CreateCrmVendorHandler : IRequestHandler<CreateCrmVendorCommand, Cr
         _dbContext = dbContext;
     }
 
-    public async Task<CrmVendorDto> Handle(CreateCrmVendorCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(CreateCrmVendorCommand request, CancellationToken cancellationToken)
     {
         var vendorName = request.Request.VendorName.Trim();
         if (string.IsNullOrWhiteSpace(vendorName))
@@ -29,7 +29,7 @@ public class CreateCrmVendorHandler : IRequestHandler<CreateCrmVendorCommand, Cr
             throw new BusinessException(400, "请输入厂商名称");
         }
 
-        var normalizedVendorName = NormalizeVendorName(vendorName);
+        var normalizedVendorName = CrmVendorRules.NormalizeVendorName(vendorName);
         var exists = await _dbContext.CrmVendors
             .AnyAsync(vendor => !vendor.IsDeleted && vendor.NormalizedVendorName == normalizedVendorName, cancellationToken);
         if (exists)
@@ -51,7 +51,7 @@ public class CreateCrmVendorHandler : IRequestHandler<CreateCrmVendorCommand, Cr
         var vendor = CrmVendor.Create(
             vendorName,
             normalizedVendorName,
-            NormalizePriority(request.Request.PriorityLevel),
+            CrmVendorRules.NormalizePriority(request.Request.PriorityLevel),
             request.Request.LatestPurchaseTime,
             request.Request.LatestPurchasePlanName.Trim(),
             request.Request.Remark.Trim(),
@@ -60,31 +60,7 @@ public class CreateCrmVendorHandler : IRequestHandler<CreateCrmVendorCommand, Cr
         _dbContext.CrmVendors.Add(vendor);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        var dto = new CrmVendorDto
-        {
-            Id = vendor.Id,
-            VendorName = vendor.VendorName,
-            NormalizedVendorName = vendor.NormalizedVendorName,
-            PriorityLevel = vendor.PriorityLevel,
-            LatestPurchaseTime = vendor.LatestPurchaseTime,
-            LatestPurchasePlanName = vendor.LatestPurchasePlanName,
-            Remark = vendor.Remark,
-            OwnerUserId = vendor.OwnerUserId,
-            CreatedAt = vendor.CreatedAt,
-            UpdatedAt = vendor.UpdatedAt
-        };
-
-        await CrmVendorOwners.FillAsync(_dbContext, new List<CrmVendorDto> { dto }, cancellationToken);
-        return dto;
+        return true;
     }
 
-    private static string NormalizeVendorName(string vendorName)
-    {
-        return string.Concat(vendorName.Where(c => !char.IsWhiteSpace(c))).ToUpperInvariant();
-    }
-
-    private static string NormalizePriority(string? priorityLevel)
-    {
-        return priorityLevel is "High" or "Medium" or "Low" ? priorityLevel : "Medium";
-    }
 }
