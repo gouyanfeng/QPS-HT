@@ -16,20 +16,18 @@ public class CrmContactController : ControllerBase
         _mediator = mediator;
     }
 
-    [HttpGet("customers/{customerId}/contacts")]
-    [HttpGet("herb-bases/{customerId}/contacts")]
-    public async Task<ActionResult<List<CrmContactDto>>> GetContacts(Guid customerId)
+    [HttpGet("herb-base-subjects/{herbBaseSubjectId}/contacts")]
+    public async Task<ActionResult<List<CrmContactDto>>> GetContacts(Guid herbBaseSubjectId)
     {
-        var query = new GetCrmContactsQuery { CustomerId = customerId };
+        var query = new GetCrmContactsQuery { HerbBaseSubjectId = herbBaseSubjectId };
         var result = await _mediator.Send(query);
         return Ok(result);
     }
 
-    [HttpPost("customers/{customerId}/contacts")]
-    [HttpPost("herb-bases/{customerId}/contacts")]
-    public async Task<ActionResult<bool>> CreateContact(Guid customerId, [FromBody] CrmContactCreateRequest request)
+    [HttpPost("herb-base-subjects/{herbBaseSubjectId}/contacts")]
+    public async Task<ActionResult<bool>> CreateContact(Guid herbBaseSubjectId, [FromBody] CrmContactCreateRequest request)
     {
-        var command = new CreateCrmContactCommand { CustomerId = customerId, Request = request };
+        var command = new CreateCrmContactCommand { HerbBaseSubjectId = herbBaseSubjectId, Request = request };
         var result = await _mediator.Send(command);
         return Ok(result);
     }

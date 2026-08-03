@@ -70,13 +70,13 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
 
         var recentFollowRecords = await (
                 from record in _dbContext.CrmFollowRecords
-                join customer in myCustomers on record.CustomerId equals customer.Id
+                join customer in myCustomers on record.HerbBaseId equals customer.Id
                 where !record.IsDeleted
                 orderby record.CreatedAt descending
                 select new CrmDashboardRecentFollowRecordDto
                 {
                     Id = record.Id,
-                    CustomerId = record.CustomerId,
+                    CustomerId = customer.Id,
                     BaseName = customer.BaseName,
                     FollowType = record.FollowType,
                     FollowResult = record.FollowResult,
@@ -131,7 +131,7 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
 
         var trendRecords = await (
                 from record in _dbContext.CrmFollowRecords
-                join customer in myCustomers on record.CustomerId equals customer.Id
+                join customer in myCustomers on record.HerbBaseId equals customer.Id
                 where !record.IsDeleted && record.CreatedAt >= trendStart && record.CreatedAt < tomorrowStart
                 select new { record.CreatedAt, record.FollowResult })
             .ToListAsync(cancellationToken);

@@ -17,6 +17,7 @@ public interface IDbContext
     DbSet<SystemErrorLog> SystemErrorLogs { get; }
 
     // CRM 模块
+    DbSet<CrmHerbBaseSubject> CrmHerbBaseSubjects { get; }
     DbSet<CrmHerbBase> CrmHerbBases { get; }
     DbSet<CrmContact> CrmContacts { get; }
     DbSet<CrmFollowRecord> CrmFollowRecords { get; }

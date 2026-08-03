@@ -10,6 +10,8 @@ public class CrmHerbBaseDto
     /// </summary>
     public Guid Id { get; set; }
 
+    public Guid? HerbBaseSubjectId { get; set; }
+
     /// <summary>
     /// 上级客户ID，用于维护客户层级关系。
     /// </summary>

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Features.Crm.CrmHerbBases;
+using QPS.Application.Features.Crm.CrmHerbBaseSubjects;
 using QPS.Application.Extensions;
 
 namespace QPS.WebAPI.Controllers.Admin.Crm;
@@ -20,6 +21,19 @@ public class CrmHerbBaseController : ControllerBase
     public CrmHerbBaseController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    [HttpGet("/api/admin/crm/herb-base-subjects")]
+    public async Task<ActionResult<PaginationResponse<CrmHerbBaseSubjectDto>>> GetHerbBaseSubjects(
+        [FromQuery] GetCrmHerbBaseSubjectsQuery query)
+    {
+        return Ok(await _mediator.Send(query));
+    }
+
+    [HttpGet("/api/admin/crm/herb-base-subjects/{id:guid}")]
+    public async Task<ActionResult<CrmHerbBaseSubjectDetailDto>> GetHerbBaseSubject(Guid id)
+    {
+        return Ok(await _mediator.Send(new GetCrmHerbBaseSubjectQuery { Id = id }));
     }
 
     /// <summary>

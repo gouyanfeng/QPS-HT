@@ -17,7 +17,7 @@ public class UpdateCrmContactCommand : IRequest<bool>
 
 public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, bool>
 {
-    private const string CustomerEntityType = CrmCodes.HerbBaseEntityType;
+    private const string HerbBaseSubjectEntityType = CrmCodes.HerbBaseSubjectEntityType;
     private const string InvalidStatus = "INVALID";
 
     private readonly IDbContext _dbContext;
@@ -36,14 +36,14 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
     public async Task<bool> Handle(UpdateCrmContactCommand request, CancellationToken cancellationToken)
     {
         // 编排更新联系人用例：
-        // 确认联系人和客户、更新联系人、同步主联系人摘要。
+        // 确认联系人和主体、更新联系人、同步主联系人摘要。
         var contact = await GetContact(request.Id, cancellationToken);
         EnsureCanSetPrimary(request.Request, contact);
-        var customer = await GetCustomer(contact, cancellationToken);
+        var subject = await GetSubject(contact, cancellationToken);
         var wasPrimary = contact.IsPrimary;
 
         UpdateContact(contact, request.Request);
-        await ApplyPrimaryContactChange(customer, contact, wasPrimary, cancellationToken);
+        await ApplyPrimaryContactChange(subject, contact, wasPrimary, cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -78,24 +78,23 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
     }
 
     /// <summary>
-    /// 获取联系人所属客户。
+    /// 获取联系人所属的药材基地主体。
     /// </summary>
-    private async Task<CrmHerbBase> GetCustomer(CrmContact contact, CancellationToken cancellationToken)
+    private async Task<CrmHerbBaseSubject> GetSubject(CrmContact contact, CancellationToken cancellationToken)
     {
-        var customer = await _dbContext.CrmHerbBases
+        var subject = await _dbContext.CrmHerbBaseSubjects
             .FirstOrDefaultAsync(
-                c =>
-                    c.Id == contact.EntityId &&
-                    contact.EntityType == CustomerEntityType &&
-                    !c.IsDeleted,
+                item =>
+                    item.Id == contact.EntityId &&
+                    contact.EntityType == HerbBaseSubjectEntityType,
                 cancellationToken);
 
-        if (customer == null)
+        if (subject == null)
         {
-            throw new BusinessException(404, "客户不存在");
+            throw new BusinessException(404, "药材基地主体不存在");
         }
 
-        return customer;
+        return subject;
     }
 
     /// <summary>
@@ -117,7 +116,7 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
     /// 根据主联系人状态变更同步客户主联系人摘要。
     /// </summary>
     private async Task ApplyPrimaryContactChange(
-        CrmHerbBase customer,
+        CrmHerbBaseSubject subject,
         CrmContact contact,
         bool wasPrimary,
         CancellationToken cancellationToken)
@@ -125,13 +124,13 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
         if (contact.IsPrimary)
         {
             await UnmarkSiblingPrimaryContacts(contact.EntityType, contact.EntityId, contact.Id, cancellationToken);
-            customer.UpdatePrimaryContact(contact.ContactName, contact.Phone);
+            subject.UpdatePrimaryContact(contact.ContactName, contact.Phone);
             return;
         }
 
         if (wasPrimary)
         {
-            await PromoteOldestValidContactOrClear(customer, contact.Id, cancellationToken);
+            await PromoteOldestValidContactOrClear(subject, contact.Id, cancellationToken);
         }
     }
 
@@ -155,14 +154,14 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
     }
 
     /// <summary>
-    /// 原主联系人取消后提升最早有效联系人或清空客户摘要。
+    /// 原主联系人取消后提升最早有效联系人或清空主体摘要。
     /// </summary>
-    private async Task PromoteOldestValidContactOrClear(CrmHerbBase customer, Guid excludedContactId, CancellationToken cancellationToken)
+    private async Task PromoteOldestValidContactOrClear(CrmHerbBaseSubject subject, Guid excludedContactId, CancellationToken cancellationToken)
     {
         var replacement = await _dbContext.CrmContacts
             .Where(c =>
-                c.EntityType == CustomerEntityType &&
-                c.EntityId == customer.Id &&
+                c.EntityType == HerbBaseSubjectEntityType &&
+                c.EntityId == subject.Id &&
                 c.Id != excludedContactId &&
                 c.Status != InvalidStatus)
             .OrderBy(c => c.CreatedAt)
@@ -170,12 +169,12 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
 
         if (replacement == null)
         {
-            customer.ClearPrimaryContact();
+            subject.ClearPrimaryContact();
             return;
         }
 
         replacement.MarkPrimary();
-        customer.UpdatePrimaryContact(replacement.ContactName, replacement.Phone);
+        subject.UpdatePrimaryContact(replacement.ContactName, replacement.Phone);
     }
 }
 

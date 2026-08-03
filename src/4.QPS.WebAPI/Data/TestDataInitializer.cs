@@ -1263,6 +1263,26 @@ public static class TestDataInitializer
             )
         };
 
+        var subjects = customers
+            .Select(customer => CrmHerbBaseSubject.Create(
+                subjectName: string.Empty,
+                baseName: customer.BaseName,
+                subjectType: "BASE_ONLY",
+                ownerUserId: customer.OwnerUserId,
+                status: customer.Status,
+                grade: customer.Grade,
+                score: customer.Score,
+                remark: customer.Remark))
+            .ToList();
+
+        dbContext.CrmHerbBaseSubjects.AddRange(subjects);
+        dbContext.SaveChanges();
+
+        for (var index = 0; index < customers.Count; index++)
+        {
+            customers[index].SetHerbBaseSubject(subjects[index].Id);
+        }
+
         dbContext.CrmHerbBases.AddRange(customers);
         dbContext.SaveChanges();
 
@@ -1275,8 +1295,8 @@ public static class TestDataInitializer
         var contacts = new List<CrmContact>
         {
             CrmContact.Create(
-                entityType: "CRM_HERB_BASE",
-                entityId: customers[0].Id,
+                entityType: "CRM_HERB_BASE_SUBJECT",
+                entityId: subjects[0].Id,
                 contactName: "王建国",
                 phone: "13893210001",
                 phoneType: "MOBILE",
@@ -1285,8 +1305,8 @@ public static class TestDataInitializer
                 isPrimary: true,
                 remark: "主联系人，了解今年黄芪采收量。"),
             CrmContact.Create(
-                entityType: "CRM_HERB_BASE",
-                entityId: customers[0].Id,
+                entityType: "CRM_HERB_BASE_SUBJECT",
+                entityId: subjects[0].Id,
                 contactName: "李会计",
                 phone: "13993210002",
                 phoneType: "MOBILE",
@@ -1295,8 +1315,8 @@ public static class TestDataInitializer
                 isPrimary: false,
                 remark: "可确认结算方式。"),
             CrmContact.Create(
-                entityType: "CRM_HERB_BASE",
-                entityId: customers[1].Id,
+                entityType: "CRM_HERB_BASE_SUBJECT",
+                entityId: subjects[1].Id,
                 contactName: "张主任",
                 phone: "13893220001",
                 phoneType: "MOBILE",
@@ -1307,15 +1327,16 @@ public static class TestDataInitializer
         };
 
         dbContext.CrmContacts.AddRange(contacts);
-        customers[0].UpdatePrimaryContact(contacts[0].ContactName, contacts[0].Phone);
-        customers[1].UpdatePrimaryContact(contacts[2].ContactName, contacts[2].Phone);
+        subjects[0].UpdatePrimaryContact(contacts[0].ContactName, contacts[0].Phone);
+        subjects[1].UpdatePrimaryContact(contacts[2].ContactName, contacts[2].Phone);
         dbContext.SaveChanges();
 
         var nextFollowAt = DateTime.Now.Date.AddDays(2).AddHours(10);
         var followRecords = new List<CrmFollowRecord>
         {
             CrmFollowRecord.Create(
-                customerId: customers[0].Id,
+                herbBaseSubjectId: subjects[0].Id,
+                herbBaseId: customers[0].Id,
                 contactId: contacts[0].Id,
                 followType: "PHONE",
                 followResult: "CONNECTED",
@@ -1324,7 +1345,8 @@ public static class TestDataInitializer
                 nextFollowAt: DateTime.Now.Date.AddDays(1).AddHours(15),
                 operatorUserId: null),
             CrmFollowRecord.Create(
-                customerId: customers[0].Id,
+                herbBaseSubjectId: subjects[0].Id,
+                herbBaseId: customers[0].Id,
                 contactId: contacts[0].Id,
                 followType: "WECHAT",
                 followResult: "INTERESTED",
@@ -1335,7 +1357,7 @@ public static class TestDataInitializer
         };
 
         dbContext.CrmFollowRecords.AddRange(followRecords);
-        customers[0].UpdateFollowSummary(DateTime.Now, "INTERESTED", nextFollowAt);
+        subjects[0].UpdateFollowSummary(DateTime.Now, "INTERESTED", nextFollowAt);
         dbContext.SaveChanges();
     }
 

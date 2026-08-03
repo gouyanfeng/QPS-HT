@@ -15,7 +15,7 @@ public class SetPrimaryCrmContactCommand : IRequest<bool>
 
 public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactCommand, bool>
 {
-    private const string CustomerEntityType = CrmCodes.HerbBaseEntityType;
+    private const string HerbBaseSubjectEntityType = CrmCodes.HerbBaseSubjectEntityType;
     private const string InvalidStatus = "INVALID";
 
     private readonly IDbContext _dbContext;
@@ -34,18 +34,18 @@ public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactC
     public async Task<bool> Handle(SetPrimaryCrmContactCommand request, CancellationToken cancellationToken)
     {
         // 编排设置主联系人用例：
-        // 获取联系人、确认客户、取消其他主联系人、同步客户主联系人摘要。
+        // 获取联系人、确认主体、取消其他主联系人、同步主体主联系人摘要。
         var contact = await GetContact(request.Id, cancellationToken);
 
         EnsureContactCanBePrimary(contact);
 
-        var customer = await GetCustomer(contact, cancellationToken);
+        var subject = await GetSubject(contact, cancellationToken);
 
         await UnmarkSiblingPrimaryContacts(contact, cancellationToken);
 
         contact.MarkPrimary();
         
-        customer.UpdatePrimaryContact(contact.ContactName, contact.Phone);
+        subject.UpdatePrimaryContact(contact.ContactName, contact.Phone);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -80,23 +80,22 @@ public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactC
     }
 
     /// <summary>
-    /// 获取联系人所属客户。
+    /// 获取联系人所属的药材基地主体。
     /// </summary>
-    private async Task<CrmHerbBase> GetCustomer(CrmContact contact, CancellationToken cancellationToken)
+    private async Task<CrmHerbBaseSubject> GetSubject(CrmContact contact, CancellationToken cancellationToken)
     {
-        var customer = await _dbContext.CrmHerbBases
+        var subject = await _dbContext.CrmHerbBaseSubjects
             .FirstOrDefaultAsync(
-                c => c.Id == contact.EntityId &&
-                    contact.EntityType == CustomerEntityType &&
-                    !c.IsDeleted,
+                item => item.Id == contact.EntityId &&
+                    contact.EntityType == HerbBaseSubjectEntityType,
                 cancellationToken);
 
-        if (customer == null)
+        if (subject == null)
         {
-            throw new BusinessException(404, "客户不存在");
+            throw new BusinessException(404, "药材基地主体不存在");
         }
 
-        return customer;
+        return subject;
     }
 
     /// <summary>

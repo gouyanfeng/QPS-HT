@@ -10,19 +10,19 @@ namespace QPS.Application.Features.Crm.CrmContacts;
 
 public class CreateCrmContactCommand : IRequest<bool>
 {
-    public Guid CustomerId { get; set; }
+    public Guid HerbBaseSubjectId { get; set; }
 
     public CrmContactCreateRequest Request { get; set; } = null!;
 }
 
 public class CreateCrmContactHandler : IRequestHandler<CreateCrmContactCommand, bool>
 {
-    private const string CustomerEntityType = CrmCodes.HerbBaseEntityType;
+    private const string HerbBaseSubjectEntityType = CrmCodes.HerbBaseSubjectEntityType;
 
     private readonly IDbContext _dbContext;
 
     /// <summary>
-    /// 创建客户联系人处理器。
+    /// 创建基地主体联系人处理器。
     /// </summary>
     public CreateCrmContactHandler(IDbContext dbContext)
     {
@@ -35,12 +35,12 @@ public class CreateCrmContactHandler : IRequestHandler<CreateCrmContactCommand, 
     public async Task<bool> Handle(CreateCrmContactCommand request, CancellationToken cancellationToken)
     {
         // 编排新增联系人用例：
-        // 确认客户、创建联系人、同步主联系人摘要。
-        var customer = await GetCustomer(request.CustomerId, cancellationToken);
+        // 确认基地主体、创建联系人、同步主联系人摘要。
+        var subject = await GetSubject(request.HerbBaseSubjectId, cancellationToken);
 
-        var contact = CreateContact(request, customer);
+        var contact = CreateContact(request, subject);
 
-        await ApplyPrimaryContact(customer, contact, cancellationToken);
+        await ApplyPrimaryContact(subject, contact, cancellationToken);
 
         _dbContext.CrmContacts.Add(contact);
         
@@ -50,36 +50,36 @@ public class CreateCrmContactHandler : IRequestHandler<CreateCrmContactCommand, 
     }
 
     /// <summary>
-    /// 获取联系人所属客户。
+    /// 获取联系人所属的药材基地主体。
     /// </summary>
-    private async Task<CrmHerbBase> GetCustomer(Guid customerId, CancellationToken cancellationToken)
+    private async Task<CrmHerbBaseSubject> GetSubject(Guid herbBaseSubjectId, CancellationToken cancellationToken)
     {
-        var customer = await _dbContext.CrmHerbBases
+        var subject = await _dbContext.CrmHerbBaseSubjects
             .FirstOrDefaultAsync(
-                c => c.Id == customerId && !c.IsDeleted,
+                subject => subject.Id == herbBaseSubjectId,
                 cancellationToken);
 
-        if (customer == null)
+        if (subject == null)
         {
-            throw new BusinessException(404, "客户不存在");
+            throw new BusinessException(404, "药材基地主体不存在");
         }
 
-        return customer;
+        return subject;
     }
 
     /// <summary>
     /// 根据请求创建联系人实体。
     /// </summary>
-    private static CrmContact CreateContact(CreateCrmContactCommand command, CrmHerbBase customer)
+    private static CrmContact CreateContact(CreateCrmContactCommand command, CrmHerbBaseSubject subject)
     {
         var shouldBePrimary = command.Request.IsPrimary ||
             (
-                string.IsNullOrWhiteSpace(customer.PrimaryContactName) &&
-                string.IsNullOrWhiteSpace(customer.PrimaryContactPhone));
+                string.IsNullOrWhiteSpace(subject.PrimaryContactName) &&
+                string.IsNullOrWhiteSpace(subject.PrimaryContactPhone));
 
         return CrmContact.Create(
-            CustomerEntityType,
-            command.CustomerId,
+            HerbBaseSubjectEntityType,
+            command.HerbBaseSubjectId,
             command.Request.ContactName,
             command.Request.Phone,
             command.Request.PhoneType,
@@ -90,29 +90,29 @@ public class CreateCrmContactHandler : IRequestHandler<CreateCrmContactCommand, 
     }
 
     /// <summary>
-    /// 联系人为主联系人时同步客户主联系人摘要。
+    /// 联系人为主联系人时同步主体主联系人摘要。
     /// </summary>
-    private async Task ApplyPrimaryContact(CrmHerbBase customer, CrmContact contact, CancellationToken cancellationToken)
+    private async Task ApplyPrimaryContact(CrmHerbBaseSubject subject, CrmContact contact, CancellationToken cancellationToken)
     {
         if (!contact.IsPrimary)
         {
             return;
         }
 
-        await UnmarkSiblingPrimaryContacts(customer.Id, contact.Id, cancellationToken);
+        await UnmarkSiblingPrimaryContacts(subject.Id, contact.Id, cancellationToken);
         
-        customer.UpdatePrimaryContact(contact.ContactName, contact.Phone);
+        subject.UpdatePrimaryContact(contact.ContactName, contact.Phone);
     }
 
     /// <summary>
-    /// 取消同一客户下其他主联系人标记。
+    /// 取消同一主体下其他主联系人标记。
     /// </summary>
-    private async Task UnmarkSiblingPrimaryContacts(Guid customerId, Guid contactId, CancellationToken cancellationToken)
+    private async Task UnmarkSiblingPrimaryContacts(Guid herbBaseSubjectId, Guid contactId, CancellationToken cancellationToken)
     {
         var siblings = await _dbContext.CrmContacts
             .Where(c =>
-                c.EntityType == CustomerEntityType &&
-                c.EntityId == customerId &&
+                c.EntityType == HerbBaseSubjectEntityType &&
+                c.EntityId == herbBaseSubjectId &&
                 c.Id != contactId &&
                 c.IsPrimary)
             .ToListAsync(cancellationToken);

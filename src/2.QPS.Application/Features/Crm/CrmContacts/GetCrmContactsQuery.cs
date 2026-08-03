@@ -8,17 +8,17 @@ namespace QPS.Application.Features.Crm.CrmContacts;
 
 public class GetCrmContactsQuery : IRequest<List<CrmContactDto>>
 {
-    public Guid CustomerId { get; set; }
+    public Guid HerbBaseSubjectId { get; set; }
 }
 
 public class GetCrmContactsHandler : IRequestHandler<GetCrmContactsQuery, List<CrmContactDto>>
 {
-    private const string CustomerEntityType = CrmCodes.HerbBaseEntityType;
+    private const string HerbBaseSubjectEntityType = CrmCodes.HerbBaseSubjectEntityType;
 
     private readonly IDbContext _dbContext;
 
     /// <summary>
-    /// 查询客户联系人处理器。
+    /// 查询基地主体联系人处理器。
     /// </summary>
     public GetCrmContactsHandler(IDbContext dbContext)
     {
@@ -31,9 +31,9 @@ public class GetCrmContactsHandler : IRequestHandler<GetCrmContactsQuery, List<C
     public async Task<List<CrmContactDto>> Handle(GetCrmContactsQuery request, CancellationToken cancellationToken)
     {
         // 编排查询客户联系人用例：
-        // 按客户编号过滤、主联系人优先排序并映射 DTO。
+        // 按基地主体编号过滤、主联系人优先排序并映射 DTO。
         return await _dbContext.CrmContacts
-            .Where(c => c.EntityType == CustomerEntityType && c.EntityId == request.CustomerId)
+            .Where(c => c.EntityType == HerbBaseSubjectEntityType && c.EntityId == request.HerbBaseSubjectId)
             .OrderByDescending(c => c.IsPrimary)
             .ThenBy(c => c.CreatedAt)
             .Select(c => new CrmContactDto

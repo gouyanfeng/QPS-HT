@@ -22,6 +22,7 @@ public class AppDbContext : DbContext, IDbContext
     public DbSet<SystemErrorLog> SystemErrorLogs { get; set; }
 
     // CRM 模块
+    public DbSet<CrmHerbBaseSubject> CrmHerbBaseSubjects { get; set; }
     public DbSet<CrmHerbBase> CrmHerbBases { get; set; }
     public DbSet<CrmContact> CrmContacts { get; set; }
     public DbSet<CrmFollowRecord> CrmFollowRecords { get; set; }
@@ -50,6 +51,37 @@ public class AppDbContext : DbContext, IDbContext
             entity.HasOne(herbBase => herbBase.ParentHerbBase)
                 .WithMany(herbBase => herbBase.Children)
                 .HasForeignKey(herbBase => herbBase.ParentId);
+            entity.HasOne(herbBase => herbBase.HerbBaseSubject)
+                .WithMany(subject => subject.HerbBases)
+                .HasForeignKey(herbBase => herbBase.HerbBaseSubjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CrmHerbBaseSubject>(entity =>
+        {
+            entity.Property(subject => subject.SubjectName).HasMaxLength(200);
+            entity.Property(subject => subject.NormalizedSubjectName).HasMaxLength(500);
+            entity.Property(subject => subject.DisplayName).HasMaxLength(200);
+            entity.Property(subject => subject.SubjectType).HasMaxLength(32);
+            entity.Property(subject => subject.Status).HasMaxLength(32);
+            entity.Property(subject => subject.Grade).HasMaxLength(32);
+            entity.Property(subject => subject.PrimaryContactName).HasMaxLength(200);
+            entity.Property(subject => subject.PrimaryContactPhone).HasMaxLength(100);
+            entity.HasIndex(subject => subject.NormalizedSubjectName).IsUnique();
+            entity.HasIndex(subject => subject.DisplayName);
+            entity.HasIndex(subject => new { subject.SubjectType, subject.IsDeleted });
+        });
+
+        modelBuilder.Entity<CrmFollowRecord>(entity =>
+        {
+            entity.HasOne(record => record.HerbBaseSubject)
+                .WithMany(subject => subject.FollowRecords)
+                .HasForeignKey(record => record.HerbBaseSubjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(record => record.HerbBase)
+                .WithMany()
+                .HasForeignKey(record => record.HerbBaseId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<CrmBusinessEntityAttribute>(entity =>

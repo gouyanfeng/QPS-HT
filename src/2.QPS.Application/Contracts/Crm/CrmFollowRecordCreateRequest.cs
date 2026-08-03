@@ -2,6 +2,8 @@
 
 public class CrmFollowRecordCreateRequest
 {
+    public Guid? HerbBaseId { get; set; }
+
     public Guid? ContactId { get; set; }
 
     public string FollowType { get; set; } = "PHONE";

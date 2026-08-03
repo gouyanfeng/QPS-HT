@@ -16,6 +16,10 @@ public class CrmHerbBase : BaseEntity
     /// </summary>
     public Guid? ParentId { get; private set; }
 
+    public Guid? HerbBaseSubjectId { get; private set; }
+
+    public virtual CrmHerbBaseSubject? HerbBaseSubject { get; private set; }
+
     /// <summary>
     /// 基地名称，对应清洗线索名称，导入CRM使用。
     /// </summary>
@@ -121,11 +125,6 @@ public class CrmHerbBase : BaseEntity
     /// </summary>
     public virtual ICollection<CrmHerbBase> Children { get; private set; } = new List<CrmHerbBase>();
 
-    /// <summary>
-    /// 客户跟进记录集合。
-    /// </summary>
-    public virtual ICollection<CrmFollowRecord> FollowRecords { get; private set; } = new List<CrmFollowRecord>();
-
     private CrmHerbBase() { }
 
     private CrmHerbBase(
@@ -227,6 +226,14 @@ public class CrmHerbBase : BaseEntity
     public void SetParent(Guid? parentId)
     {
         ParentId = parentId;
+    }
+
+    /// <summary>
+    /// 绑定药材基地主体。
+    /// </summary>
+    public void SetHerbBaseSubject(Guid? herbBaseSubjectId)
+    {
+        HerbBaseSubjectId = herbBaseSubjectId;
     }
 
     public void AssignOwner(Guid? ownerUserId)

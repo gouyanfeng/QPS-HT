@@ -10,20 +10,20 @@ namespace QPS.Application.Features.Crm.CrmFollowRecords;
 
 public class CreateCrmFollowRecordCommand : IRequest<bool>
 {
-    public Guid CustomerId { get; set; }
+    public Guid HerbBaseSubjectId { get; set; }
 
     public CrmFollowRecordCreateRequest Request { get; set; } = null!;
 }
 
 public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecordCommand, bool>
 {
-    private const string CustomerEntityType = CrmCodes.HerbBaseEntityType;
+    private const string HerbBaseSubjectEntityType = CrmCodes.HerbBaseSubjectEntityType;
 
     private readonly IDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
 
     /// <summary>
-    /// 创建客户沟通记录处理器。
+    /// 创建基地主体沟通记录处理器。
     /// </summary>
     public CreateCrmFollowRecordHandler(IDbContext dbContext, ICurrentUserService currentUserService)
     {
@@ -37,18 +37,19 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
     public async Task<bool> Handle(CreateCrmFollowRecordCommand request, CancellationToken cancellationToken)
     {
         // 编排新增沟通记录用例：
-        // 校验沟通结果、确认客户与联系人、创建记录、同步客户跟进摘要。
+        // 校验沟通结果、确认主体与联系人、校验基地上下文、创建记录并同步主体跟进摘要。
         EnsureFollowResult(request.Request.FollowResult);
 
-        var customer = await GetCustomer(request.CustomerId, cancellationToken);
+        var subject = await GetSubject(request.HerbBaseSubjectId, cancellationToken);
 
-        await EnsureContactBelongsToCustomer(request, cancellationToken);
+        await EnsureContactBelongsToSubject(request, cancellationToken);
+        await EnsureHerbBaseBelongsToSubject(request, cancellationToken);
 
         var record = CreateFollowRecord(request);
 
         _dbContext.CrmFollowRecords.Add(record);
         
-        customer.UpdateFollowSummary(DateTime.Now, request.Request.FollowResult, request.Request.NextFollowAt);
+        subject.UpdateFollowSummary(DateTime.Now, request.Request.FollowResult, request.Request.NextFollowAt);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -67,25 +68,25 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
     }
 
     /// <summary>
-    /// 获取沟通记录所属客户。
+    /// 获取沟通记录所属的药材基地主体。
     /// </summary>
-    private async Task<CrmHerbBase> GetCustomer(Guid customerId, CancellationToken cancellationToken)
+    private async Task<CrmHerbBaseSubject> GetSubject(Guid herbBaseSubjectId, CancellationToken cancellationToken)
     {
-        var customer = await _dbContext.CrmHerbBases
-            .FirstOrDefaultAsync(c => c.Id == customerId && !c.IsDeleted, cancellationToken);
+        var subject = await _dbContext.CrmHerbBaseSubjects
+            .FirstOrDefaultAsync(subject => subject.Id == herbBaseSubjectId, cancellationToken);
 
-        if (customer == null)
+        if (subject == null)
         {
-            throw new BusinessException(404, "客户不存在");
+            throw new BusinessException(404, "药材基地主体不存在");
         }
 
-        return customer;
+        return subject;
     }
 
     /// <summary>
-    /// 确认联系人属于当前客户。
+    /// 确认联系人属于当前基地主体。
     /// </summary>
-    private async Task EnsureContactBelongsToCustomer(CreateCrmFollowRecordCommand command, CancellationToken cancellationToken)
+    private async Task EnsureContactBelongsToSubject(CreateCrmFollowRecordCommand command, CancellationToken cancellationToken)
     {
         if (!command.Request.ContactId.HasValue)
         {
@@ -96,10 +97,33 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
             .FirstOrDefaultAsync(c => c.Id == command.Request.ContactId.Value, cancellationToken);
 
         if (contact == null ||
-            contact.EntityType != CustomerEntityType ||
-            contact.EntityId != command.CustomerId)
+            contact.EntityType != HerbBaseSubjectEntityType ||
+            contact.EntityId != command.HerbBaseSubjectId)
         {
             throw new BusinessException(404, "联系人不存在");
+        }
+    }
+
+    /// <summary>
+    /// 校验可选的基地上下文归属于当前主体。
+    /// </summary>
+    private async Task EnsureHerbBaseBelongsToSubject(
+        CreateCrmFollowRecordCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (!command.Request.HerbBaseId.HasValue)
+        {
+            return;
+        }
+
+        var belongsToSubject = await _dbContext.CrmHerbBases.AnyAsync(
+            herbBase => herbBase.Id == command.Request.HerbBaseId.Value &&
+                        herbBase.HerbBaseSubjectId == command.HerbBaseSubjectId,
+            cancellationToken);
+
+        if (!belongsToSubject)
+        {
+            throw new BusinessException(400, "基地不属于当前主体");
         }
     }
 
@@ -111,7 +135,8 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
         var operatorUserId = GetOperatorUserId();
 
         return CrmFollowRecord.Create(
-            command.CustomerId,
+            command.HerbBaseSubjectId,
+            command.Request.HerbBaseId,
             command.Request.ContactId,
             command.Request.FollowType,
             command.Request.FollowResult,

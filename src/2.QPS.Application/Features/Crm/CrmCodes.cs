@@ -3,6 +3,7 @@ namespace QPS.Application.Features.Crm;
 public static class CrmCodes
 {
     public const string HerbBaseEntityType = "CRM_HERB_BASE";
+    public const string HerbBaseSubjectEntityType = "CRM_HERB_BASE_SUBJECT";
     public const string VendorEntityType = "CRM_VENDOR";
     public const string MainProductAttributeCode = "CRM_MAIN_PRODUCT";
 
