@@ -66,6 +66,7 @@ public class GetCrmHerbBaseHandler : IRequestHandler<GetCrmHerbBaseQuery, CrmHer
                 SubjectName = customer.SubjectName,
                 Grade = customer.Grade,
                 Score = customer.Score,
+                Scale = customer.Scale,
                 Province = customer.Province,
                 City = customer.City,
                 Area = customer.Area,

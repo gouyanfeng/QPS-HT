@@ -43,6 +43,11 @@ public class CrmHerbBaseDto
     public int Score { get; set; }
 
     /// <summary>
+    /// 种植规模，单位：亩。
+    /// </summary>
+    public decimal? Scale { get; set; }
+
+    /// <summary>
     /// 省份。
     /// </summary>
     public string Province { get; set; } = string.Empty;

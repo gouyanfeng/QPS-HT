@@ -21,6 +21,7 @@ public static class TestDataInitializer
         EnsureCrmHerbBasesBaseNameColumn(dbContext);
         EnsureCrmHerbBasesSourceIdColumn(dbContext);
         EnsureCrmHerbBasesSubjectNameColumn(dbContext);
+        EnsureCrmHerbBasesScaleColumn(dbContext);
         InitializeDataDictionaries(dbContext);
         InitializeCrm(dbContext, permissions);
         NormalizeCrmBusinessValues(dbContext);
@@ -841,6 +842,17 @@ public static class TestDataInitializer
             """);
     }
 
+    private static void EnsureCrmHerbBasesScaleColumn(AppDbContext dbContext)
+    {
+        dbContext.Database.ExecuteSqlRaw("""
+            IF OBJECT_ID(N'[CrmHerbBases]', N'U') IS NOT NULL
+                AND COL_LENGTH(N'dbo.CrmHerbBases', N'Scale') IS NULL
+            BEGIN
+                ALTER TABLE [CrmHerbBases] ADD [Scale] decimal(18,2) NULL;
+            END;
+            """);
+    }
+
     private static void InitializeDataDictionaries(AppDbContext dbContext)
     {
         EnsureDefaultDataDictionaries(dbContext);
@@ -909,7 +921,8 @@ public static class TestDataInitializer
                     new DataDictionaryItemSeed("CRM_SOURCE_PLATFORM_BAIDU_MAP", "百度地图", "BAIDU_MAP", "百度地图线索", 1, "crm_source_platform_baidu_map"),
                     new DataDictionaryItemSeed("CRM_SOURCE_PLATFORM_MANUAL", "手工录入", "MANUAL", "人工新增药材基地", 2, "crm_source_platform_manual"),
                     new DataDictionaryItemSeed("CRM_SOURCE_PLATFORM_EXCEL", "Excel导入", "EXCEL", "表格导入药材基地", 3, "crm_source_platform_excel"),
-                    new DataDictionaryItemSeed("CRM_SOURCE_PLATFORM_OTHER", "其他", "OTHER", "其他来源", 4, "crm_source_platform_other")
+                    new DataDictionaryItemSeed("CRM_SOURCE_PLATFORM_OTHER", "其他", "OTHER", "其他来源", 4, "crm_source_platform_other"),
+                    new DataDictionaryItemSeed("CRM_SOURCE_PLATFORM_GOV_HERB_BASE", "政府网站", "GOV_HERB_BASE", "政府网站来源", 5, "crm_source_platform_gov_herb_base")
                 },
                 "crm_source_platform"),
             new(

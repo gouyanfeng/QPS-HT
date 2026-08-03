@@ -188,6 +188,7 @@ public class GetCrmHerbBasesHandler : IRequestHandler<GetCrmHerbBasesQuery, Pagi
                 SubjectName = c.SubjectName,
                 Grade = c.Grade,
                 Score = c.Score,
+                Scale = c.Scale,
                 Province = c.Province,
                 City = c.City,
                 Area = c.Area,

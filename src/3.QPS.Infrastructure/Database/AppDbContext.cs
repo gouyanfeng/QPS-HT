@@ -44,6 +44,7 @@ public class AppDbContext : DbContext, IDbContext
             entity.Ignore(herbBase => herbBase.HerbBaseName);
             entity.Property(herbBase => herbBase.BaseName).HasMaxLength(200);
             entity.Property(herbBase => herbBase.SubjectName).HasMaxLength(200);
+            entity.Property(herbBase => herbBase.Scale).HasPrecision(18, 2);
             entity.Property(herbBase => herbBase.Lat).HasPrecision(10, 6);
             entity.Property(herbBase => herbBase.Lng).HasPrecision(10, 6);
             entity.HasOne(herbBase => herbBase.ParentHerbBase)

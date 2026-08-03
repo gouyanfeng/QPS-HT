@@ -12,8 +12,10 @@ public class CrmHerbBaseCommandTests
     [Fact]
     public async Task Create_ShouldNotPersistMainProductAttributes()
     {
-        await using var dbContext = TestDbContextFactory.Create();
-        var handler = new CreateCrmHerbBaseHandler(dbContext);
+        var operatorUserId = Guid.NewGuid();
+        var ownerUserId = Guid.NewGuid();
+        await using var dbContext = TestDbContextFactory.Create(new TestCurrentUserService(operatorUserId.ToString()));
+        var handler = new CreateCrmHerbBaseHandler(dbContext, new TestCurrentUserService(operatorUserId.ToString()));
 
         var result = await handler.Handle(new CreateCrmHerbBaseCommand
         {
@@ -29,6 +31,7 @@ public class CrmHerbBaseCommandTests
                 Address = "Test address",
                 SourcePlatform = "MANUAL",
                 SourceId = 3001,
+                OwnerUserId = ownerUserId,
                 PrimaryContactName = "Primary Contact",
                 PrimaryContactPhone = "13900000000",
                 Remark = "Created by unit test"
@@ -41,18 +44,25 @@ public class CrmHerbBaseCommandTests
             .OrderBy(attribute => attribute.SortOrder)
             .Select(attribute => attribute.AttributeValue)
             .ToListAsync();
+        var transferRecord = await dbContext.CrmTransferRecords.SingleAsync();
 
         Assert.True(result);
         Assert.Empty(attributes);
         Assert.Equal("Primary Contact", customer.PrimaryContactName);
         Assert.Equal("13900000000", customer.PrimaryContactPhone);
+        Assert.Equal("CRM_HERB_BASE", transferRecord.EntityType);
+        Assert.Equal(customer.Id, transferRecord.EntityId);
+        Assert.Null(transferRecord.FromOwnerUserId);
+        Assert.Equal(ownerUserId, transferRecord.ToOwnerUserId);
+        Assert.Equal(operatorUserId, transferRecord.OperatorUserId);
+        Assert.Equal("Created by unit test", transferRecord.Remark);
     }
 
     [Fact]
     public async Task GetList_ShouldFilterByBusinessEntityMainProductAttributes()
     {
         await using var dbContext = TestDbContextFactory.Create();
-        var createHandler = new CreateCrmHerbBaseHandler(dbContext);
+        var createHandler = new CreateCrmHerbBaseHandler(dbContext, new TestCurrentUserService());
         await createHandler.Handle(new CreateCrmHerbBaseCommand
         {
             Request = CreateCustomerRequest("Dang Gui Customer")

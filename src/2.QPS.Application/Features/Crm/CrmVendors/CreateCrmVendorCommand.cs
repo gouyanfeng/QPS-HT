@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.Crm;
 using QPS.Domain.Exceptions;
@@ -15,13 +16,15 @@ public class CreateCrmVendorCommand : IRequest<bool>
 public class CreateCrmVendorHandler : IRequestHandler<CreateCrmVendorCommand, bool>
 {
     private readonly IDbContext _dbContext;
+    private readonly ICurrentUserService _currentUserService;
 
     /// <summary>
     /// 创建厂商处理器。
     /// </summary>
-    public CreateCrmVendorHandler(IDbContext dbContext)
+    public CreateCrmVendorHandler(IDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -30,7 +33,7 @@ public class CreateCrmVendorHandler : IRequestHandler<CreateCrmVendorCommand, bo
     public async Task<bool> Handle(CreateCrmVendorCommand request, CancellationToken cancellationToken)
     {
         // 编排创建厂商用例：
-        // 规范化名称、校验重复、确认负责人、创建并保存厂商。
+        // 规范化名称、校验重复、确认负责人、创建厂商和默认流转记录。
         var vendorName = NormalizeVendorDisplayName(request.Request.VendorName);
 
         var normalizedVendorName = CrmVendorRules.NormalizeVendorName(vendorName);
@@ -42,6 +45,13 @@ public class CreateCrmVendorHandler : IRequestHandler<CreateCrmVendorCommand, bo
         var vendor = CreateVendor(request.Request, vendorName, normalizedVendorName);
 
         _dbContext.CrmVendors.Add(vendor);
+        _dbContext.CrmTransferRecords.Add(CrmTransferRecord.Create(
+            CrmCodes.VendorEntityType,
+            vendor.Id,
+            null,
+            request.Request.OwnerUserId,
+            GetOperatorUserId(),
+            request.Request.Remark.Trim()));
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -115,5 +125,12 @@ public class CreateCrmVendorHandler : IRequestHandler<CreateCrmVendorCommand, bo
             request.LatestPurchasePlanName.Trim(),
             request.Remark.Trim(),
             request.OwnerUserId);
+    }
+
+    private Guid? GetOperatorUserId()
+    {
+        return Guid.TryParse(_currentUserService.UserId, out var operatorUserId)
+            ? operatorUserId
+            : null;
     }
 }

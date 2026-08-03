@@ -42,6 +42,11 @@ public class CrmHerbBase : BaseEntity
     public int Score { get; private set; }
 
     /// <summary>
+    /// 种植规模，单位：亩。
+    /// </summary>
+    public decimal? Scale { get; private set; }
+
+    /// <summary>
     /// 省份。
     /// </summary>
     public string Province { get; private set; } = string.Empty;

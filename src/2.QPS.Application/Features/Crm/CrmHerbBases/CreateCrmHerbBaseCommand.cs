@@ -1,5 +1,6 @@
 using MediatR;
 using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.Crm;
 
@@ -19,13 +20,15 @@ public class CreateCrmHerbBaseCommand : IRequest<bool>
 public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand, bool>
 {
     private readonly IDbContext _dbContext;
+    private readonly ICurrentUserService _currentUserService;
 
     /// <summary>
     /// 创建药材基地处理器。
     /// </summary>
-    public CreateCrmHerbBaseHandler(IDbContext dbContext)
+    public CreateCrmHerbBaseHandler(IDbContext dbContext, ICurrentUserService currentUserService)
     {
         _dbContext = dbContext;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -34,12 +37,19 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
     public async Task<bool> Handle(CreateCrmHerbBaseCommand request, CancellationToken cancellationToken)
     {
         // 编排创建药材基地用例：
-        // 创建客户实体、同步主联系人摘要、保存。
+        // 创建客户实体、同步主联系人摘要、保存默认流转记录。
         var customer = CreateCustomer(request.Request);
 
         ApplyPrimaryContact(customer, request.Request);
 
         _dbContext.CrmHerbBases.Add(customer);
+        _dbContext.CrmTransferRecords.Add(CrmTransferRecord.Create(
+            CrmCodes.HerbBaseEntityType,
+            customer.Id,
+            null,
+            request.Request.OwnerUserId,
+            GetOperatorUserId(),
+            request.Request.Remark.Trim()));
         
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -95,6 +105,13 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
         customer.UpdatePrimaryContact(
             request.PrimaryContactName ?? string.Empty,
             request.PrimaryContactPhone ?? string.Empty);
+    }
+
+    private Guid? GetOperatorUserId()
+    {
+        return Guid.TryParse(_currentUserService.UserId, out var operatorUserId)
+            ? operatorUserId
+            : null;
     }
 }
 
