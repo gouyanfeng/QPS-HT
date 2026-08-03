@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
@@ -37,19 +38,28 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
     public async Task<bool> Handle(CreateCrmHerbBaseCommand request, CancellationToken cancellationToken)
     {
         // 编排创建药材基地用例：
-        // 创建客户实体、同步主联系人摘要、保存默认流转记录。
-        var customer = CreateCustomer(request.Request);
+        // 创建主体和基地、同步主体主联系人摘要、保存默认流转记录。
+        var herbBase = CreateHerbBase(request.Request);
+        var (subject, isNewSubject) = await ResolveSubjectAsync(request.Request, herbBase.BaseName, cancellationToken);
+        herbBase.SetHerbBaseSubject(subject.Id);
 
-        ApplyPrimaryContact(customer, request.Request);
+        if (isNewSubject)
+        {
+            ApplyPrimaryContact(subject, request.Request);
+            _dbContext.CrmHerbBaseSubjects.Add(subject);
+        }
 
-        _dbContext.CrmHerbBases.Add(customer);
-        _dbContext.CrmTransferRecords.Add(CrmTransferRecord.Create(
-            CrmCodes.HerbBaseEntityType,
-            customer.Id,
-            null,
-            request.Request.OwnerUserId,
-            GetOperatorUserId(),
-            request.Request.Remark.Trim()));
+        _dbContext.CrmHerbBases.Add(herbBase);
+        if (isNewSubject)
+        {
+            _dbContext.CrmTransferRecords.Add(CrmTransferRecord.Create(
+                CrmCodes.HerbBaseSubjectEntityType,
+                subject.Id,
+                null,
+                request.Request.OwnerUserId,
+                GetOperatorUserId(),
+                request.Request.Remark.Trim()));
+        }
         
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -59,7 +69,7 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
     /// <summary>
     /// 根据请求创建药材基地实体。
     /// </summary>
-    private static CrmHerbBase CreateCustomer(CrmHerbBaseCreateRequest request)
+    private static CrmHerbBase CreateHerbBase(CrmHerbBaseCreateRequest request)
     {
         var baseName = GetBaseName(request.BaseName, request.HerbBaseName);
 
@@ -82,6 +92,45 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
     }
 
     /// <summary>
+    /// 根据基地信息创建或承接基地主体。
+    /// </summary>
+    private static CrmHerbBaseSubject CreateSubject(CrmHerbBaseCreateRequest request, string baseName)
+    {
+        var hasSubjectName = !string.IsNullOrWhiteSpace(request.SubjectName);
+        return CrmHerbBaseSubject.Create(
+            request.SubjectName,
+            baseName,
+            hasSubjectName ? "UNKNOWN" : "BASE_ONLY",
+            request.OwnerUserId,
+            CrmCodes.Status.Pending,
+            request.Grade,
+            request.Score,
+            request.Remark);
+    }
+
+    /// <summary>
+    /// 有主体名称时复用现有主体；没有主体名称时为基地创建独立主体。
+    /// </summary>
+    private async Task<(CrmHerbBaseSubject Subject, bool IsNew)> ResolveSubjectAsync(
+        CrmHerbBaseCreateRequest request,
+        string baseName,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.SubjectName))
+        {
+            return (CreateSubject(request, baseName), true);
+        }
+
+        var normalizedSubjectName = request.SubjectName.Trim().ToUpperInvariant();
+        var existingSubject = await _dbContext.CrmHerbBaseSubjects
+            .FirstOrDefaultAsync(subject => subject.NormalizedSubjectName == normalizedSubjectName, cancellationToken);
+
+        return existingSubject == null
+            ? (CreateSubject(request, baseName), true)
+            : (existingSubject, false);
+    }
+
+    /// <summary>
     /// 取兼容旧字段后的基地名称。
     /// </summary>
     private static string GetBaseName(string? baseName, string herbBaseName)
@@ -92,9 +141,9 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
     }
 
     /// <summary>
-    /// 请求带主联系人时同步客户主联系人摘要。
+    /// 请求带主联系人时同步主体主联系人摘要。
     /// </summary>
-    private static void ApplyPrimaryContact(CrmHerbBase customer, CrmHerbBaseCreateRequest request)
+    private static void ApplyPrimaryContact(CrmHerbBaseSubject subject, CrmHerbBaseCreateRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.PrimaryContactName) &&
             string.IsNullOrWhiteSpace(request.PrimaryContactPhone))
@@ -102,7 +151,7 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
             return;
         }
 
-        customer.UpdatePrimaryContact(
+        subject.UpdatePrimaryContact(
             request.PrimaryContactName ?? string.Empty,
             request.PrimaryContactPhone ?? string.Empty);
     }
