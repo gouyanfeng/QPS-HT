@@ -87,7 +87,6 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
             request.SourceId,
             request.OwnerUserId,
             request.Remark,
-            request.ParentId,
             request.SubjectName);
     }
 

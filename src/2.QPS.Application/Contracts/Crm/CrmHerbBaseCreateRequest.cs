@@ -6,11 +6,6 @@ namespace QPS.Application.Contracts.Crm;
 public class CrmHerbBaseCreateRequest
 {
     /// <summary>
-    /// 上级客户ID，用于维护客户层级关系。
-    /// </summary>
-    public Guid? ParentId { get; set; }
-
-    /// <summary>
     /// 基地名称，对应清洗线索名称，导入CRM使用。
     /// </summary>
     public string BaseName { get; set; } = string.Empty;

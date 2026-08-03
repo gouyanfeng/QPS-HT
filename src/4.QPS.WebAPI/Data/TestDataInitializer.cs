@@ -39,20 +39,6 @@ public static class TestDataInitializer
             END;
 
             IF OBJECT_ID(N'[CrmHerbBases]', N'U') IS NOT NULL
-                AND COL_LENGTH(N'dbo.CrmHerbBases', N'ParentId') IS NULL
-                AND COL_LENGTH(N'dbo.CrmHerbBases', N'ParentHerbBaseId') IS NOT NULL
-            BEGIN
-                EXEC sp_rename N'dbo.CrmHerbBases.ParentHerbBaseId', N'ParentId', N'COLUMN';
-            END;
-
-            IF OBJECT_ID(N'[CrmHerbBases]', N'U') IS NOT NULL
-                AND COL_LENGTH(N'dbo.CrmHerbBases', N'ParentId') IS NULL
-                AND COL_LENGTH(N'dbo.CrmHerbBases', N'ParentCustomerId') IS NOT NULL
-            BEGIN
-                EXEC sp_rename N'dbo.CrmHerbBases.ParentCustomerId', N'ParentId', N'COLUMN';
-            END;
-
-            IF OBJECT_ID(N'[CrmHerbBases]', N'U') IS NOT NULL
                 AND COL_LENGTH(N'dbo.CrmHerbBases', N'BaseName') IS NULL
                 AND COL_LENGTH(N'dbo.CrmHerbBases', N'CustomerName') IS NOT NULL
             BEGIN
@@ -1226,8 +1212,7 @@ public static class TestDataInitializer
                 sourcePlatform: "BAIDU_MAP",
                 sourceId: 2001,
                 ownerUserId: null,
-                remark: "A类合作社，黄芪种植规模较大，需要持续跟进收购意向。",
-                parentId: null
+                remark: "A类合作社，黄芪种植规模较大，需要持续跟进收购意向。"
             ),
             CrmHerbBase.Create(
                 herbBaseName: "岷县当归基地",
@@ -1242,8 +1227,7 @@ public static class TestDataInitializer
                 sourcePlatform: "BAIDU_MAP",
                 sourceId: 2002,
                 ownerUserId: null,
-                remark: "基地电话有效，负责人上午更容易接听。",
-                parentId: null
+                remark: "基地电话有效，负责人上午更容易接听。"
             ),
             CrmHerbBase.Create(
                 herbBaseName: "亳州药材流通商",
@@ -1258,8 +1242,7 @@ public static class TestDataInitializer
                 sourcePlatform: "BAIDU_MAP",
                 sourceId: 2003,
                 ownerUserId: null,
-                remark: "流通商多品类经营，需确认黄芪和当归近期采购计划。",
-                parentId: null
+                remark: "流通商多品类经营，需确认黄芪和当归近期采购计划。"
             )
         };
 

@@ -11,11 +11,6 @@ public class CrmHerbBase : BaseEntity
     private const string FollowingUpStatus = "FOLLOWING";
     private const string InterestedStatus = "INTERESTED";
 
-    /// <summary>
-    /// 上级客户ID，用于维护客户层级关系。
-    /// </summary>
-    public Guid? ParentId { get; private set; }
-
     public Guid? HerbBaseSubjectId { get; private set; }
 
     public virtual CrmHerbBaseSubject? HerbBaseSubject { get; private set; }
@@ -115,16 +110,6 @@ public class CrmHerbBase : BaseEntity
 
     public DateTime? NextFollowAt { get; private set; }
 
-    /// <summary>
-    /// 上级客户。
-    /// </summary>
-    public virtual CrmHerbBase? ParentHerbBase { get; private set; }
-
-    /// <summary>
-    /// 下级客户集合。
-    /// </summary>
-    public virtual ICollection<CrmHerbBase> Children { get; private set; } = new List<CrmHerbBase>();
-
     private CrmHerbBase() { }
 
     private CrmHerbBase(
@@ -141,7 +126,6 @@ public class CrmHerbBase : BaseEntity
         long? sourceId,
         Guid? ownerUserId,
         string remark,
-        Guid? parentId,
         string subjectName)
     {
         BaseName = herbBaseName;
@@ -158,7 +142,6 @@ public class CrmHerbBase : BaseEntity
         SourceId = sourceId;
         OwnerUserId = ownerUserId;
         Remark = remark;
-        ParentId = parentId;
         Status = PendingContactStatus;
     }
 
@@ -176,7 +159,6 @@ public class CrmHerbBase : BaseEntity
         long? sourceId,
         Guid? ownerUserId,
         string remark,
-        Guid? parentId = null,
         string subjectName = "")
     {
         return new CrmHerbBase(
@@ -193,7 +175,6 @@ public class CrmHerbBase : BaseEntity
             sourceId,
             ownerUserId,
             remark,
-            parentId,
             subjectName);
     }
 
@@ -221,11 +202,6 @@ public class CrmHerbBase : BaseEntity
         Lat = lat;
         Lng = lng;
         Remark = remark;
-    }
-
-    public void SetParent(Guid? parentId)
-    {
-        ParentId = parentId;
     }
 
     /// <summary>

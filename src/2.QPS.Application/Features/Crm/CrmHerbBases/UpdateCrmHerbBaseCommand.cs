@@ -42,8 +42,6 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
 
         UpdateBasicInfo(customer, request.Request);
 
-        ApplyParent(customer, request.Request.ParentId);
-
         ApplyOwner(customer, request.Request.OwnerUserId);
 
         ApplySource(customer, request.Request);
@@ -102,17 +100,6 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
         return string.IsNullOrWhiteSpace(baseName)
             ? herbBaseName
             : baseName;
-    }
-
-    /// <summary>
-    /// 上级客户变化时更新上级客户。
-    /// </summary>
-    private static void ApplyParent(CrmHerbBase customer, Guid? parentId)
-    {
-        if (customer.ParentId != parentId)
-        {
-            customer.SetParent(parentId);
-        }
     }
 
     /// <summary>

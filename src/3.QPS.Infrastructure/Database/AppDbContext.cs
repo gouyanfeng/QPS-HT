@@ -48,9 +48,6 @@ public class AppDbContext : DbContext, IDbContext
             entity.Property(herbBase => herbBase.Scale).HasPrecision(18, 2);
             entity.Property(herbBase => herbBase.Lat).HasPrecision(10, 6);
             entity.Property(herbBase => herbBase.Lng).HasPrecision(10, 6);
-            entity.HasOne(herbBase => herbBase.ParentHerbBase)
-                .WithMany(herbBase => herbBase.Children)
-                .HasForeignKey(herbBase => herbBase.ParentId);
             entity.HasOne(herbBase => herbBase.HerbBaseSubject)
                 .WithMany(subject => subject.HerbBases)
                 .HasForeignKey(herbBase => herbBase.HerbBaseSubjectId)

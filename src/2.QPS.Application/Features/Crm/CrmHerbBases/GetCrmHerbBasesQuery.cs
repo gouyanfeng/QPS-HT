@@ -182,7 +182,6 @@ public class GetCrmHerbBasesHandler : IRequestHandler<GetCrmHerbBasesQuery, Pagi
             select new CrmHerbBaseDto
             {
                 Id = c.Id,
-                ParentId = c.ParentId,
                 BaseName = c.BaseName,
                 HerbBaseName = c.BaseName,
                 SubjectName = c.SubjectName,

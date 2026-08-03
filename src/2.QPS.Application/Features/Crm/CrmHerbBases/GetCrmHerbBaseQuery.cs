@@ -60,7 +60,6 @@ public class GetCrmHerbBaseHandler : IRequestHandler<GetCrmHerbBaseQuery, CrmHer
             select new CrmHerbBaseDto
             {
                 Id = customer.Id,
-                ParentId = customer.ParentId,
                 BaseName = customer.BaseName,
                 HerbBaseName = customer.BaseName,
                 SubjectName = customer.SubjectName,
