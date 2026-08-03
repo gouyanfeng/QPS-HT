@@ -36,6 +36,13 @@ public class CrmHerbBaseController : ControllerBase
         return Ok(await _mediator.Send(new GetCrmHerbBaseSubjectQuery { Id = id }));
     }
 
+    [HttpPatch("/api/admin/crm/herb-base-subjects/assign-owner")]
+    public async Task<ActionResult<bool>> AssignHerbBaseSubjectOwner(
+        [FromBody] CrmHerbBaseSubjectAssignOwnerRequest request)
+    {
+        return Ok(await _mediator.Send(new AssignCrmHerbBaseSubjectOwnerCommand { Request = request }));
+    }
+
     /// <summary>
     /// 获取药材基地列表
     /// </summary>
