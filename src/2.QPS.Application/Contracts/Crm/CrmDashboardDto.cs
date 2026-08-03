@@ -3,7 +3,7 @@ namespace QPS.Application.Contracts.Crm;
 public class CrmDashboardDto
 {
     public CrmDashboardMetricsDto Metrics { get; set; } = new();
-    public List<CrmDashboardFollowCustomerDto> TodayFollowCustomers { get; set; } = new();
+    public List<CrmDashboardFollowSubjectDto> TodayFollowSubjects { get; set; } = new();
     public List<CrmDashboardRecentFollowRecordDto> RecentFollowRecords { get; set; } = new();
     public List<CrmDashboardChartItemDto> FollowFunnel { get; set; } = new();
     public List<CrmDashboardChartItemDto> MainProductDistribution { get; set; } = new();
@@ -14,20 +14,17 @@ public class CrmDashboardMetricsDto
 {
     public int TodayFollowCount { get; set; }
     public int OverdueFollowCount { get; set; }
-    public int MyCustomerCount { get; set; }
-    public int HighIntentCustomerCount { get; set; }
+    public int MySubjectCount { get; set; }
+    public int HighIntentSubjectCount { get; set; }
 }
 
-public class CrmDashboardFollowCustomerDto
+public class CrmDashboardFollowSubjectDto
 {
     public Guid Id { get; set; }
-    public string BaseName { get; set; } = string.Empty;
-    public string SubjectName { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
     public List<string> MainProducts { get; set; } = new();
     public string Grade { get; set; } = string.Empty;
-    public string Province { get; set; } = string.Empty;
-    public string City { get; set; } = string.Empty;
-    public string Area { get; set; } = string.Empty;
+    public List<string> Regions { get; set; } = new();
     public string PrimaryContactName { get; set; } = string.Empty;
     public string PrimaryContactPhone { get; set; } = string.Empty;
     public string LastFollowResult { get; set; } = string.Empty;
@@ -37,8 +34,8 @@ public class CrmDashboardFollowCustomerDto
 public class CrmDashboardRecentFollowRecordDto
 {
     public Guid Id { get; set; }
-    public Guid CustomerId { get; set; }
-    public string BaseName { get; set; } = string.Empty;
+    public Guid HerbBaseSubjectId { get; set; }
+    public string SubjectName { get; set; } = string.Empty;
     public string FollowType { get; set; } = string.Empty;
     public string FollowResult { get; set; } = string.Empty;
     public string IntentLevel { get; set; } = string.Empty;

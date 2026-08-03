@@ -32,52 +32,48 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
         var todayStart = now.Date;
         var tomorrowStart = todayStart.AddDays(1);
         var trendStart = todayStart.AddDays(-6);
-        var myCustomers = _dbContext.CrmHerbBases
-            .Where(customer => !customer.IsDeleted && customer.OwnerUserId == ownerUserId);
-        var activeCustomers = myCustomers.Where(customer => !ClosedStatuses.Contains(customer.Status));
+        var mySubjects = _dbContext.CrmHerbBaseSubjects
+            .Where(subject => !subject.IsDeleted && subject.OwnerUserId == ownerUserId);
+        var activeSubjects = mySubjects.Where(subject => !ClosedStatuses.Contains(subject.Status));
 
-        var todayFollowCount = await activeCustomers.CountAsync(
-            customer => customer.NextFollowAt >= todayStart && customer.NextFollowAt < tomorrowStart,
+        var todayFollowCount = await activeSubjects.CountAsync(
+            subject => subject.NextFollowAt >= todayStart && subject.NextFollowAt < tomorrowStart,
             cancellationToken);
-        var overdueFollowCount = await activeCustomers.CountAsync(
-            customer => customer.NextFollowAt.HasValue && customer.NextFollowAt.Value < now,
+        var overdueFollowCount = await activeSubjects.CountAsync(
+            subject => subject.NextFollowAt.HasValue && subject.NextFollowAt.Value < now,
             cancellationToken);
-        var myCustomerCount = await myCustomers.CountAsync(cancellationToken);
-        var highIntentCustomerCount = await activeCustomers.CountAsync(
-            customer => customer.Status == CrmCodes.Status.Interested, cancellationToken);
+        var mySubjectCount = await mySubjects.CountAsync(cancellationToken);
+        var highIntentSubjectCount = await activeSubjects.CountAsync(
+            subject => subject.Status == CrmCodes.Status.Interested, cancellationToken);
 
-        var todayFollowCustomers = await activeCustomers
-            .Where(customer => customer.NextFollowAt.HasValue && customer.NextFollowAt.Value < tomorrowStart)
-            .OrderBy(customer => customer.NextFollowAt >= now)
-            .ThenByDescending(customer => customer.Status == CrmCodes.Status.Interested)
-            .ThenBy(customer => customer.NextFollowAt)
+        var todayFollowSubjects = await activeSubjects
+            .Where(subject => subject.NextFollowAt.HasValue && subject.NextFollowAt.Value < tomorrowStart)
+            .OrderBy(subject => subject.NextFollowAt >= now)
+            .ThenByDescending(subject => subject.Status == CrmCodes.Status.Interested)
+            .ThenBy(subject => subject.NextFollowAt)
             .Take(10)
-            .Select(customer => new CrmDashboardFollowCustomerDto
+            .Select(subject => new CrmDashboardFollowSubjectDto
             {
-                Id = customer.Id,
-                BaseName = customer.BaseName,
-                SubjectName = customer.SubjectName,
-                Grade = customer.Grade,
-                Province = customer.Province,
-                City = customer.City,
-                Area = customer.Area,
-                PrimaryContactName = customer.PrimaryContactName,
-                PrimaryContactPhone = customer.PrimaryContactPhone,
-                LastFollowResult = customer.LastFollowResult,
-                NextFollowAt = customer.NextFollowAt
+                Id = subject.Id,
+                DisplayName = subject.DisplayName ?? string.Empty,
+                Grade = subject.Grade ?? string.Empty,
+                PrimaryContactName = subject.PrimaryContactName ?? string.Empty,
+                PrimaryContactPhone = subject.PrimaryContactPhone ?? string.Empty,
+                LastFollowResult = subject.LastFollowResult ?? string.Empty,
+                NextFollowAt = subject.NextFollowAt
             })
             .ToListAsync(cancellationToken);
 
         var recentFollowRecords = await (
                 from record in _dbContext.CrmFollowRecords
-                join customer in myCustomers on record.HerbBaseId equals customer.Id
+                join subject in mySubjects on record.HerbBaseSubjectId equals subject.Id
                 where !record.IsDeleted
                 orderby record.CreatedAt descending
                 select new CrmDashboardRecentFollowRecordDto
                 {
                     Id = record.Id,
-                    CustomerId = customer.Id,
-                    BaseName = customer.BaseName,
+                    HerbBaseSubjectId = subject.Id,
+                    SubjectName = subject.DisplayName ?? string.Empty,
                     FollowType = record.FollowType,
                     FollowResult = record.FollowResult,
                     IntentLevel = record.IntentLevel,
@@ -96,8 +92,8 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
             new { Code = CrmCodes.Status.Deal, Name = "成交" },
             new { Code = CrmCodes.Status.Lost, Name = "流失" }
         };
-        var statusCounts = await myCustomers
-            .GroupBy(customer => customer.Status)
+        var statusCounts = await mySubjects
+            .GroupBy(subject => subject.Status)
             .Select(group => new { Status = group.Key, Count = group.Count() })
             .ToListAsync(cancellationToken);
         var followFunnel = funnelStatuses
@@ -114,7 +110,10 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
                 !attribute.IsDeleted &&
                 attribute.EntityType == CrmCodes.HerbBaseEntityType &&
                 attribute.AttributeCode == CrmCodes.MainProductAttributeCode &&
-                myCustomers.Select(customer => customer.Id).Contains(attribute.EntityId))
+                _dbContext.CrmHerbBases
+                    .Where(herbBase => herbBase.HerbBaseSubjectId.HasValue && mySubjects.Select(subject => subject.Id).Contains(herbBase.HerbBaseSubjectId.Value))
+                    .Select(herbBase => herbBase.Id)
+                    .Contains(attribute.EntityId))
             .GroupBy(attribute => attribute.AttributeValue)
             .Select(group => new { Code = group.Key, Count = group.Count() })
             .ToListAsync(cancellationToken);
@@ -131,7 +130,7 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
 
         var trendRecords = await (
                 from record in _dbContext.CrmFollowRecords
-                join customer in myCustomers on record.HerbBaseId equals customer.Id
+                join subject in mySubjects on record.HerbBaseSubjectId equals subject.Id
                 where !record.IsDeleted && record.CreatedAt >= trendStart && record.CreatedAt < tomorrowStart
                 select new { record.CreatedAt, record.FollowResult })
             .ToListAsync(cancellationToken);
@@ -150,7 +149,7 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
             })
             .ToList();
 
-        await FillMainProductsAsync(todayFollowCustomers, cancellationToken);
+        await FillSubjectSummariesAsync(todayFollowSubjects, cancellationToken);
 
         return new CrmDashboardDto
         {
@@ -158,10 +157,10 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
             {
                 TodayFollowCount = todayFollowCount,
                 OverdueFollowCount = overdueFollowCount,
-                MyCustomerCount = myCustomerCount,
-                HighIntentCustomerCount = highIntentCustomerCount
+                MySubjectCount = mySubjectCount,
+                HighIntentSubjectCount = highIntentSubjectCount
             },
-            TodayFollowCustomers = todayFollowCustomers,
+            TodayFollowSubjects = todayFollowSubjects,
             RecentFollowRecords = recentFollowRecords,
             FollowFunnel = followFunnel,
             MainProductDistribution = mainProductDistribution,
@@ -188,33 +187,52 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
         };
     }
 
-    private async Task FillMainProductsAsync(List<CrmDashboardFollowCustomerDto> customers, CancellationToken cancellationToken)
+    private async Task FillSubjectSummariesAsync(List<CrmDashboardFollowSubjectDto> subjects, CancellationToken cancellationToken)
     {
-        var customerIds = customers.Select(customer => customer.Id).ToList();
-        if (customerIds.Count == 0)
+        var subjectIds = subjects.Select(subject => subject.Id).ToList();
+        if (subjectIds.Count == 0)
         {
             return;
         }
 
+        var bases = await _dbContext.CrmHerbBases
+            .Where(herbBase => herbBase.HerbBaseSubjectId.HasValue && subjectIds.Contains(herbBase.HerbBaseSubjectId.Value))
+            .Select(herbBase => new
+            {
+                herbBase.Id,
+                SubjectId = herbBase.HerbBaseSubjectId!.Value,
+                herbBase.Province,
+                herbBase.City,
+                herbBase.Area
+            })
+            .ToListAsync(cancellationToken);
+        var baseIds = bases.Select(herbBase => herbBase.Id).ToList();
         var attributes = await _dbContext.CrmBusinessEntityAttributes
             .Where(attribute =>
                 !attribute.IsDeleted &&
-                customerIds.Contains(attribute.EntityId) &&
+                baseIds.Contains(attribute.EntityId) &&
                 attribute.EntityType == CrmCodes.HerbBaseEntityType &&
                 attribute.AttributeCode == CrmCodes.MainProductAttributeCode)
             .OrderBy(attribute => attribute.SortOrder)
             .ThenBy(attribute => attribute.CreatedAt)
             .Select(attribute => new { attribute.EntityId, attribute.AttributeValue })
             .ToListAsync(cancellationToken);
-        var lookup = attributes
+        var productsByBase = attributes
             .GroupBy(attribute => attribute.EntityId)
             .ToDictionary(group => group.Key, group => group.Select(attribute => attribute.AttributeValue).Distinct().ToList());
 
-        foreach (var customer in customers)
+        foreach (var subject in subjects)
         {
-            customer.MainProducts = lookup.TryGetValue(customer.Id, out var mainProducts)
-                ? mainProducts
-                : new List<string>();
+            var subjectBases = bases.Where(herbBase => herbBase.SubjectId == subject.Id).ToList();
+            subject.MainProducts = subjectBases
+                .SelectMany(herbBase => productsByBase.GetValueOrDefault(herbBase.Id, []))
+                .Distinct()
+                .ToList();
+            subject.Regions = subjectBases
+                .Select(herbBase => string.Join(' ', new[] { herbBase.Province, herbBase.City, herbBase.Area }.Where(value => !string.IsNullOrWhiteSpace(value))))
+                .Where(region => !string.IsNullOrWhiteSpace(region))
+                .Distinct()
+                .ToList();
         }
     }
 
