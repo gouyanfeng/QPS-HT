@@ -186,7 +186,7 @@ public class AppDbContext : DbContext, IDbContext
     private void SetAuditFields()
     {
         var currentUser = _currentUserService.Username ?? "System";
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
 
         var entries = ChangeTracker.Entries()
             .Where(e => e.Entity is BaseEntity && (e.State == EntityState.Added || e.State == EntityState.Modified));

@@ -17,8 +17,8 @@ public abstract class BaseEntity
     protected BaseEntity()
     {
         Id = Guid.NewGuid();
-        CreatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        CreatedAt = DateTime.Now;
+        UpdatedAt = DateTime.Now;
         IsDeleted = false;
     }
 
@@ -60,7 +60,7 @@ public abstract class DomainEvent : INotification
 
     protected DomainEvent()
     {
-        OccurredOn = DateTime.UtcNow;
+        OccurredOn = DateTime.Now;
     }
 }
 
