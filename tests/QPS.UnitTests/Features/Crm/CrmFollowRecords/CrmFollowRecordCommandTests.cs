@@ -15,7 +15,8 @@ public class CrmFollowRecordCommandTests
     {
         var operatorUserId = Guid.NewGuid();
         await using var dbContext = TestDbContextFactory.Create(new TestCurrentUserService(operatorUserId.ToString()));
-        var customer = CrmHerbBase.Create(
+        var subject = CreateSubject(operatorUserId, "Follow Test Subject");
+        var herbBase = CrmHerbBase.Create(
             "Follow Test Customer",
             "B",
             80,
@@ -29,9 +30,10 @@ public class CrmFollowRecordCommandTests
             null,
             null,
             "Remark");
+        herbBase.SetHerbBaseSubject(subject.Id);
         var contact = CrmContact.Create(
-            "CRM_HERB_BASE",
-            customer.Id,
+            "CRM_HERB_BASE_SUBJECT",
+            subject.Id,
             "Follow Contact",
             "13800000001",
             "MOBILE",
@@ -39,7 +41,8 @@ public class CrmFollowRecordCommandTests
             "OWNER",
             true,
             "");
-        dbContext.CrmHerbBases.Add(customer);
+        dbContext.CrmHerbBaseSubjects.Add(subject);
+        dbContext.CrmHerbBases.Add(herbBase);
         dbContext.CrmContacts.Add(contact);
         await dbContext.SaveChangesAsync();
 
@@ -50,9 +53,10 @@ public class CrmFollowRecordCommandTests
 
         var result = await handler.Handle(new CreateCrmFollowRecordCommand
         {
-            CustomerId = customer.Id,
+            HerbBaseSubjectId = subject.Id,
             Request = new CrmFollowRecordCreateRequest
             {
+                HerbBaseId = herbBase.Id,
                 ContactId = contact.Id,
                 FollowType = "PHONE",
                 FollowResult = "INTERESTED",
@@ -66,9 +70,11 @@ public class CrmFollowRecordCommandTests
         Assert.True(result);
         Assert.Equal(contact.Id, persistedRecord.ContactId);
         Assert.Equal(operatorUserId, persistedRecord.OperatorUserId);
-        Assert.Equal("INTERESTED", customer.LastFollowResult);
-        Assert.Equal(nextFollowAt, customer.NextFollowAt);
-        Assert.Equal("INTERESTED", customer.Status);
+        Assert.Equal(subject.Id, persistedRecord.HerbBaseSubjectId);
+        Assert.Equal(herbBase.Id, persistedRecord.HerbBaseId);
+        Assert.Equal("INTERESTED", subject.LastFollowResult);
+        Assert.Equal(nextFollowAt, subject.NextFollowAt);
+        Assert.Equal("INTERESTED", subject.Status);
     }
 
     [Fact]
@@ -76,20 +82,7 @@ public class CrmFollowRecordCommandTests
     {
         var operatorUserId = Guid.NewGuid();
         await using var dbContext = TestDbContextFactory.Create(new TestCurrentUserService(operatorUserId.ToString()));
-        var customer = CrmHerbBase.Create(
-            "Follow Test Customer",
-            "B",
-            80,
-            "Gansu",
-            "Dingxi",
-            "Longxi",
-            "Test address",
-            null,
-            null,
-            "MANUAL",
-            null,
-            null,
-            "Remark");
+        var subject = CreateSubject(operatorUserId, "Follow Test Subject");
         var contact = CrmContact.Create(
             "CRM_VENDOR",
             Guid.NewGuid(),
@@ -101,7 +94,7 @@ public class CrmFollowRecordCommandTests
             true,
             "");
 
-        dbContext.CrmHerbBases.Add(customer);
+        dbContext.CrmHerbBaseSubjects.Add(subject);
         dbContext.CrmContacts.Add(contact);
         await dbContext.SaveChangesAsync();
 
@@ -111,7 +104,7 @@ public class CrmFollowRecordCommandTests
 
         await Assert.ThrowsAsync<BusinessException>(() => handler.Handle(new CreateCrmFollowRecordCommand
         {
-            CustomerId = customer.Id,
+            HerbBaseSubjectId = subject.Id,
             Request = new CrmFollowRecordCreateRequest
             {
                 ContactId = contact.Id,
@@ -123,6 +116,17 @@ public class CrmFollowRecordCommandTests
             }
         }, CancellationToken.None));
     }
+
+    private static CrmHerbBaseSubject CreateSubject(Guid ownerUserId, string name)
+        => CrmHerbBaseSubject.Create(
+            name,
+            name,
+            "UNKNOWN",
+            ownerUserId,
+            "PENDING",
+            "B",
+            80,
+            "Remark");
 }
 
 

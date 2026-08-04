@@ -13,10 +13,9 @@ public class CrmDashboardQueryTests
     {
         var ownerUserId = Guid.NewGuid();
         await using var dbContext = TestDbContextFactory.Create(new TestCurrentUserService(ownerUserId.ToString()));
-        var followingCustomer = CreateCustomer(ownerUserId, "Following Customer");
-        followingCustomer.UpdateFollowSummary(DateTime.Now, "INTERESTED", DateTime.Now.AddDays(1));
-        followingCustomer.UpdateStatus("FOLLOWING", "");
-        dbContext.CrmHerbBases.Add(followingCustomer);
+        var followingSubject = CreateSubject(ownerUserId, "Following Subject");
+        followingSubject.UpdateFollowSummary(DateTime.Now, "CONNECTED", DateTime.Now.AddDays(1));
+        dbContext.CrmHerbBaseSubjects.Add(followingSubject);
         await dbContext.SaveChangesAsync();
 
         var handler = new GetCrmDashboardHandler(
@@ -34,12 +33,12 @@ public class CrmDashboardQueryTests
     {
         var ownerUserId = Guid.NewGuid();
         await using var dbContext = TestDbContextFactory.Create(new TestCurrentUserService(ownerUserId.ToString()));
-        var firstHighGradePendingCustomer = CreateCustomer(ownerUserId, "First High Grade Pending Customer", "A");
-        var secondHighGradePendingCustomer = CreateCustomer(ownerUserId, "Second High Grade Pending Customer", "高");
-        var interestedCustomer = CreateCustomer(ownerUserId, "Interested Customer");
-        interestedCustomer.UpdateStatus("INTERESTED", "");
+        var firstHighGradePendingSubject = CreateSubject(ownerUserId, "First High Grade Pending Subject", "A");
+        var secondHighGradePendingSubject = CreateSubject(ownerUserId, "Second High Grade Pending Subject", "高");
+        var interestedSubject = CreateSubject(ownerUserId, "Interested Subject");
+        interestedSubject.UpdateFollowSummary(DateTime.Now, "INTERESTED", null);
 
-        dbContext.CrmHerbBases.AddRange(firstHighGradePendingCustomer, secondHighGradePendingCustomer, interestedCustomer);
+        dbContext.CrmHerbBaseSubjects.AddRange(firstHighGradePendingSubject, secondHighGradePendingSubject, interestedSubject);
         await dbContext.SaveChangesAsync();
 
         var handler = new GetCrmDashboardHandler(
@@ -48,24 +47,19 @@ public class CrmDashboardQueryTests
 
         var result = await handler.Handle(new GetCrmDashboardQuery(), CancellationToken.None);
 
-        Assert.Equal(1, result.Metrics.HighIntentCustomerCount);
+        Assert.Equal(1, result.Metrics.HighIntentSubjectCount);
     }
 
-    private static CrmHerbBase CreateCustomer(Guid ownerUserId, string name, string grade = "B")
+    private static CrmHerbBaseSubject CreateSubject(Guid ownerUserId, string name, string grade = "B")
     {
-        return CrmHerbBase.Create(
+        return CrmHerbBaseSubject.Create(
             name,
+            name,
+            "UNKNOWN",
+            ownerUserId,
+            "PENDING",
             grade,
             80,
-            "Gansu",
-            "Dingxi",
-            "Longxi",
-            "Test address",
-            null,
-            null,
-            "MANUAL",
-            null,
-            ownerUserId,
             "");
     }
 }

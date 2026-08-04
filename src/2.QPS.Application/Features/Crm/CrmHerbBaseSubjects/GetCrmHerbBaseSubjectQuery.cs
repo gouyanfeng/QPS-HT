@@ -30,6 +30,7 @@ public class GetCrmHerbBaseSubjectHandler : IRequestHandler<GetCrmHerbBaseSubjec
         FillBaseSummary(subject);
         subject.Contacts = await GetContactsAsync(subject.Id, cancellationToken);
         subject.FollowRecords = await GetFollowRecordsAsync(subject.Id, cancellationToken);
+        subject.TransferRecords = await GetTransferRecordsAsync(subject.Id, cancellationToken);
         return subject;
     }
 
@@ -126,11 +127,6 @@ public class GetCrmHerbBaseSubjectHandler : IRequestHandler<GetCrmHerbBaseSubjec
             .Where(region => !string.IsNullOrWhiteSpace(region))
             .Distinct()
             .ToList();
-        subject.SourcePlatforms = subject.HerbBases
-            .Select(herbBase => herbBase.SourcePlatform)
-            .Where(source => !string.IsNullOrWhiteSpace(source))
-            .Distinct()
-            .ToList();
     }
 
     private async Task<List<CrmContactDto>> GetContactsAsync(Guid subjectId, CancellationToken cancellationToken)
@@ -180,5 +176,64 @@ public class GetCrmHerbBaseSubjectHandler : IRequestHandler<GetCrmHerbBaseSubjec
                 CreatedAt = record.CreatedAt
             })
             .ToListAsync(cancellationToken);
+    }
+
+    private async Task<List<CrmTransferRecordDto>> GetTransferRecordsAsync(Guid subjectId, CancellationToken cancellationToken)
+    {
+        var records = await _dbContext.CrmTransferRecords
+            .AsNoTracking()
+            .Where(record =>
+                record.EntityType == CrmCodes.HerbBaseSubjectEntityType &&
+                record.EntityId == subjectId)
+            .OrderByDescending(record => record.CreatedAt)
+            .Select(record => new CrmTransferRecordDto
+            {
+                Id = record.Id,
+                EntityType = record.EntityType,
+                EntityId = record.EntityId,
+                FromOwnerUserId = record.FromOwnerUserId,
+                ToOwnerUserId = record.ToOwnerUserId,
+                OperatorUserId = record.OperatorUserId,
+                Remark = record.Remark,
+                CreatedAt = record.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
+        await FillTransferUserNamesAsync(records, cancellationToken);
+        return records;
+    }
+
+    private async Task FillTransferUserNamesAsync(List<CrmTransferRecordDto> records, CancellationToken cancellationToken)
+    {
+        var userIds = records
+            .SelectMany(record => new[] { record.FromOwnerUserId, record.ToOwnerUserId, record.OperatorUserId })
+            .Where(userId => userId.HasValue)
+            .Select(userId => userId!.Value)
+            .Distinct()
+            .ToList();
+        if (userIds.Count == 0)
+            return;
+
+        var userNameLookup = await _dbContext.SystemUsers
+            .AsNoTracking()
+            .Where(user => userIds.Contains(user.Id))
+            .ToDictionaryAsync(
+                user => user.Id,
+                user => string.IsNullOrWhiteSpace(user.RealName) ? user.Username : user.RealName,
+                cancellationToken);
+
+        foreach (var record in records)
+        {
+            record.FromOwnerUserName = GetUserName(userNameLookup, record.FromOwnerUserId);
+            record.ToOwnerUserName = GetUserName(userNameLookup, record.ToOwnerUserId);
+            record.OperatorUserName = GetUserName(userNameLookup, record.OperatorUserId);
+        }
+    }
+
+    private static string GetUserName(Dictionary<Guid, string> userNameLookup, Guid? userId)
+    {
+        return userId.HasValue && userNameLookup.TryGetValue(userId.Value, out var userName)
+            ? userName
+            : string.Empty;
     }
 }

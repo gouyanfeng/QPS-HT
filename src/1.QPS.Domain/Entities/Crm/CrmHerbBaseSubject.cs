@@ -50,6 +50,20 @@ public class CrmHerbBaseSubject : BaseEntity
         OwnerUserId = ownerUserId;
     }
 
+    public void UpdateBasicInfo(string subjectName, string displayName, string subjectType, string status, string grade, int score, string remark)
+    {
+        SubjectName = string.IsNullOrWhiteSpace(subjectName) ? null : subjectName.Trim();
+        DisplayName = string.IsNullOrWhiteSpace(displayName) ? DisplayName : displayName.Trim();
+        SubjectType = string.IsNullOrWhiteSpace(subjectType) ? SubjectType : subjectType;
+        Status = string.IsNullOrWhiteSpace(status) ? Status : status;
+        Grade = string.IsNullOrWhiteSpace(grade) ? Grade : grade;
+        Score = score;
+        Remark = remark;
+        NormalizedSubjectName = string.IsNullOrWhiteSpace(SubjectName)
+            ? $"BASE_ONLY|{DisplayName}".ToUpperInvariant()
+            : SubjectName.ToUpperInvariant();
+    }
+
     public void UpdatePrimaryContact(string contactName, string phone)
     {
         PrimaryContactName = contactName;

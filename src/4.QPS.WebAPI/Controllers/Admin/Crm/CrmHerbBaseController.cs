@@ -43,6 +43,14 @@ public class CrmHerbBaseController : ControllerBase
         return Ok(await _mediator.Send(new AssignCrmHerbBaseSubjectOwnerCommand { Request = request }));
     }
 
+    [HttpPut("/api/admin/crm/herb-base-subjects/{id:guid}")]
+    public async Task<ActionResult<bool>> UpdateHerbBaseSubject(
+        Guid id,
+        [FromBody] CrmHerbBaseSubjectUpdateRequest request)
+    {
+        return Ok(await _mediator.Send(new UpdateCrmHerbBaseSubjectCommand { Id = id, Request = request }));
+    }
+
     /// <summary>
     /// 获取药材基地列表
     /// </summary>

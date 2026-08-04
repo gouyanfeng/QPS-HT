@@ -21,7 +21,6 @@ public class CrmHerbBaseSubjectDto
     public decimal TotalScale { get; set; }
     public List<string> MainProducts { get; set; } = new();
     public List<string> Regions { get; set; } = new();
-    public List<string> SourcePlatforms { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
@@ -31,4 +30,5 @@ public class CrmHerbBaseSubjectDetailDto : CrmHerbBaseSubjectDto
     public List<CrmHerbBaseDto> HerbBases { get; set; } = new();
     public List<CrmContactDto> Contacts { get; set; } = new();
     public List<CrmFollowRecordDto> FollowRecords { get; set; } = new();
+    public List<CrmTransferRecordDto> TransferRecords { get; set; } = new();
 }

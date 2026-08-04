@@ -147,8 +147,7 @@ public class GetCrmHerbBaseSubjectsHandler : IRequestHandler<GetCrmHerbBaseSubje
                 herbBase.Scale,
                 herbBase.Province,
                 herbBase.City,
-                herbBase.Area,
-                herbBase.SourcePlatform
+                herbBase.Area
             })
             .ToListAsync(cancellationToken);
 
@@ -172,11 +171,6 @@ public class GetCrmHerbBaseSubjectsHandler : IRequestHandler<GetCrmHerbBaseSubje
             subject.Regions = subjectBases
                 .Select(herbBase => string.Join(' ', new[] { herbBase.Province, herbBase.City, herbBase.Area }.Where(value => !string.IsNullOrWhiteSpace(value))))
                 .Where(region => !string.IsNullOrWhiteSpace(region))
-                .Distinct()
-                .ToList();
-            subject.SourcePlatforms = subjectBases
-                .Select(herbBase => herbBase.SourcePlatform)
-                .Where(source => !string.IsNullOrWhiteSpace(source))
                 .Distinct()
                 .ToList();
             subject.MainProducts = subjectBases

@@ -39,6 +39,7 @@ public class CrmHerbBaseCommandTests
         }, CancellationToken.None);
 
         var customer = await dbContext.CrmHerbBases.SingleAsync(item => item.BaseName == "Multi Product Customer");
+        var subject = await dbContext.CrmHerbBaseSubjects.SingleAsync(item => item.Id == customer.HerbBaseSubjectId);
         var attributes = await dbContext.CrmBusinessEntityAttributes
             .Where(attribute => attribute.EntityId == customer.Id)
             .OrderBy(attribute => attribute.SortOrder)
@@ -48,10 +49,10 @@ public class CrmHerbBaseCommandTests
 
         Assert.True(result);
         Assert.Empty(attributes);
-        Assert.Equal("Primary Contact", customer.PrimaryContactName);
-        Assert.Equal("13900000000", customer.PrimaryContactPhone);
-        Assert.Equal("CRM_HERB_BASE", transferRecord.EntityType);
-        Assert.Equal(customer.Id, transferRecord.EntityId);
+        Assert.Equal("Primary Contact", subject.PrimaryContactName);
+        Assert.Equal("13900000000", subject.PrimaryContactPhone);
+        Assert.Equal("CRM_HERB_BASE_SUBJECT", transferRecord.EntityType);
+        Assert.Equal(subject.Id, transferRecord.EntityId);
         Assert.Null(transferRecord.FromOwnerUserId);
         Assert.Equal(ownerUserId, transferRecord.ToOwnerUserId);
         Assert.Equal(operatorUserId, transferRecord.OperatorUserId);

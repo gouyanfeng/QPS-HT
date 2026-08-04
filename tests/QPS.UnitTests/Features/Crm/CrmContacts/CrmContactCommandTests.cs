@@ -13,15 +13,15 @@ public class CrmContactCommandTests
     public async Task Create_ShouldPromoteFirstContactToPrimary_WhenCustomerHasNoPrimaryContact()
     {
         await using var dbContext = TestDbContextFactory.Create();
-        var customer = CreateCustomer();
-        dbContext.CrmHerbBases.Add(customer);
+        var subject = CreateSubject();
+        dbContext.CrmHerbBaseSubjects.Add(subject);
         await dbContext.SaveChangesAsync();
 
         var handler = new CreateCrmContactHandler(dbContext);
 
         var result = await handler.Handle(new CreateCrmContactCommand
         {
-            CustomerId = customer.Id,
+            HerbBaseSubjectId = subject.Id,
             Request = new CrmContactCreateRequest
             {
                 ContactName = "First Contact",
@@ -32,22 +32,22 @@ public class CrmContactCommandTests
             }
         }, CancellationToken.None);
 
-        var persistedCustomer = await dbContext.CrmHerbBases.SingleAsync(item => item.Id == customer.Id);
+        var persistedSubject = await dbContext.CrmHerbBaseSubjects.SingleAsync(item => item.Id == subject.Id);
         var persistedContact = await dbContext.CrmContacts.SingleAsync();
         Assert.True(result);
         Assert.True(persistedContact.IsPrimary);
-        Assert.Equal("First Contact", persistedCustomer.PrimaryContactName);
-        Assert.Equal("13800000001", persistedCustomer.PrimaryContactPhone);
+        Assert.Equal("First Contact", persistedSubject.PrimaryContactName);
+        Assert.Equal("13800000001", persistedSubject.PrimaryContactPhone);
     }
 
     [Fact]
     public async Task UpdateStatus_ShouldPromoteOldestValidContact_WhenPrimaryContactBecomesInvalid()
     {
         await using var dbContext = TestDbContextFactory.Create();
-        var customer = CreateCustomer();
+        var subject = CreateSubject();
         var primary = CrmContact.Create(
-            "CRM_HERB_BASE",
-            customer.Id,
+            "CRM_HERB_BASE_SUBJECT",
+            subject.Id,
             "Primary Contact",
             "13800000001",
             "MOBILE",
@@ -56,8 +56,8 @@ public class CrmContactCommandTests
             true,
             "");
         var replacement = CrmContact.Create(
-            "CRM_HERB_BASE",
-            customer.Id,
+            "CRM_HERB_BASE_SUBJECT",
+            subject.Id,
             "Replacement Contact",
             "13800000002",
             "MOBILE",
@@ -67,8 +67,8 @@ public class CrmContactCommandTests
             "");
         primary.CreatedAt = DateTime.UtcNow.AddMinutes(-10);
         replacement.CreatedAt = DateTime.UtcNow.AddMinutes(-5);
-        customer.UpdatePrimaryContact(primary.ContactName, primary.Phone);
-        dbContext.CrmHerbBases.Add(customer);
+        subject.UpdatePrimaryContact(primary.ContactName, primary.Phone);
+        dbContext.CrmHerbBaseSubjects.Add(subject);
         dbContext.CrmContacts.AddRange(primary, replacement);
         await dbContext.SaveChangesAsync();
 
@@ -87,27 +87,20 @@ public class CrmContactCommandTests
         Assert.False(primary.IsPrimary);
         Assert.True(replacement.IsPrimary);
         Assert.Equal("INVALID", primary.Status);
-        Assert.Equal("Replacement Contact", customer.PrimaryContactName);
-        Assert.Equal("13800000002", customer.PrimaryContactPhone);
+        Assert.Equal("Replacement Contact", subject.PrimaryContactName);
+        Assert.Equal("13800000002", subject.PrimaryContactPhone);
     }
 
-    private static CrmHerbBase CreateCustomer()
-    {
-        return CrmHerbBase.Create(
-            "Contact Test Customer",
+    private static CrmHerbBaseSubject CreateSubject()
+        => CrmHerbBaseSubject.Create(
+            "Contact Test Subject",
+            "Contact Test Base",
+            "UNKNOWN",
+            null,
+            "PENDING",
             "B",
             80,
-            "Gansu",
-            "Dingxi",
-            "Longxi",
-            "Test address",
-            null,
-            null,
-            "MANUAL",
-            null,
-            null,
             "Remark");
-    }
 }
 
 
