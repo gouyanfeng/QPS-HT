@@ -32,6 +32,8 @@ public class CrmHerbBaseUpdateRequest
     /// </summary>
     public int Score { get; set; }
 
+    public decimal? Scale { get; set; }
+
     /// <summary>
     /// 省份。
     /// </summary>

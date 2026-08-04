@@ -27,6 +27,7 @@ public static class TestDataInitializer
         NormalizeCrmBusinessValues(dbContext);
         NormalizeCrmMainProducts(dbContext);
         EnsureDefaultCrmOwner(dbContext);
+        EnsureDefaultCrmSubjectTransferRecords(dbContext);
     }
 
     private static void EnsureCrmHerbBaseLegacyTables(AppDbContext dbContext)
@@ -1207,6 +1208,7 @@ public static class TestDataInitializer
                 city: "定西市",
                 area: "陇西县",
                 address: "甘肃省定西市陇西县首阳镇黄芪种植片区",
+                scale: null,
                 lat: 35.0036m,
                 lng: 104.6386m,
                 sourcePlatform: "BAIDU_MAP",
@@ -1222,6 +1224,7 @@ public static class TestDataInitializer
                 city: "定西市",
                 area: "岷县",
                 address: "甘肃省定西市岷县梅川镇当归种植基地",
+                scale: null,
                 lat: 34.4391m,
                 lng: 104.0369m,
                 sourcePlatform: "BAIDU_MAP",
@@ -1237,6 +1240,7 @@ public static class TestDataInitializer
                 city: "亳州市",
                 area: "谯城区",
                 address: "安徽省亳州市谯城区药材市场周边",
+                scale: null,
                 lat: 33.8446m,
                 lng: 115.7793m,
                 sourcePlatform: "BAIDU_MAP",
@@ -1501,7 +1505,65 @@ public static class TestDataInitializer
                     [UpdatedAt] = SYSUTCDATETIME(),
                     [UpdatedBy] = N'System'
                 WHERE [IsDeleted] = 0 AND [OwnerUserId] IS NULL;
+
+                IF OBJECT_ID(N'[CrmHerbBaseSubjects]', N'U') IS NOT NULL
+                BEGIN
+                    UPDATE [CrmHerbBaseSubjects]
+                    SET
+                        [OwnerUserId] = @AdminUserId,
+                        [UpdatedAt] = SYSUTCDATETIME(),
+                        [UpdatedBy] = N'System'
+                    WHERE [IsDeleted] = 0 AND [OwnerUserId] IS NULL;
+                END;
             END;
+            """);
+    }
+
+    private static void EnsureDefaultCrmSubjectTransferRecords(AppDbContext dbContext)
+    {
+        dbContext.Database.ExecuteSqlRaw("""
+            IF OBJECT_ID(N'[CrmHerbBaseSubjects]', N'U') IS NULL
+                OR OBJECT_ID(N'[CrmTransferRecords]', N'U') IS NULL
+            BEGIN
+                RETURN;
+            END;
+
+            INSERT INTO [CrmTransferRecords](
+                [Id],
+                [EntityType],
+                [EntityId],
+                [FromOwnerUserId],
+                [ToOwnerUserId],
+                [OperatorUserId],
+                [Remark],
+                [CreatedAt],
+                [UpdatedAt],
+                [CreatedBy],
+                [UpdatedBy],
+                [IsDeleted])
+            SELECT
+                NEWID(),
+                N'CRM_HERB_BASE_SUBJECT',
+                [Subject].[Id],
+                NULL,
+                [Subject].[OwnerUserId],
+                [Subject].[OwnerUserId],
+                N'系统初始化默认负责人',
+                SYSUTCDATETIME(),
+                SYSUTCDATETIME(),
+                N'System',
+                N'System',
+                0
+            FROM [CrmHerbBaseSubjects] AS [Subject]
+            WHERE [Subject].[IsDeleted] = 0
+                AND [Subject].[OwnerUserId] IS NOT NULL
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM [CrmTransferRecords] AS [Record]
+                    WHERE [Record].[EntityType] = N'CRM_HERB_BASE_SUBJECT'
+                        AND [Record].[EntityId] = [Subject].[Id]
+                        AND [Record].[IsDeleted] = 0
+                );
             """);
     }
 }

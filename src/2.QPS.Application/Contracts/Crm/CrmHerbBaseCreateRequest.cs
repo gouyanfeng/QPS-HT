@@ -5,6 +5,8 @@ namespace QPS.Application.Contracts.Crm;
 /// </summary>
 public class CrmHerbBaseCreateRequest
 {
+    public Guid? HerbBaseSubjectId { get; set; }
+
     /// <summary>
     /// 基地名称，对应清洗线索名称，导入CRM使用。
     /// </summary>
@@ -31,6 +33,8 @@ public class CrmHerbBaseCreateRequest
     /// 线索评分，用于排序和筛选。
     /// </summary>
     public int Score { get; set; }
+
+    public decimal? Scale { get; set; }
 
     /// <summary>
     /// 省份。

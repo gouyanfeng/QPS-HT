@@ -126,7 +126,8 @@ public class CrmHerbBase : BaseEntity
         long? sourceId,
         Guid? ownerUserId,
         string remark,
-        string subjectName)
+        string subjectName,
+        decimal? scale = null)
     {
         BaseName = herbBaseName;
         SubjectName = subjectName;
@@ -136,6 +137,7 @@ public class CrmHerbBase : BaseEntity
         City = city;
         Area = area;
         Address = address;
+        Scale = scale;
         Lat = lat;
         Lng = lng;
         SourcePlatform = sourcePlatform;
@@ -159,7 +161,8 @@ public class CrmHerbBase : BaseEntity
         long? sourceId,
         Guid? ownerUserId,
         string remark,
-        string subjectName = "")
+        string subjectName = "",
+        decimal? scale = null)
     {
         return new CrmHerbBase(
             herbBaseName,
@@ -175,7 +178,8 @@ public class CrmHerbBase : BaseEntity
             sourceId,
             ownerUserId,
             remark,
-            subjectName);
+            subjectName,
+            scale);
     }
 
     public void UpdateBasicInfo(
@@ -186,6 +190,7 @@ public class CrmHerbBase : BaseEntity
         string city,
         string area,
         string address,
+        decimal? scale,
         decimal? lat,
         decimal? lng,
         string remark,
@@ -199,6 +204,7 @@ public class CrmHerbBase : BaseEntity
         City = city;
         Area = area;
         Address = address;
+        Scale = scale;
         Lat = lat;
         Lng = lng;
         Remark = remark;

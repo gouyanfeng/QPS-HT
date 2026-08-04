@@ -50,6 +50,8 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
 
         ApplyStatus(customer, request.Request);
 
+        await SyncMainProducts(customer.Id, request.Request.MainProducts, cancellationToken);
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
@@ -86,6 +88,7 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
             request.City,
             request.Area,
             request.Address,
+            request.Scale,
             request.Lat,
             request.Lng,
             request.Remark,
@@ -156,6 +159,31 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
         if (!string.IsNullOrEmpty(request.Status) && customer.Status != request.Status)
         {
             customer.UpdateStatus(request.Status, request.Remark);
+        }
+    }
+
+    private async Task SyncMainProducts(Guid herbBaseId, List<string> mainProducts, CancellationToken cancellationToken)
+    {
+        var oldAttributes = await _dbContext.CrmBusinessEntityAttributes
+            .Where(attribute =>
+                attribute.EntityType == CrmCodes.HerbBaseEntityType &&
+                attribute.EntityId == herbBaseId &&
+                attribute.AttributeCode == CrmCodes.MainProductAttributeCode)
+            .ToListAsync(cancellationToken);
+        _dbContext.CrmBusinessEntityAttributes.RemoveRange(oldAttributes);
+
+        var values = mainProducts
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct()
+            .ToList();
+        for (var i = 0; i < values.Count; i++)
+        {
+            _dbContext.CrmBusinessEntityAttributes.Add(new CrmBusinessEntityAttribute(
+                CrmCodes.HerbBaseEntityType,
+                herbBaseId,
+                CrmCodes.MainProductAttributeCode,
+                values[i],
+                i));
         }
     }
 }

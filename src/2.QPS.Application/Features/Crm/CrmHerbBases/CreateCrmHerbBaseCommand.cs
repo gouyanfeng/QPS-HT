@@ -4,6 +4,7 @@ using QPS.Application.Contracts.Crm;
 using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.Crm;
+using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.Crm.CrmHerbBases;
 
@@ -50,6 +51,7 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
         }
 
         _dbContext.CrmHerbBases.Add(herbBase);
+        AddMainProducts(herbBase.Id, request.Request.MainProducts);
         if (isNewSubject)
         {
             _dbContext.CrmTransferRecords.Add(CrmTransferRecord.Create(
@@ -66,6 +68,23 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
         return true;
     }
 
+    private void AddMainProducts(Guid herbBaseId, List<string> mainProducts)
+    {
+        var values = mainProducts
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct()
+            .ToList();
+        for (var i = 0; i < values.Count; i++)
+        {
+            _dbContext.CrmBusinessEntityAttributes.Add(new CrmBusinessEntityAttribute(
+                CrmCodes.HerbBaseEntityType,
+                herbBaseId,
+                CrmCodes.MainProductAttributeCode,
+                values[i],
+                i));
+        }
+    }
+
     /// <summary>
     /// 根据请求创建药材基地实体。
     /// </summary>
@@ -74,20 +93,21 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
         var baseName = GetBaseName(request.BaseName, request.HerbBaseName);
 
         return CrmHerbBase.Create(
-            baseName,
-            request.Grade,
-            request.Score,
-            request.Province,
-            request.City,
-            request.Area,
-            request.Address,
-            request.Lat,
-            request.Lng,
-            request.SourcePlatform,
-            request.SourceId,
-            request.OwnerUserId,
-            request.Remark,
-            request.SubjectName);
+            herbBaseName: baseName,
+            grade: request.Grade,
+            score: request.Score,
+            province: request.Province,
+            city: request.City,
+            area: request.Area,
+            address: request.Address,
+            lat: request.Lat,
+            lng: request.Lng,
+            sourcePlatform: request.SourcePlatform,
+            sourceId: request.SourceId,
+            ownerUserId: request.OwnerUserId,
+            remark: request.Remark,
+            subjectName: request.SubjectName,
+            scale: request.Scale);
     }
 
     /// <summary>
@@ -115,6 +135,15 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
         string baseName,
         CancellationToken cancellationToken)
     {
+        if (request.HerbBaseSubjectId.HasValue)
+        {
+            var subject = await _dbContext.CrmHerbBaseSubjects
+                .FirstOrDefaultAsync(subject => subject.Id == request.HerbBaseSubjectId.Value, cancellationToken);
+            return subject == null
+                ? throw new BusinessException(404, "药材基地主体不存在")
+                : (subject, false);
+        }
+
         if (string.IsNullOrWhiteSpace(request.SubjectName))
         {
             return (CreateSubject(request, baseName), true);
