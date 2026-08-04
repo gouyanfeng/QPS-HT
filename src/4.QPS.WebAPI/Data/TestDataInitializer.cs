@@ -1526,7 +1526,7 @@ public static class TestDataInitializer
     private static void EnsureSystemOperationLogsTable(AppDbContext dbContext)
     {
         dbContext.Database.ExecuteSqlRaw("""
-            IF OBJECT_ID(N'[SystemOperationLogs]', N'U') IS NULL
+            IF OBJECT_ID(N'SystemOperationLogs', N'U') IS NULL
             BEGIN
                 CREATE TABLE [SystemOperationLogs] (
                     [Id] uniqueidentifier NOT NULL,
@@ -1548,6 +1548,46 @@ public static class TestDataInitializer
                 CREATE INDEX [IX_SystemOperationLogs_CreatedAt] ON [SystemOperationLogs] ([CreatedAt]);
                 CREATE INDEX [IX_SystemOperationLogs_ActionType] ON [SystemOperationLogs] ([ActionType]);
                 CREATE INDEX [IX_SystemOperationLogs_EntityType_EntityId] ON [SystemOperationLogs] ([EntityType], [EntityId]);
+            END;
+            ELSE
+            BEGIN
+                IF COL_LENGTH(N'SystemOperationLogs', N'OperatorUserId') IS NOT NULL
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM sys.default_constraints dc
+                        INNER JOIN sys.columns c ON c.default_object_id = dc.object_id
+                        WHERE dc.parent_object_id = OBJECT_ID(N'SystemOperationLogs')
+                            AND c.name = N'OperatorUserId'
+                    )
+                BEGIN
+                    ALTER TABLE [SystemOperationLogs]
+                        ADD CONSTRAINT [DF_SystemOperationLogs_OperatorUserId] DEFAULT N'' FOR [OperatorUserId];
+                END;
+
+                IF COL_LENGTH(N'SystemOperationLogs', N'UserAgent') IS NOT NULL
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM sys.default_constraints dc
+                        INNER JOIN sys.columns c ON c.default_object_id = dc.object_id
+                        WHERE dc.parent_object_id = OBJECT_ID(N'SystemOperationLogs')
+                            AND c.name = N'UserAgent'
+                    )
+                BEGIN
+                    ALTER TABLE [SystemOperationLogs]
+                        ADD CONSTRAINT [DF_SystemOperationLogs_UserAgent] DEFAULT N'' FOR [UserAgent];
+                END;
+
+                IF COL_LENGTH(N'SystemOperationLogs', N'RequestPath') IS NOT NULL
+                    AND EXISTS (
+                        SELECT 1
+                        FROM sys.columns
+                        WHERE object_id = OBJECT_ID(N'SystemOperationLogs')
+                            AND name = N'RequestPath'
+                            AND max_length < 1000
+                    )
+                BEGIN
+                    ALTER TABLE [SystemOperationLogs] ALTER COLUMN [RequestPath] nvarchar(500) NOT NULL;
+                END;
             END;
             """);
     }

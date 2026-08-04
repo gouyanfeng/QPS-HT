@@ -2,7 +2,7 @@
 
 public interface IJwtGenerator
 {
-    string GenerateToken(Guid userId, string role);
+    string GenerateToken(Guid userId, string username, string role);
 }
 
 

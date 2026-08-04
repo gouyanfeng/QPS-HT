@@ -20,11 +20,12 @@ public class JwtGenerator : IJwtGenerator
         _audience = audience ?? throw new ArgumentNullException(nameof(audience));
     }
 
-    public string GenerateToken(Guid userId, string role)
+    public string GenerateToken(Guid userId, string username, string role)
     {
         var claims = new List<Claim>
         {
             new Claim("userId", userId.ToString()),
+            new Claim("username", username),
             new Claim("role", role)
         };
 

@@ -4,6 +4,7 @@ using QPS.Domain.Common;
 using QPS.Domain.Entities.System;
 using QPS.Domain.Entities.Crm;
 using System.Linq.Expressions;
+using System.Text.Json;
 
 namespace QPS.Infrastructure.Database;
 
@@ -169,11 +170,15 @@ public class AppDbContext : DbContext, IDbContext
     public override int SaveChanges()
     {
         SetAuditFields();
+        AddOperationLogs();
+        SetAuditFields();
         return base.SaveChanges();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        SetAuditFields();
+        AddOperationLogs();
         SetAuditFields();
         return await base.SaveChangesAsync(cancellationToken);
     }
@@ -199,6 +204,121 @@ public class AppDbContext : DbContext, IDbContext
             entity.UpdatedAt = now;
             entity.UpdatedBy = currentUser;
         }
+    }
+
+    private void AddOperationLogs()
+    {
+        var currentUser = _currentUserService.Username
+            ?? _currentUserService.UserId
+            ?? "System";
+
+        var logs = ChangeTracker.Entries<BaseEntity>()
+            .Where(entry => entry.Entity is not SystemOperationLog)
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .Select(entry => CreateOperationLog(entry, currentUser))
+            .Where(log => log is not null)
+            .Cast<SystemOperationLog>()
+            .ToList();
+
+        if (logs.Count == 0)
+        {
+            return;
+        }
+
+        SystemOperationLogs.AddRange(logs);
+    }
+
+    private static SystemOperationLog? CreateOperationLog(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<BaseEntity> entry, string currentUser)
+    {
+        var actionType = GetActionType(entry);
+        var changeJson = BuildChangeJson(entry);
+
+        if (actionType == "Update" && changeJson == "{}")
+        {
+            return null;
+        }
+
+        return new SystemOperationLog(
+            actionType: actionType,
+            entityType: entry.Entity.GetType().Name,
+            entityId: entry.Entity.Id.ToString(),
+            operatorName: currentUser,
+            requestPath: string.Empty,
+            ipAddress: string.Empty,
+            changeJson: changeJson);
+    }
+
+    private static string GetActionType(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry)
+    {
+        if (entry.State == EntityState.Added)
+        {
+            return "Create";
+        }
+
+        if (entry.State == EntityState.Deleted || IsSoftDelete(entry))
+        {
+            return "Delete";
+        }
+
+        return "Update";
+    }
+
+    private static bool IsSoftDelete(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry)
+    {
+        return entry.State == EntityState.Modified
+            && entry.Properties.Any(property =>
+                property.Metadata.Name == nameof(BaseEntity.IsDeleted)
+                && property.IsModified
+                && property.CurrentValue is true);
+    }
+
+    private static string BuildChangeJson(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry)
+    {
+        var changes = new Dictionary<string, object?>();
+
+        foreach (var property in entry.Properties)
+        {
+            if (property.Metadata.IsShadowProperty())
+            {
+                continue;
+            }
+
+            if (entry.State == EntityState.Added)
+            {
+                changes[property.Metadata.Name] = new
+                {
+                    old = (object?)null,
+                    @new = property.CurrentValue
+                };
+                continue;
+            }
+
+            if (entry.State == EntityState.Deleted)
+            {
+                changes[property.Metadata.Name] = new
+                {
+                    old = property.OriginalValue,
+                    @new = (object?)null
+                };
+                continue;
+            }
+
+            if (!property.IsModified || Equals(property.OriginalValue, property.CurrentValue))
+            {
+                continue;
+            }
+
+            changes[property.Metadata.Name] = new
+            {
+                old = property.OriginalValue,
+                @new = property.CurrentValue
+            };
+        }
+
+        return JsonSerializer.Serialize(changes, new JsonSerializerOptions
+        {
+            WriteIndented = false
+        });
     }
 
     private static void ApplySoftDeleteQueryFilters(ModelBuilder modelBuilder)

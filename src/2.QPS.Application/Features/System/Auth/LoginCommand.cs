@@ -63,7 +63,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
         var roleCode = role ?? "admin";
 
         // 生成JWT令牌
-        var token = _jwtGenerator.GenerateToken(user.Id, roleCode);
+        var token = _jwtGenerator.GenerateToken(user.Id, user.Username, roleCode);
 
         // 返回登录响应
         return new LoginResponse
