@@ -30,27 +30,31 @@ public class GetOperationLogsQueryHandler : IRequestHandler<GetOperationLogsQuer
         GetOperationLogsQuery request,
         CancellationToken cancellationToken)
     {
-        var query = _dbContext.SystemErrorLogs.AsNoTracking().AsQueryable();
+        var query = _dbContext.SystemOperationLogs.AsNoTracking().AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(request.ActionType) &&
-            !string.Equals(request.ActionType, "Error", StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(request.EntityType))
         {
-            return new PaginationResponse<OperationLogDto>(new List<OperationLogDto>(), 0, request.Page, request.PageSize);
+            query = query.Where(log => log.EntityType.Contains(request.EntityType));
         }
 
-        if (!string.IsNullOrWhiteSpace(request.EntityType) || !string.IsNullOrWhiteSpace(request.EntityId))
+        if (!string.IsNullOrWhiteSpace(request.EntityId))
         {
-            return new PaginationResponse<OperationLogDto>(new List<OperationLogDto>(), 0, request.Page, request.PageSize);
+            query = query.Where(log => log.EntityId.Contains(request.EntityId));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.ActionType))
+        {
+            query = query.Where(log => log.ActionType == request.ActionType);
         }
 
         if (!string.IsNullOrWhiteSpace(request.OperatorName))
         {
-            query = query.Where(log => log.Username.Contains(request.OperatorName));
+            query = query.Where(log => log.OperatorName.Contains(request.OperatorName));
         }
 
         if (!string.IsNullOrWhiteSpace(request.RequestPath))
         {
-            query = query.Where(log => log.RequestUrl.Contains(request.RequestPath));
+            query = query.Where(log => log.RequestPath.Contains(request.RequestPath));
         }
 
         if (request.StartAt.HasValue)
@@ -72,13 +76,13 @@ public class GetOperationLogsQueryHandler : IRequestHandler<GetOperationLogsQuer
             {
                 Id = log.Id,
                 CreatedAt = log.CreatedAt,
-                ActionType = "Error",
-                EntityType = log.ErrorType,
-                EntityId = string.Empty,
-                OperatorName = log.Username,
-                RequestPath = log.RequestUrl,
+                ActionType = log.ActionType,
+                EntityType = log.EntityType,
+                EntityId = log.EntityId,
+                OperatorName = log.OperatorName,
+                RequestPath = log.RequestPath,
                 IpAddress = log.IpAddress,
-                ChangeJson = "{}"
+                ChangeJson = log.ChangeJson
             })
             .ToListAsync(cancellationToken);
 

@@ -12,6 +12,7 @@ public static class TestDataInitializer
         var roles = InitializeRoles(dbContext);
         InitializeUsers(dbContext, roles);
         var permissions = InitializePermissions(dbContext, roles);
+        EnsureSystemOperationLogsTable(dbContext);
         EnsureCrmHerbBaseLegacyTables(dbContext);
         EnsureCrmBusinessEntityAttributesTable(dbContext);
         EnsureCrmTransferRecordsTable(dbContext);
@@ -1515,6 +1516,35 @@ public static class TestDataInitializer
                         [UpdatedBy] = N'System'
                     WHERE [IsDeleted] = 0 AND [OwnerUserId] IS NULL;
                 END;
+            END;
+            """);
+    }
+
+    private static void EnsureSystemOperationLogsTable(AppDbContext dbContext)
+    {
+        dbContext.Database.ExecuteSqlRaw("""
+            IF OBJECT_ID(N'[SystemOperationLogs]', N'U') IS NULL
+            BEGIN
+                CREATE TABLE [SystemOperationLogs] (
+                    [Id] uniqueidentifier NOT NULL,
+                    [ActionType] nvarchar(64) NOT NULL,
+                    [EntityType] nvarchar(128) NOT NULL,
+                    [EntityId] nvarchar(64) NOT NULL,
+                    [OperatorName] nvarchar(100) NOT NULL,
+                    [RequestPath] nvarchar(500) NOT NULL,
+                    [IpAddress] nvarchar(64) NOT NULL,
+                    [ChangeJson] nvarchar(max) NOT NULL,
+                    [CreatedAt] datetime2 NOT NULL,
+                    [CreatedBy] nvarchar(max) NOT NULL,
+                    [UpdatedAt] datetime2 NOT NULL,
+                    [UpdatedBy] nvarchar(max) NOT NULL,
+                    [IsDeleted] bit NOT NULL,
+                    CONSTRAINT [PK_SystemOperationLogs] PRIMARY KEY ([Id])
+                );
+
+                CREATE INDEX [IX_SystemOperationLogs_CreatedAt] ON [SystemOperationLogs] ([CreatedAt]);
+                CREATE INDEX [IX_SystemOperationLogs_ActionType] ON [SystemOperationLogs] ([ActionType]);
+                CREATE INDEX [IX_SystemOperationLogs_EntityType_EntityId] ON [SystemOperationLogs] ([EntityType], [EntityId]);
             END;
             """);
     }

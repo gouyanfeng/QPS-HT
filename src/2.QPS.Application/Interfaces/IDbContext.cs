@@ -15,6 +15,7 @@ public interface IDbContext
     DbSet<SystemRegion> SystemRegions { get; }
     DbSet<SystemChinaRegion> SystemChinaRegions { get; }
     DbSet<SystemErrorLog> SystemErrorLogs { get; }
+    DbSet<SystemOperationLog> SystemOperationLogs { get; }
 
     // CRM 模块
     DbSet<CrmHerbBaseSubject> CrmHerbBaseSubjects { get; }

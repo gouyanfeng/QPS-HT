@@ -20,6 +20,7 @@ public class AppDbContext : DbContext, IDbContext
     public DbSet<SystemRegion> SystemRegions { get; set; }
     public DbSet<SystemChinaRegion> SystemChinaRegions { get; set; }
     public DbSet<SystemErrorLog> SystemErrorLogs { get; set; }
+    public DbSet<SystemOperationLog> SystemOperationLogs { get; set; }
 
     // CRM 模块
     public DbSet<CrmHerbBaseSubject> CrmHerbBaseSubjects { get; set; }
@@ -147,6 +148,19 @@ public class AppDbContext : DbContext, IDbContext
             entity.Property(region => region.ParentCode).HasMaxLength(20);
             entity.Property(region => region.ProvinceCode).HasMaxLength(20);
             entity.Property(region => region.CityCode).HasMaxLength(20);
+        });
+
+        modelBuilder.Entity<SystemOperationLog>(entity =>
+        {
+            entity.Property(log => log.ActionType).HasMaxLength(64);
+            entity.Property(log => log.EntityType).HasMaxLength(128);
+            entity.Property(log => log.EntityId).HasMaxLength(64);
+            entity.Property(log => log.OperatorName).HasMaxLength(100);
+            entity.Property(log => log.RequestPath).HasMaxLength(500);
+            entity.Property(log => log.IpAddress).HasMaxLength(64);
+            entity.HasIndex(log => log.CreatedAt);
+            entity.HasIndex(log => new { log.EntityType, log.EntityId });
+            entity.HasIndex(log => log.ActionType);
         });
 
         ApplySoftDeleteQueryFilters(modelBuilder);
