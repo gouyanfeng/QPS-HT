@@ -133,6 +133,7 @@ public static class TestDataInitializer
         EnsurePermission(dbContext, permissions, "编辑", "SYSTEM_REGION_EDIT", region.Id);
         EnsurePermission(dbContext, permissions, "删除", "SYSTEM_REGION_DELETE", region.Id);
         EnsurePermission(dbContext, permissions, "操作日志", "SYSTEM_OPERATION_LOG", system.Id);
+        EnsurePermission(dbContext, permissions, "错误日志", "SYSTEM_ERROR_LOG", system.Id);
         var crmHerbBase = EnsurePermission(dbContext, permissions, "基地管理", "CRM_HERB_BASE", root.Id);
         EnsurePermission(dbContext, permissions, "新增", "CRM_HERB_BASE_ADD", crmHerbBase.Id);
         EnsurePermission(dbContext, permissions, "编辑", "CRM_HERB_BASE_EDIT", crmHerbBase.Id);
@@ -384,6 +385,7 @@ public static class TestDataInitializer
             "SYSTEM_REGION_EDIT",
             "SYSTEM_REGION_DELETE",
             "SYSTEM_OPERATION_LOG",
+            "SYSTEM_ERROR_LOG",
             "CRM_HERB_BASE",
             "CRM_HERB_BASE_ADD",
             "CRM_HERB_BASE_EDIT",
@@ -424,6 +426,7 @@ public static class TestDataInitializer
             ["REGION_EDIT"] = "SYSTEM_REGION_EDIT",
             ["REGION_DELETE"] = "SYSTEM_REGION_DELETE",
             ["OPERATION_LOG"] = "SYSTEM_OPERATION_LOG",
+            ["ERROR_LOG"] = "SYSTEM_ERROR_LOG",
             ["CRM"] = "CRM_HERB_BASE",
             ["CRM_CUSTOMER"] = "CRM_HERB_BASE",
             ["CRM_CUSTOMER_ADD"] = "CRM_HERB_BASE_ADD",

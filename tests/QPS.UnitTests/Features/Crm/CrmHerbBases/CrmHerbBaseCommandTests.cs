@@ -10,7 +10,7 @@ namespace QPS.UnitTests.Features.Crm.CrmHerbBases;
 public class CrmHerbBaseCommandTests
 {
     [Fact]
-    public async Task Create_ShouldNotPersistMainProductAttributes()
+    public async Task Create_ShouldPersistMainProductAttributes()
     {
         var operatorUserId = Guid.NewGuid();
         var ownerUserId = Guid.NewGuid();
@@ -48,7 +48,7 @@ public class CrmHerbBaseCommandTests
         var transferRecord = await dbContext.CrmTransferRecords.SingleAsync();
 
         Assert.True(result);
-        Assert.Empty(attributes);
+        Assert.Equal(new List<string> { "HUANG_QI", "DANG_GUI" }, attributes);
         Assert.Equal("Primary Contact", subject.PrimaryContactName);
         Assert.Equal("13900000000", subject.PrimaryContactPhone);
         Assert.Equal("CRM_HERB_BASE_SUBJECT", transferRecord.EntityType);
