@@ -59,15 +59,12 @@ public class AppDbContext : DbContext, IDbContext
         modelBuilder.Entity<CrmHerbBaseSubject>(entity =>
         {
             entity.Property(subject => subject.SubjectName).HasMaxLength(200);
-            entity.Property(subject => subject.NormalizedSubjectName).HasMaxLength(500);
-            entity.Property(subject => subject.DisplayName).HasMaxLength(200);
             entity.Property(subject => subject.SubjectType).HasMaxLength(32);
             entity.Property(subject => subject.Status).HasMaxLength(32);
             entity.Property(subject => subject.Grade).HasMaxLength(32);
             entity.Property(subject => subject.PrimaryContactName).HasMaxLength(200);
             entity.Property(subject => subject.PrimaryContactPhone).HasMaxLength(100);
-            entity.HasIndex(subject => subject.NormalizedSubjectName).IsUnique();
-            entity.HasIndex(subject => subject.DisplayName);
+            entity.HasIndex(subject => subject.SubjectName);
             entity.HasIndex(subject => new { subject.SubjectType, subject.IsDeleted });
         });
 

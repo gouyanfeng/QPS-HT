@@ -22,6 +22,7 @@ public static class TestDataInitializer
         EnsureCrmHerbBasesBaseNameColumn(dbContext);
         EnsureCrmHerbBasesSourceIdColumn(dbContext);
         EnsureCrmHerbBasesSubjectNameColumn(dbContext);
+        EnsureCrmHerbBaseSubjectLegacyNameColumnsRemoved(dbContext);
         EnsureCrmHerbBasesScaleColumn(dbContext);
         InitializeDataDictionaries(dbContext);
         InitializeCrm(dbContext, permissions);
@@ -840,6 +841,72 @@ public static class TestDataInitializer
                 AND COL_LENGTH(N'dbo.CrmHerbBases', N'Scale') IS NULL
             BEGIN
                 ALTER TABLE [CrmHerbBases] ADD [Scale] decimal(18,2) NULL;
+            END;
+            """);
+    }
+
+    private static void EnsureCrmHerbBaseSubjectLegacyNameColumnsRemoved(AppDbContext dbContext)
+    {
+        dbContext.Database.ExecuteSqlRaw("""
+            IF OBJECT_ID(N'[CrmHerbBaseSubjects]', N'U') IS NULL
+            BEGIN
+                RETURN;
+            END;
+
+            IF COL_LENGTH(N'dbo.CrmHerbBaseSubjects', N'SubjectName') IS NULL
+            BEGIN
+                ALTER TABLE [CrmHerbBaseSubjects] ADD [SubjectName] nvarchar(200) NULL;
+            END;
+
+            IF COL_LENGTH(N'dbo.CrmHerbBaseSubjects', N'DisplayName') IS NOT NULL
+            BEGIN
+                UPDATE [CrmHerbBaseSubjects]
+                SET [SubjectName] = [DisplayName]
+                WHERE (NULLIF(LTRIM(RTRIM([SubjectName])), N'') IS NULL)
+                    AND NULLIF(LTRIM(RTRIM([DisplayName])), N'') IS NOT NULL;
+            END;
+
+            IF OBJECT_ID(N'[CrmHerbBases]', N'U') IS NOT NULL
+                AND COL_LENGTH(N'dbo.CrmHerbBases', N'SubjectName') IS NOT NULL
+            BEGIN
+                UPDATE [Base]
+                SET [SubjectName] = [Subject].[SubjectName]
+                FROM [CrmHerbBases] AS [Base]
+                INNER JOIN [CrmHerbBaseSubjects] AS [Subject]
+                    ON [Base].[HerbBaseSubjectId] = [Subject].[Id]
+                WHERE NULLIF(LTRIM(RTRIM([Subject].[SubjectName])), N'') IS NOT NULL
+                    AND ISNULL([Base].[SubjectName], N'') <> [Subject].[SubjectName];
+            END;
+
+            DECLARE @DropIndexSql nvarchar(max) = N'';
+            SELECT @DropIndexSql = @DropIndexSql + N'DROP INDEX ' + QUOTENAME([Index].[name]) + N' ON [CrmHerbBaseSubjects];'
+            FROM sys.indexes AS [Index]
+            WHERE [Index].[object_id] = OBJECT_ID(N'[CrmHerbBaseSubjects]')
+                AND [Index].[name] IS NOT NULL
+                AND EXISTS (
+                    SELECT 1
+                    FROM sys.index_columns AS [IndexColumn]
+                    INNER JOIN sys.columns AS [Column]
+                        ON [Column].[object_id] = [IndexColumn].[object_id]
+                        AND [Column].[column_id] = [IndexColumn].[column_id]
+                    WHERE [IndexColumn].[object_id] = [Index].[object_id]
+                        AND [IndexColumn].[index_id] = [Index].[index_id]
+                        AND [Column].[name] IN (N'NormalizedSubjectName', N'DisplayName')
+                );
+
+            IF @DropIndexSql <> N''
+            BEGIN
+                EXEC sp_executesql @DropIndexSql;
+            END;
+
+            IF COL_LENGTH(N'dbo.CrmHerbBaseSubjects', N'NormalizedSubjectName') IS NOT NULL
+            BEGIN
+                ALTER TABLE [CrmHerbBaseSubjects] DROP COLUMN [NormalizedSubjectName];
+            END;
+
+            IF COL_LENGTH(N'dbo.CrmHerbBaseSubjects', N'DisplayName') IS NOT NULL
+            BEGIN
+                ALTER TABLE [CrmHerbBaseSubjects] DROP COLUMN [DisplayName];
             END;
             """);
     }

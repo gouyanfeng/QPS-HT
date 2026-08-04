@@ -210,6 +210,11 @@ public class CrmHerbBase : BaseEntity
         Remark = remark;
     }
 
+    public void RenameSubject(string subjectName)
+    {
+        SubjectName = subjectName;
+    }
+
     /// <summary>
     /// 绑定药材基地主体。
     /// </summary>

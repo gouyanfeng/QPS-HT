@@ -31,12 +31,21 @@ public class UpdateCrmHerbBaseSubjectHandler : IRequestHandler<UpdateCrmHerbBase
 
         subject.UpdateBasicInfo(
             request.Request.SubjectName,
-            request.Request.DisplayName,
             request.Request.SubjectType,
             request.Request.Status,
             request.Request.Grade,
             request.Request.Score,
             request.Request.Remark);
+
+        var syncedSubjectName = subject.SubjectName ?? string.Empty;
+        var herbBases = await _dbContext.CrmHerbBases
+            .Where(item => item.HerbBaseSubjectId == subject.Id)
+            .ToListAsync(cancellationToken);
+
+        foreach (var herbBase in herbBases)
+        {
+            herbBase.RenameSubject(syncedSubjectName);
+        }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return true;

@@ -55,7 +55,7 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
             .Select(subject => new CrmDashboardFollowSubjectDto
             {
                 Id = subject.Id,
-                DisplayName = subject.DisplayName ?? string.Empty,
+                SubjectName = subject.SubjectName ?? string.Empty,
                 Grade = subject.Grade ?? string.Empty,
                 PrimaryContactName = subject.PrimaryContactName ?? string.Empty,
                 PrimaryContactPhone = subject.PrimaryContactPhone ?? string.Empty,
@@ -73,7 +73,7 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
                 {
                     Id = record.Id,
                     HerbBaseSubjectId = subject.Id,
-                    SubjectName = subject.DisplayName ?? string.Empty,
+                    SubjectName = subject.SubjectName ?? string.Empty,
                     FollowType = record.FollowType,
                     FollowResult = record.FollowResult,
                     IntentLevel = record.IntentLevel,

@@ -4,7 +4,6 @@ public class CrmHerbBaseSubjectDto
 {
     public Guid Id { get; set; }
     public string? SubjectName { get; set; }
-    public string DisplayName { get; set; } = string.Empty;
     public string SubjectType { get; set; } = string.Empty;
     public Guid? OwnerUserId { get; set; }
     public string? OwnerUserName { get; set; }

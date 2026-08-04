@@ -4,8 +4,6 @@ public class CrmHerbBaseSubjectUpdateRequest
 {
     public string SubjectName { get; set; } = string.Empty;
 
-    public string DisplayName { get; set; } = string.Empty;
-
     public string SubjectType { get; set; } = string.Empty;
 
     public string Status { get; set; } = string.Empty;

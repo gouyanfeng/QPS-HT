@@ -149,9 +149,9 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
             return (CreateSubject(request, baseName), true);
         }
 
-        var normalizedSubjectName = request.SubjectName.Trim().ToUpperInvariant();
+        var subjectName = request.SubjectName.Trim();
         var existingSubject = await _dbContext.CrmHerbBaseSubjects
-            .FirstOrDefaultAsync(subject => subject.NormalizedSubjectName == normalizedSubjectName, cancellationToken);
+            .FirstOrDefaultAsync(subject => subject.SubjectName == subjectName, cancellationToken);
 
         return existingSubject == null
             ? (CreateSubject(request, baseName), true)

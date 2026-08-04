@@ -21,7 +21,7 @@ public class CrmDashboardMetricsDto
 public class CrmDashboardFollowSubjectDto
 {
     public Guid Id { get; set; }
-    public string DisplayName { get; set; } = string.Empty;
+    public string SubjectName { get; set; } = string.Empty;
     public List<string> MainProducts { get; set; } = new();
     public string Grade { get; set; } = string.Empty;
     public List<string> Regions { get; set; } = new();

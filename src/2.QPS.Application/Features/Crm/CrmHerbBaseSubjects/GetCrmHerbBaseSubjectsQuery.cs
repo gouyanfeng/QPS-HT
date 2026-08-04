@@ -44,7 +44,6 @@ public class GetCrmHerbBaseSubjectsHandler : IRequestHandler<GetCrmHerbBaseSubje
             {
                 Id = subject.Id,
                 SubjectName = subject.SubjectName,
-                DisplayName = subject.DisplayName ?? string.Empty,
                 SubjectType = subject.SubjectType,
                 OwnerUserId = subject.OwnerUserId,
                 OwnerUserName = owner == null ? null : owner.RealName != string.Empty ? owner.RealName : owner.Username,
@@ -74,7 +73,6 @@ public class GetCrmHerbBaseSubjectsHandler : IRequestHandler<GetCrmHerbBaseSubje
         {
             var keyword = request.Keyword.Trim();
             query = query.Where(subject =>
-                (subject.DisplayName ?? string.Empty).Contains(keyword) ||
                 (subject.SubjectName ?? string.Empty).Contains(keyword) ||
                 (subject.PrimaryContactName ?? string.Empty).Contains(keyword) ||
                 (subject.PrimaryContactPhone ?? string.Empty).Contains(keyword) ||

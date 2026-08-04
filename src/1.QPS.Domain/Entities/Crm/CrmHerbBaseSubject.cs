@@ -9,8 +9,6 @@ public class CrmHerbBaseSubject : BaseEntity
     private const string InterestedStatus = "INTERESTED";
 
     public string? SubjectName { get; private set; }
-    public string NormalizedSubjectName { get; private set; } = string.Empty;
-    public string? DisplayName { get; private set; }
     public string SubjectType { get; private set; } = "UNKNOWN";
     public Guid? OwnerUserId { get; private set; }
     public string Status { get; private set; } = "PENDING";
@@ -29,12 +27,8 @@ public class CrmHerbBaseSubject : BaseEntity
 
     private CrmHerbBaseSubject(string subjectName, string baseName, string subjectType, Guid? ownerUserId, string status, string grade, int score, string remark)
     {
-        SubjectName = string.IsNullOrWhiteSpace(subjectName) ? null : subjectName.Trim();
-        DisplayName = string.IsNullOrWhiteSpace(SubjectName) ? baseName.Trim() : SubjectName;
+        SubjectName = string.IsNullOrWhiteSpace(subjectName) ? baseName.Trim() : subjectName.Trim();
         SubjectType = subjectType;
-        NormalizedSubjectName = string.IsNullOrWhiteSpace(SubjectName)
-            ? $"BASE_ONLY|{DisplayName}".ToUpperInvariant()
-            : SubjectName.ToUpperInvariant();
         OwnerUserId = ownerUserId;
         Status = status;
         Grade = grade;
@@ -50,18 +44,14 @@ public class CrmHerbBaseSubject : BaseEntity
         OwnerUserId = ownerUserId;
     }
 
-    public void UpdateBasicInfo(string subjectName, string displayName, string subjectType, string status, string grade, int score, string remark)
+    public void UpdateBasicInfo(string subjectName, string subjectType, string status, string grade, int score, string remark)
     {
-        SubjectName = string.IsNullOrWhiteSpace(subjectName) ? null : subjectName.Trim();
-        DisplayName = string.IsNullOrWhiteSpace(displayName) ? DisplayName : displayName.Trim();
+        SubjectName = string.IsNullOrWhiteSpace(subjectName) ? SubjectName : subjectName.Trim();
         SubjectType = string.IsNullOrWhiteSpace(subjectType) ? SubjectType : subjectType;
         Status = string.IsNullOrWhiteSpace(status) ? Status : status;
         Grade = string.IsNullOrWhiteSpace(grade) ? Grade : grade;
         Score = score;
         Remark = remark;
-        NormalizedSubjectName = string.IsNullOrWhiteSpace(SubjectName)
-            ? $"BASE_ONLY|{DisplayName}".ToUpperInvariant()
-            : SubjectName.ToUpperInvariant();
     }
 
     public void UpdatePrimaryContact(string contactName, string phone)

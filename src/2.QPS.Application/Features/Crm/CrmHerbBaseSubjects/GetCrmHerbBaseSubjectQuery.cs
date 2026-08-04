@@ -45,7 +45,6 @@ public class GetCrmHerbBaseSubjectHandler : IRequestHandler<GetCrmHerbBaseSubjec
             {
                 Id = item.Id,
                 SubjectName = item.SubjectName,
-                DisplayName = item.DisplayName ?? string.Empty,
                 SubjectType = item.SubjectType,
                 OwnerUserId = item.OwnerUserId,
                 OwnerUserName = owner == null ? null : owner.RealName != string.Empty ? owner.RealName : owner.Username,
