@@ -24,12 +24,31 @@ public static class TestDataInitializer
         EnsureCrmHerbBasesSubjectNameColumn(dbContext);
         EnsureCrmHerbBaseSubjectLegacyNameColumnsRemoved(dbContext);
         EnsureCrmHerbBasesScaleColumn(dbContext);
+        InitializeRegions(dbContext);
         InitializeDataDictionaries(dbContext);
         InitializeCrm(dbContext, permissions);
         NormalizeCrmBusinessValues(dbContext);
         NormalizeCrmMainProducts(dbContext);
         EnsureDefaultCrmOwner(dbContext);
         EnsureDefaultCrmSubjectTransferRecords(dbContext);
+    }
+
+    private static void InitializeRegions(AppDbContext dbContext)
+    {
+        if (dbContext.SystemRegions.Any())
+        {
+            return;
+        }
+
+        var gansuId = Guid.Parse("62000000-0000-0000-0000-000000000000");
+        var dingxiId = Guid.Parse("62110000-0000-0000-0000-000000000000");
+        var longxiId = Guid.Parse("62112200-0000-0000-0000-000000000000");
+
+        dbContext.SystemRegions.AddRange(
+            new SystemRegion(gansuId, null, "620000", "甘肃省", 1, 1, true),
+            new SystemRegion(dingxiId, gansuId, "621100", "定西市", 2, 1, true),
+            new SystemRegion(longxiId, dingxiId, "621122", "陇西县", 3, 1, true));
+        dbContext.SaveChanges();
     }
 
     private static void EnsureCrmHerbBaseLegacyTables(AppDbContext dbContext)
@@ -860,10 +879,12 @@ public static class TestDataInitializer
 
             IF COL_LENGTH(N'dbo.CrmHerbBaseSubjects', N'DisplayName') IS NOT NULL
             BEGIN
-                UPDATE [CrmHerbBaseSubjects]
-                SET [SubjectName] = [DisplayName]
-                WHERE (NULLIF(LTRIM(RTRIM([SubjectName])), N'') IS NULL)
-                    AND NULLIF(LTRIM(RTRIM([DisplayName])), N'') IS NOT NULL;
+                EXEC sp_executesql N'
+                    UPDATE [CrmHerbBaseSubjects]
+                    SET [SubjectName] = [DisplayName]
+                    WHERE (NULLIF(LTRIM(RTRIM([SubjectName])), N'''') IS NULL)
+                        AND NULLIF(LTRIM(RTRIM([DisplayName])), N'''') IS NOT NULL;
+                ';
             END;
 
             IF OBJECT_ID(N'[CrmHerbBases]', N'U') IS NOT NULL
