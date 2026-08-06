@@ -42,8 +42,6 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
 
         UpdateBasicInfo(customer, request.Request);
 
-        ApplyOwner(customer, request.Request.OwnerUserId);
-
         ApplySource(customer, request.Request);
 
         ApplyPrimaryContact(customer, request.Request);
@@ -103,17 +101,6 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
         return string.IsNullOrWhiteSpace(baseName)
             ? herbBaseName
             : baseName;
-    }
-
-    /// <summary>
-    /// 负责人变化时更新负责人。
-    /// </summary>
-    private static void ApplyOwner(CrmHerbBase customer, Guid? ownerUserId)
-    {
-        if (customer.OwnerUserId != ownerUserId)
-        {
-            customer.AssignOwner(ownerUserId);
-        }
     }
 
     /// <summary>

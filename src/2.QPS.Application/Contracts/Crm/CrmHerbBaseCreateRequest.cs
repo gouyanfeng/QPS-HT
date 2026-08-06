@@ -76,11 +76,6 @@ public class CrmHerbBaseCreateRequest
     /// </summary>
     public long? SourceId { get; set; }
 
-    /// <summary>
-    /// 负责人用户ID。
-    /// </summary>
-    public Guid? OwnerUserId { get; set; }
-
     public string? PrimaryContactName { get; set; }
 
     public string? PrimaryContactPhone { get; set; }

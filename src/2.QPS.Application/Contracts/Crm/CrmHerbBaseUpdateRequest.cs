@@ -75,11 +75,6 @@ public class CrmHerbBaseUpdateRequest
     public long? SourceId { get; set; }
 
     /// <summary>
-    /// 负责人用户ID。
-    /// </summary>
-    public Guid? OwnerUserId { get; set; }
-
-    /// <summary>
     /// 药材基地处理状态，例如待联系、跟进中、有意向、已成交、已流失。
     /// </summary>
     public string Status { get; set; } = string.Empty;

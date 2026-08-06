@@ -22,15 +22,13 @@ public class CreateCrmHerbBaseCommand : IRequest<bool>
 public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand, bool>
 {
     private readonly IDbContext _dbContext;
-    private readonly ICurrentUserService _currentUserService;
 
     /// <summary>
     /// 创建药材基地处理器。
     /// </summary>
-    public CreateCrmHerbBaseHandler(IDbContext dbContext, ICurrentUserService currentUserService)
+    public CreateCrmHerbBaseHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
-        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -39,7 +37,7 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
     public async Task<bool> Handle(CreateCrmHerbBaseCommand request, CancellationToken cancellationToken)
     {
         // 编排创建药材基地用例：
-        // 创建主体和基地、同步主体主联系人摘要、保存默认流转记录。
+        // 创建主体和基地、同步主体主联系人摘要。
         var herbBase = CreateHerbBase(request.Request);
         var (subject, isNewSubject) = await ResolveSubjectAsync(request.Request, herbBase.BaseName, cancellationToken);
         herbBase.SetHerbBaseSubject(subject.Id);
@@ -52,16 +50,6 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
 
         _dbContext.CrmHerbBases.Add(herbBase);
         AddMainProducts(herbBase.Id, request.Request.MainProducts);
-        if (isNewSubject)
-        {
-            _dbContext.CrmTransferRecords.Add(CrmTransferRecord.Create(
-                CrmCodes.HerbBaseSubjectEntityType,
-                subject.Id,
-                null,
-                request.Request.OwnerUserId,
-                GetOperatorUserId(),
-                request.Request.Remark.Trim()));
-        }
         
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -104,7 +92,7 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
             lng: request.Lng,
             sourcePlatform: request.SourcePlatform,
             sourceId: request.SourceId,
-            ownerUserId: request.OwnerUserId,
+            ownerUserId: null,
             remark: request.Remark,
             subjectName: request.SubjectName,
             scale: request.Scale);
@@ -120,7 +108,7 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
             request.SubjectName,
             baseName,
             hasSubjectName ? "UNKNOWN" : "BASE_ONLY",
-            request.OwnerUserId,
+            null,
             CrmCodes.Status.Pending,
             request.Grade,
             request.Score,
@@ -184,12 +172,6 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
             request.PrimaryContactPhone ?? string.Empty);
     }
 
-    private Guid? GetOperatorUserId()
-    {
-        return Guid.TryParse(_currentUserService.UserId, out var operatorUserId)
-            ? operatorUserId
-            : null;
-    }
 }
 
 

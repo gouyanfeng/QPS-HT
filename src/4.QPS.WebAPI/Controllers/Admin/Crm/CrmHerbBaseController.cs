@@ -14,8 +14,6 @@ namespace QPS.WebAPI.Controllers.Admin.Crm;
 [ApiController]
 public class CrmHerbBaseController : ControllerBase
 {
-    private const string HerbBaseEntityType = "CRM_HERB_BASE";
-
     private readonly IMediator _mediator;
 
     public CrmHerbBaseController(IMediator mediator)
@@ -109,22 +107,6 @@ public class CrmHerbBaseController : ControllerBase
     {
         var query = new GetCrmHerbBaseQuery { Id = id };
         var result = await _mediator.Send(query);
-        return Ok(result);
-    }
-
-    [HttpGet("{id}/owner-transfers")]
-    public async Task<ActionResult<List<CrmTransferRecordDto>>> GetTransferRecords(Guid id)
-    {
-        var query = new GetCrmTransferRecordsQuery { EntityType = HerbBaseEntityType, EntityId = id };
-        var result = await _mediator.Send(query);
-        return Ok(result);
-    }
-
-    [HttpPatch("assign-owner")]
-    public async Task<ActionResult<bool>> AssignOwner([FromBody] CrmHerbBaseAssignOwnerRequest request)
-    {
-        var command = new AssignCrmHerbBaseOwnerCommand { Request = request };
-        var result = await _mediator.Send(command);
         return Ok(result);
     }
 

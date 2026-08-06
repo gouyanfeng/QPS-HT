@@ -12,10 +12,8 @@ public class CrmHerbBaseCommandTests
     [Fact]
     public async Task Create_ShouldPersistMainProductAttributes()
     {
-        var operatorUserId = Guid.NewGuid();
-        var ownerUserId = Guid.NewGuid();
-        await using var dbContext = TestDbContextFactory.Create(new TestCurrentUserService(operatorUserId.ToString()));
-        var handler = new CreateCrmHerbBaseHandler(dbContext, new TestCurrentUserService(operatorUserId.ToString()));
+        await using var dbContext = TestDbContextFactory.Create();
+        var handler = new CreateCrmHerbBaseHandler(dbContext);
 
         var result = await handler.Handle(new CreateCrmHerbBaseCommand
         {
@@ -31,7 +29,6 @@ public class CrmHerbBaseCommandTests
                 Address = "Test address",
                 SourcePlatform = "MANUAL",
                 SourceId = 3001,
-                OwnerUserId = ownerUserId,
                 PrimaryContactName = "Primary Contact",
                 PrimaryContactPhone = "13900000000",
                 Remark = "Created by unit test"
@@ -45,25 +42,20 @@ public class CrmHerbBaseCommandTests
             .OrderBy(attribute => attribute.SortOrder)
             .Select(attribute => attribute.AttributeValue)
             .ToListAsync();
-        var transferRecord = await dbContext.CrmTransferRecords.SingleAsync();
+        var transferRecordCount = await dbContext.CrmTransferRecords.CountAsync();
 
         Assert.True(result);
         Assert.Equal(new List<string> { "HUANG_QI", "DANG_GUI" }, attributes);
         Assert.Equal("Primary Contact", subject.PrimaryContactName);
         Assert.Equal("13900000000", subject.PrimaryContactPhone);
-        Assert.Equal("CRM_HERB_BASE_SUBJECT", transferRecord.EntityType);
-        Assert.Equal(subject.Id, transferRecord.EntityId);
-        Assert.Null(transferRecord.FromOwnerUserId);
-        Assert.Equal(ownerUserId, transferRecord.ToOwnerUserId);
-        Assert.Equal(operatorUserId, transferRecord.OperatorUserId);
-        Assert.Equal("Created by unit test", transferRecord.Remark);
+        Assert.Equal(0, transferRecordCount);
     }
 
     [Fact]
     public async Task GetList_ShouldFilterByBusinessEntityMainProductAttributes()
     {
         await using var dbContext = TestDbContextFactory.Create();
-        var createHandler = new CreateCrmHerbBaseHandler(dbContext, new TestCurrentUserService());
+        var createHandler = new CreateCrmHerbBaseHandler(dbContext);
         await createHandler.Handle(new CreateCrmHerbBaseCommand
         {
             Request = CreateCustomerRequest("Dang Gui Customer")
