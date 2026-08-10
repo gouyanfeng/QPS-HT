@@ -67,11 +67,7 @@ public class GetOperationLogsQueryHandler : IRequestHandler<GetOperationLogsQuer
             query = query.Where(log => log.CreatedAt <= request.EndAt.Value);
         }
 
-        var totalCount = await query.CountAsync(cancellationToken);
-        var logs = await query
-            .OrderByDescending(log => log.CreatedAt)
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
+        var logs = query
             .Select(log => new OperationLogDto
             {
                 Id = log.Id,
@@ -83,9 +79,8 @@ public class GetOperationLogsQueryHandler : IRequestHandler<GetOperationLogsQuer
                 RequestPath = log.RequestPath,
                 IpAddress = log.IpAddress,
                 ChangeJson = log.ChangeJson
-            })
-            .ToListAsync(cancellationToken);
+            });
 
-        return new PaginationResponse<OperationLogDto>(logs, totalCount, request.Page, request.PageSize);
+        return await logs.ToPaginationResponseAsync(request);
     }
 }

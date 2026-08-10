@@ -14,6 +14,7 @@ public class CrmHerbBaseSubject : BaseEntity
     public string Status { get; private set; } = "PENDING";
     public string Grade { get; private set; } = string.Empty;
     public int Score { get; private set; }
+    public decimal? Scale { get; private set; }
     public string? PrimaryContactName { get; private set; }
     public string? PrimaryContactPhone { get; private set; }
     public DateTime? LastFollowAt { get; private set; }
@@ -25,7 +26,7 @@ public class CrmHerbBaseSubject : BaseEntity
 
     private CrmHerbBaseSubject() { }
 
-    private CrmHerbBaseSubject(string subjectName, string baseName, string subjectType, Guid? ownerUserId, string status, string grade, int score, string remark)
+    private CrmHerbBaseSubject(string subjectName, string baseName, string subjectType, Guid? ownerUserId, string status, string grade, int score, string remark, decimal? scale)
     {
         SubjectName = string.IsNullOrWhiteSpace(subjectName) ? baseName.Trim() : subjectName.Trim();
         SubjectType = subjectType;
@@ -33,11 +34,12 @@ public class CrmHerbBaseSubject : BaseEntity
         Status = status;
         Grade = grade;
         Score = score;
+        Scale = scale;
         Remark = remark;
     }
 
-    public static CrmHerbBaseSubject Create(string subjectName, string baseName, string subjectType, Guid? ownerUserId, string status, string grade, int score, string remark)
-        => new(subjectName, baseName, subjectType, ownerUserId, status, grade, score, remark);
+    public static CrmHerbBaseSubject Create(string subjectName, string baseName, string subjectType, Guid? ownerUserId, string status, string grade, int score, string remark, decimal? scale = null)
+        => new(subjectName, baseName, subjectType, ownerUserId, status, grade, score, remark, scale);
 
     public void AssignOwner(Guid? ownerUserId)
     {
@@ -52,6 +54,11 @@ public class CrmHerbBaseSubject : BaseEntity
         Grade = string.IsNullOrWhiteSpace(grade) ? Grade : grade;
         Score = score;
         Remark = remark;
+    }
+
+    public void UpdateScale(decimal scale)
+    {
+        Scale = scale;
     }
 
     public void UpdatePrimaryContact(string contactName, string phone)

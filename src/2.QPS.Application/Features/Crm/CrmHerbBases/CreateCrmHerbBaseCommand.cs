@@ -41,6 +41,7 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
         var herbBase = CreateHerbBase(request.Request);
         var (subject, isNewSubject) = await ResolveSubjectAsync(request.Request, herbBase.BaseName, cancellationToken);
         herbBase.SetHerbBaseSubject(subject.Id);
+        await SyncSubjectScaleAsync(subject, herbBase.Scale ?? 0, isNewSubject, cancellationToken);
 
         if (isNewSubject)
         {
@@ -112,7 +113,8 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
             CrmCodes.Status.Pending,
             request.Grade,
             request.Score,
-            request.Remark);
+            request.Remark,
+            request.Scale);
     }
 
     /// <summary>
@@ -170,6 +172,21 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
         subject.UpdatePrimaryContact(
             request.PrimaryContactName ?? string.Empty,
             request.PrimaryContactPhone ?? string.Empty);
+    }
+
+    private async Task SyncSubjectScaleAsync(
+        CrmHerbBaseSubject subject,
+        decimal newBaseScale,
+        bool isNewSubject,
+        CancellationToken cancellationToken)
+    {
+        var existingScale = isNewSubject
+            ? 0
+            : await _dbContext.CrmHerbBases
+                .Where(herbBase => herbBase.HerbBaseSubjectId == subject.Id)
+                .SumAsync(herbBase => herbBase.Scale ?? 0, cancellationToken);
+
+        subject.UpdateScale(existingScale + newBaseScale);
     }
 
 }

@@ -24,9 +24,11 @@ public static class TestDataInitializer
         EnsureCrmHerbBasesSubjectNameColumn(dbContext);
         EnsureCrmHerbBaseSubjectLegacyNameColumnsRemoved(dbContext);
         EnsureCrmHerbBasesScaleColumn(dbContext);
+        EnsureCrmHerbBaseSubjectsScaleColumn(dbContext);
         InitializeRegions(dbContext);
         InitializeDataDictionaries(dbContext);
         InitializeCrm(dbContext, permissions);
+        SyncCrmHerbBaseSubjectScale(dbContext);
         NormalizeCrmBusinessValues(dbContext);
         NormalizeCrmMainProducts(dbContext);
         EnsureDefaultCrmOwner(dbContext);
@@ -861,6 +863,44 @@ public static class TestDataInitializer
             BEGIN
                 ALTER TABLE [CrmHerbBases] ADD [Scale] decimal(18,2) NULL;
             END;
+            """);
+    }
+
+    private static void EnsureCrmHerbBaseSubjectsScaleColumn(AppDbContext dbContext)
+    {
+        dbContext.Database.ExecuteSqlRaw("""
+            IF OBJECT_ID(N'[CrmHerbBaseSubjects]', N'U') IS NOT NULL
+                AND COL_LENGTH(N'dbo.CrmHerbBaseSubjects', N'Scale') IS NULL
+            BEGIN
+                ALTER TABLE [CrmHerbBaseSubjects] ADD [Scale] decimal(18,2) NULL;
+            END;
+            """);
+    }
+
+    private static void SyncCrmHerbBaseSubjectScale(AppDbContext dbContext)
+    {
+        dbContext.Database.ExecuteSqlRaw("""
+            IF OBJECT_ID(N'[CrmHerbBaseSubjects]', N'U') IS NULL
+                OR OBJECT_ID(N'[CrmHerbBases]', N'U') IS NULL
+                OR COL_LENGTH(N'dbo.CrmHerbBaseSubjects', N'Scale') IS NULL
+            BEGIN
+                RETURN;
+            END;
+
+            UPDATE [Subject]
+            SET [Scale] = [Summary].[TotalScale]
+            FROM [CrmHerbBaseSubjects] AS [Subject]
+            OUTER APPLY (
+                SELECT CAST(COALESCE(SUM(ISNULL([Base].[Scale], 0)), 0) AS decimal(18,2)) AS [TotalScale]
+                FROM [CrmHerbBases] AS [Base]
+                WHERE [Base].[HerbBaseSubjectId] = [Subject].[Id]
+                    AND [Base].[IsDeleted] = 0
+            ) AS [Summary]
+            WHERE [Subject].[IsDeleted] = 0
+                AND (
+                    [Subject].[Scale] IS NULL
+                    OR [Subject].[Scale] <> [Summary].[TotalScale]
+                );
             """);
     }
 

@@ -49,6 +49,7 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
         ApplyStatus(customer, request.Request);
 
         await SyncMainProducts(customer.Id, request.Request.MainProducts, cancellationToken);
+        await SyncSubjectScaleAsync(customer, cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -172,6 +173,29 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
                 values[i],
                 i));
         }
+    }
+
+    private async Task SyncSubjectScaleAsync(CrmHerbBase herbBase, CancellationToken cancellationToken)
+    {
+        if (!herbBase.HerbBaseSubjectId.HasValue)
+        {
+            return;
+        }
+
+        var subject = await _dbContext.CrmHerbBaseSubjects
+            .FirstOrDefaultAsync(item => item.Id == herbBase.HerbBaseSubjectId.Value, cancellationToken);
+        if (subject == null)
+        {
+            return;
+        }
+
+        var otherBaseScale = await _dbContext.CrmHerbBases
+            .Where(item =>
+                item.HerbBaseSubjectId == herbBase.HerbBaseSubjectId.Value &&
+                item.Id != herbBase.Id)
+            .SumAsync(item => item.Scale ?? 0, cancellationToken);
+
+        subject.UpdateScale(otherBaseScale + (herbBase.Scale ?? 0));
     }
 }
 

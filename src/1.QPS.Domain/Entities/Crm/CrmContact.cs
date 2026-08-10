@@ -1,5 +1,6 @@
 ﻿using QPS.Domain.Common;
 using QPS.Domain.Exceptions;
+using System.Text.RegularExpressions;
 
 namespace QPS.Domain.Entities.Crm;
 
@@ -8,6 +9,9 @@ namespace QPS.Domain.Entities.Crm;
 /// </summary>
 public class CrmContact : BaseEntity
 {
+    private static readonly Regex MobilePhoneRegex = new(@"^1[3-9]\d{9}$", RegexOptions.Compiled);
+    private static readonly Regex LandlinePhoneRegex = new(@"^0\d{2,3}-?\d{7,8}(-\d{1,6})?$", RegexOptions.Compiled);
+
     /// <summary>
     /// 所属业务实体类型，例如CRM_HERB_BASE、CRM_VENDOR。
     /// </summary>
@@ -82,15 +86,15 @@ public class CrmContact : BaseEntity
         bool isPrimary,
         string remark)
     {
-        EntityType = entityType;
+        EntityType = Trim(entityType);
         EntityId = entityId;
-        ContactName = contactName;
-        Phone = phone;
-        PhoneType = phoneType;
-        Wechat = wechat;
-        RoleName = roleName;
+        ContactName = Trim(contactName);
+        Phone = Trim(phone);
+        PhoneType = Trim(phoneType);
+        Wechat = Trim(wechat);
+        RoleName = Trim(roleName);
         IsPrimary = isPrimary;
-        Remark = remark;
+        Remark = Trim(remark);
         Status = "UNVERIFIED";
     }
 
@@ -127,13 +131,13 @@ public class CrmContact : BaseEntity
     {
         EnsureContactNameOrPhone(contactName, phone);
 
-        ContactName = contactName;
-        Phone = phone;
-        PhoneType = phoneType;
-        Wechat = wechat;
-        RoleName = roleName;
+        ContactName = Trim(contactName);
+        Phone = Trim(phone);
+        PhoneType = Trim(phoneType);
+        Wechat = Trim(wechat);
+        RoleName = Trim(roleName);
         IsPrimary = isPrimary;
-        Remark = remark;
+        Remark = Trim(remark);
     }
 
     /// <summary>
@@ -145,6 +149,21 @@ public class CrmContact : BaseEntity
         {
             throw new BusinessException(400, "联系人姓名和电话至少填写一项");
         }
+
+        if (!string.IsNullOrWhiteSpace(phone) && !IsValidPhone(Trim(phone)))
+        {
+            throw new BusinessException(400, "联系电话格式不正确");
+        }
+    }
+
+    private static string Trim(string? value)
+    {
+        return value?.Trim() ?? string.Empty;
+    }
+
+    private static bool IsValidPhone(string phone)
+    {
+        return MobilePhoneRegex.IsMatch(phone) || LandlinePhoneRegex.IsMatch(phone);
     }
 
     /// <summary>

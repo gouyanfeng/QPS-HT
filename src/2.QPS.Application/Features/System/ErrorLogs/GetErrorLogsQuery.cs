@@ -65,11 +65,7 @@ public class GetErrorLogsQueryHandler : IRequestHandler<GetErrorLogsQuery, Pagin
             query = query.Where(log => log.CreatedAt <= request.EndAt.Value);
         }
 
-        var totalCount = await query.CountAsync(cancellationToken);
-        var logs = await query
-            .OrderByDescending(log => log.CreatedAt)
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
+        var logs = query
             .Select(log => new ErrorLogDto
             {
                 Id = log.Id,
@@ -85,9 +81,8 @@ public class GetErrorLogsQueryHandler : IRequestHandler<GetErrorLogsQuery, Pagin
                 IpAddress = log.IpAddress,
                 UserAgent = log.UserAgent,
                 HttpStatusCode = log.HttpStatusCode
-            })
-            .ToListAsync(cancellationToken);
+            });
 
-        return new PaginationResponse<ErrorLogDto>(logs, totalCount, request.Page, request.PageSize);
+        return await logs.ToPaginationResponseAsync(request);
     }
 }

@@ -42,6 +42,8 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
         var subject = await GetSubject(contact, cancellationToken);
         var wasPrimary = contact.IsPrimary;
 
+        await EnsurePhoneNotDuplicated(contact, request.Request.Phone, cancellationToken);
+
         UpdateContact(contact, request.Request);
         await ApplyPrimaryContactChange(subject, contact, wasPrimary, cancellationToken);
 
@@ -95,6 +97,28 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
         }
 
         return subject;
+    }
+
+    private async Task EnsurePhoneNotDuplicated(CrmContact contact, string phone, CancellationToken cancellationToken)
+    {
+        var normalizedPhone = phone?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(normalizedPhone))
+        {
+            return;
+        }
+
+        var duplicated = await _dbContext.CrmContacts.AnyAsync(
+            item =>
+                item.EntityType == contact.EntityType &&
+                item.EntityId == contact.EntityId &&
+                item.Id != contact.Id &&
+                item.Phone == normalizedPhone,
+            cancellationToken);
+
+        if (duplicated)
+        {
+            throw new BusinessException(400, "该主体下已存在相同联系电话");
+        }
     }
 
     /// <summary>

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Extensions;
 using QPS.Application.Interfaces;
+using QPS.Domain.Entities.Crm;
 
 namespace QPS.Application.Features.Crm.CrmHerbBaseSubjects;
 
@@ -36,8 +37,13 @@ public class GetCrmHerbBaseSubjectsHandler : IRequestHandler<GetCrmHerbBaseSubje
         CancellationToken cancellationToken)
     {
         var query = ApplyFilters(_dbContext.CrmHerbBaseSubjects.AsQueryable(), request);
+        var totalCount = await query.CountAsync(cancellationToken);
+        var pagedQuery = ApplySorting(query, request)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize);
+
         var dtoQuery =
-            from subject in query
+            from subject in pagedQuery
             join owner in _dbContext.SystemUsers on subject.OwnerUserId equals owner.Id into ownerGroup
             from owner in ownerGroup.DefaultIfEmpty()
             select new CrmHerbBaseSubjectDto
@@ -56,13 +62,73 @@ public class GetCrmHerbBaseSubjectsHandler : IRequestHandler<GetCrmHerbBaseSubje
                 LastFollowResult = subject.LastFollowResult,
                 NextFollowAt = subject.NextFollowAt,
                 Remark = subject.Remark,
+                BaseCount = subject.HerbBases.Count,
+                TotalScale = subject.Scale ?? 0,
                 CreatedAt = subject.CreatedAt,
                 UpdatedAt = subject.UpdatedAt
             };
 
-        var response = await dtoQuery.ToPaginationResponseAsync(request);
+        var response = new PaginationResponse<CrmHerbBaseSubjectDto>(
+            await dtoQuery.ToListAsync(cancellationToken),
+            totalCount,
+            request.Page,
+            request.PageSize);
         await FillBaseSummariesAsync(response.List, cancellationToken);
         return response;
+    }
+
+    private static IQueryable<CrmHerbBaseSubject> ApplySorting(
+        IQueryable<CrmHerbBaseSubject> query,
+        GetCrmHerbBaseSubjectsQuery request)
+    {
+        var isAscending = request.SortDirection.Equals("Ascending", StringComparison.OrdinalIgnoreCase);
+        var sortField = request.SortField ?? nameof(CrmHerbBaseSubjectDto.CreatedAt);
+
+        if (sortField.Equals(nameof(CrmHerbBaseSubjectDto.TotalScale), StringComparison.OrdinalIgnoreCase))
+        {
+            return isAscending
+                ? query.OrderBy(subject => subject.Scale ?? 0).ThenByDescending(subject => subject.CreatedAt)
+                : query.OrderByDescending(subject => subject.Scale ?? 0).ThenByDescending(subject => subject.CreatedAt);
+        }
+
+        if (sortField.Equals(nameof(CrmHerbBaseSubjectDto.BaseCount), StringComparison.OrdinalIgnoreCase))
+        {
+            return isAscending
+                ? query.OrderBy(subject => subject.HerbBases.Count).ThenByDescending(subject => subject.CreatedAt)
+                : query.OrderByDescending(subject => subject.HerbBases.Count).ThenByDescending(subject => subject.CreatedAt);
+        }
+
+        if (sortField.Equals(nameof(CrmHerbBaseSubjectDto.Score), StringComparison.OrdinalIgnoreCase))
+        {
+            return isAscending
+                ? query.OrderBy(subject => subject.Score).ThenByDescending(subject => subject.CreatedAt)
+                : query.OrderByDescending(subject => subject.Score).ThenByDescending(subject => subject.CreatedAt);
+        }
+
+        if (sortField.Equals(nameof(CrmHerbBaseSubjectDto.UpdatedAt), StringComparison.OrdinalIgnoreCase))
+        {
+            return isAscending
+                ? query.OrderBy(subject => subject.UpdatedAt).ThenByDescending(subject => subject.CreatedAt)
+                : query.OrderByDescending(subject => subject.UpdatedAt).ThenByDescending(subject => subject.CreatedAt);
+        }
+
+        if (sortField.Equals(nameof(CrmHerbBaseSubjectDto.NextFollowAt), StringComparison.OrdinalIgnoreCase))
+        {
+            return isAscending
+                ? query.OrderBy(subject => subject.NextFollowAt).ThenByDescending(subject => subject.CreatedAt)
+                : query.OrderByDescending(subject => subject.NextFollowAt).ThenByDescending(subject => subject.CreatedAt);
+        }
+
+        if (sortField.Equals(nameof(CrmHerbBaseSubjectDto.SubjectName), StringComparison.OrdinalIgnoreCase))
+        {
+            return isAscending
+                ? query.OrderBy(subject => subject.SubjectName).ThenByDescending(subject => subject.CreatedAt)
+                : query.OrderByDescending(subject => subject.SubjectName).ThenByDescending(subject => subject.CreatedAt);
+        }
+
+        return isAscending
+            ? query.OrderBy(subject => subject.CreatedAt)
+            : query.OrderByDescending(subject => subject.CreatedAt);
     }
 
     private IQueryable<QPS.Domain.Entities.Crm.CrmHerbBaseSubject> ApplyFilters(
@@ -165,7 +231,6 @@ public class GetCrmHerbBaseSubjectsHandler : IRequestHandler<GetCrmHerbBaseSubje
         {
             var subjectBases = bases.Where(herbBase => herbBase.SubjectId == subject.Id).ToList();
             subject.BaseCount = subjectBases.Count;
-            subject.TotalScale = subjectBases.Sum(herbBase => herbBase.Scale ?? 0);
             subject.Regions = subjectBases
                 .Select(herbBase => string.Join(' ', new[] { herbBase.Province, herbBase.City, herbBase.Area }.Where(value => !string.IsNullOrWhiteSpace(value))))
                 .Where(region => !string.IsNullOrWhiteSpace(region))

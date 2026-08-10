@@ -38,6 +38,8 @@ public class CreateCrmContactHandler : IRequestHandler<CreateCrmContactCommand, 
         // 确认基地主体、创建联系人、同步主联系人摘要。
         var subject = await GetSubject(request.HerbBaseSubjectId, cancellationToken);
 
+        await EnsurePhoneNotDuplicated(request.HerbBaseSubjectId, request.Request.Phone, cancellationToken);
+
         var contact = CreateContact(request, subject);
 
         await ApplyPrimaryContact(subject, contact, cancellationToken);
@@ -65,6 +67,27 @@ public class CreateCrmContactHandler : IRequestHandler<CreateCrmContactCommand, 
         }
 
         return subject;
+    }
+
+    private async Task EnsurePhoneNotDuplicated(Guid herbBaseSubjectId, string phone, CancellationToken cancellationToken)
+    {
+        var normalizedPhone = phone?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(normalizedPhone))
+        {
+            return;
+        }
+
+        var exists = await _dbContext.CrmContacts.AnyAsync(
+            contact =>
+                contact.EntityType == HerbBaseSubjectEntityType &&
+                contact.EntityId == herbBaseSubjectId &&
+                contact.Phone == normalizedPhone,
+            cancellationToken);
+
+        if (exists)
+        {
+            throw new BusinessException(400, "该主体下已存在相同联系电话");
+        }
     }
 
     /// <summary>

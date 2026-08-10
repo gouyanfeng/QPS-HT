@@ -56,6 +56,7 @@ public class GetCrmHerbBaseSubjectHandler : IRequestHandler<GetCrmHerbBaseSubjec
                 LastFollowAt = item.LastFollowAt,
                 LastFollowResult = item.LastFollowResult,
                 NextFollowAt = item.NextFollowAt,
+                TotalScale = item.Scale ?? 0,
                 Remark = item.Remark,
                 CreatedAt = item.CreatedAt,
                 UpdatedAt = item.UpdatedAt
@@ -119,7 +120,6 @@ public class GetCrmHerbBaseSubjectHandler : IRequestHandler<GetCrmHerbBaseSubjec
     private static void FillBaseSummary(CrmHerbBaseSubjectDetailDto subject)
     {
         subject.BaseCount = subject.HerbBases.Count;
-        subject.TotalScale = subject.HerbBases.Sum(herbBase => herbBase.Scale ?? 0);
         subject.MainProducts = subject.HerbBases.SelectMany(herbBase => herbBase.MainProducts).Distinct().ToList();
         subject.Regions = subject.HerbBases
             .Select(herbBase => string.Join(' ', new[] { herbBase.Province, herbBase.City, herbBase.Area }.Where(value => !string.IsNullOrWhiteSpace(value))))

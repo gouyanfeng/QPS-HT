@@ -62,6 +62,7 @@ public class AppDbContext : DbContext, IDbContext
             entity.Property(subject => subject.SubjectType).HasMaxLength(32);
             entity.Property(subject => subject.Status).HasMaxLength(32);
             entity.Property(subject => subject.Grade).HasMaxLength(32);
+            entity.Property(subject => subject.Scale).HasPrecision(18, 2);
             entity.Property(subject => subject.PrimaryContactName).HasMaxLength(200);
             entity.Property(subject => subject.PrimaryContactPhone).HasMaxLength(100);
             entity.HasIndex(subject => subject.SubjectName);
