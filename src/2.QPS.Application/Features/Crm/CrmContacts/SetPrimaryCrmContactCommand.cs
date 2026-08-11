@@ -48,6 +48,8 @@ public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactC
         subject.UpdatePrimaryContact(contact.ContactName, contact.Phone);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await CrmHerbBaseSubjectScoreService.RecalculateAsync(_dbContext, subject.Id, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
     }

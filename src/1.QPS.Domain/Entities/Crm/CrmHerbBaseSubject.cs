@@ -61,6 +61,12 @@ public class CrmHerbBaseSubject : BaseEntity
         Scale = scale;
     }
 
+    public void UpdateScoreGrade(int score, string grade)
+    {
+        Score = Math.Clamp(score, 0, 100);
+        Grade = string.IsNullOrWhiteSpace(grade) ? Grade : grade;
+    }
+
     public void UpdatePrimaryContact(string contactName, string phone)
     {
         PrimaryContactName = contactName;

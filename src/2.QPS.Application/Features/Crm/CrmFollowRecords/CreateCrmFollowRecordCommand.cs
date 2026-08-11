@@ -52,6 +52,8 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
         subject.UpdateFollowSummary(DateTime.Now, request.Request.FollowResult, request.Request.NextFollowAt);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await CrmHerbBaseSubjectScoreService.RecalculateAsync(_dbContext, subject.Id, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
     }

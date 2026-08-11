@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.Crm;
 
@@ -39,6 +40,7 @@ public class SaveCrmBusinessEntityAttributesHandler : IRequestHandler<SaveCrmBus
         AddNewAttributes(request.Request, values);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await RecalculateHerbBaseSubjectScore(request.Request, cancellationToken);
 
         return true;
     }
@@ -86,5 +88,28 @@ public class SaveCrmBusinessEntityAttributesHandler : IRequestHandler<SaveCrmBus
                 value,
                 sortOrder++));
         }
+    }
+
+    private async Task RecalculateHerbBaseSubjectScore(
+        CrmBusinessEntityAttributeSaveRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.EntityType != CrmCodes.HerbBaseEntityType ||
+            request.AttributeCode != CrmCodes.MainProductAttributeCode)
+        {
+            return;
+        }
+
+        var subjectId = await _dbContext.CrmHerbBases
+            .Where(item => item.Id == request.EntityId && item.HerbBaseSubjectId.HasValue)
+            .Select(item => item.HerbBaseSubjectId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (!subjectId.HasValue)
+        {
+            return;
+        }
+
+        await CrmHerbBaseSubjectScoreService.RecalculateAsync(_dbContext, subjectId.Value, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

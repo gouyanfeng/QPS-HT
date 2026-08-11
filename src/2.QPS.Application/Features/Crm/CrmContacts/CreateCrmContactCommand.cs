@@ -47,6 +47,8 @@ public class CreateCrmContactHandler : IRequestHandler<CreateCrmContactCommand, 
         _dbContext.CrmContacts.Add(contact);
         
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await CrmHerbBaseSubjectScoreService.RecalculateAsync(_dbContext, subject.Id, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
     }

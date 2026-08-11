@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.Crm;
 using QPS.Domain.Exceptions;
@@ -42,6 +43,11 @@ public class DeleteCrmHerbBaseHandler : IRequestHandler<DeleteCrmHerbBaseCommand
         await SyncSubjectScaleAsync(customer, cancellationToken);
         
         await _dbContext.SaveChangesAsync(cancellationToken);
+        if (customer.HerbBaseSubjectId.HasValue)
+        {
+            await CrmHerbBaseSubjectScoreService.RecalculateAsync(_dbContext, customer.HerbBaseSubjectId.Value, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
 
         return true;
     }

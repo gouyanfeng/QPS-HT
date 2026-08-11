@@ -48,6 +48,8 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
         await ApplyPrimaryContactChange(subject, contact, wasPrimary, cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await CrmHerbBaseSubjectScoreService.RecalculateAsync(_dbContext, subject.Id, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
     }

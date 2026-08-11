@@ -48,6 +48,8 @@ public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactSta
         await ApplyInvalidPrimaryContact(wasPrimary, contact, subject, cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await CrmHerbBaseSubjectScoreService.RecalculateAsync(_dbContext, subject.Id, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
     }

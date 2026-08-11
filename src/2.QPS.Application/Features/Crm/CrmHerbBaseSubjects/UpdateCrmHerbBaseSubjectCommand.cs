@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Exceptions;
 
@@ -47,6 +48,8 @@ public class UpdateCrmHerbBaseSubjectHandler : IRequestHandler<UpdateCrmHerbBase
             herbBase.RenameSubject(syncedSubjectName);
         }
 
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        await CrmHerbBaseSubjectScoreService.RecalculateAsync(_dbContext, subject.Id, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
