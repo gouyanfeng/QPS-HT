@@ -149,6 +149,27 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
             })
             .ToList();
 
+        var newBaseDates = await _dbContext.CrmHerbBases
+            .Where(herbBase =>
+                herbBase.HerbBaseSubjectId.HasValue &&
+                mySubjects.Select(subject => subject.Id).Contains(herbBase.HerbBaseSubjectId.Value) &&
+                herbBase.CreatedAt >= trendStart &&
+                herbBase.CreatedAt < tomorrowStart)
+            .Select(herbBase => herbBase.CreatedAt)
+            .ToListAsync(cancellationToken);
+        var newBaseTrend = Enumerable.Range(0, 7)
+            .Select(offset => trendStart.AddDays(offset))
+            .Select(date =>
+            {
+                var nextDate = date.AddDays(1);
+                return new CrmDashboardNewBaseTrendItemDto
+                {
+                    Date = date,
+                    NewBaseCount = newBaseDates.Count(createdAt => createdAt >= date && createdAt < nextDate)
+                };
+            })
+            .ToList();
+
         await FillSubjectSummariesAsync(todayFollowSubjects, cancellationToken);
 
         return new CrmDashboardDto
@@ -164,7 +185,8 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
             RecentFollowRecords = recentFollowRecords,
             FollowFunnel = followFunnel,
             MainProductDistribution = mainProductDistribution,
-            FollowTrend = followTrend
+            FollowTrend = followTrend,
+            NewBaseTrend = newBaseTrend
         };
     }
 
@@ -183,6 +205,10 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
             FollowTrend = Enumerable.Range(0, 7)
                 .Select(offset => DateTime.Today.AddDays(-6 + offset))
                 .Select(date => new CrmDashboardTrendItemDto { Date = date })
+                .ToList(),
+            NewBaseTrend = Enumerable.Range(0, 7)
+                .Select(offset => DateTime.Today.AddDays(-6 + offset))
+                .Select(date => new CrmDashboardNewBaseTrendItemDto { Date = date })
                 .ToList()
         };
     }

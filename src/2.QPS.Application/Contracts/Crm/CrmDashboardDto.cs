@@ -8,6 +8,7 @@ public class CrmDashboardDto
     public List<CrmDashboardChartItemDto> FollowFunnel { get; set; } = new();
     public List<CrmDashboardChartItemDto> MainProductDistribution { get; set; } = new();
     public List<CrmDashboardTrendItemDto> FollowTrend { get; set; } = new();
+    public List<CrmDashboardNewBaseTrendItemDto> NewBaseTrend { get; set; } = new();
 }
 
 public class CrmDashboardMetricsDto
@@ -56,4 +57,10 @@ public class CrmDashboardTrendItemDto
     public DateTime Date { get; set; }
     public int FollowCount { get; set; }
     public int EffectiveFollowCount { get; set; }
+}
+
+public class CrmDashboardNewBaseTrendItemDto
+{
+    public DateTime Date { get; set; }
+    public int NewBaseCount { get; set; }
 }
