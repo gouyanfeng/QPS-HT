@@ -25,7 +25,6 @@ public static class TestDataInitializer
         EnsureCrmHerbBaseSubjectLegacyNameColumnsRemoved(dbContext);
         EnsureCrmHerbBasesScaleColumn(dbContext);
         EnsureCrmHerbBaseSubjectsScaleColumn(dbContext);
-        InitializeRegions(dbContext);
         InitializeDataDictionaries(dbContext);
         InitializeCrm(dbContext, permissions);
         SyncCrmHerbBaseSubjectScale(dbContext);
@@ -33,24 +32,6 @@ public static class TestDataInitializer
         NormalizeCrmMainProducts(dbContext);
         EnsureDefaultCrmOwner(dbContext);
         EnsureDefaultCrmSubjectTransferRecords(dbContext);
-    }
-
-    private static void InitializeRegions(AppDbContext dbContext)
-    {
-        if (dbContext.SystemRegions.Any())
-        {
-            return;
-        }
-
-        var gansuId = Guid.Parse("62000000-0000-0000-0000-000000000000");
-        var dingxiId = Guid.Parse("62110000-0000-0000-0000-000000000000");
-        var longxiId = Guid.Parse("62112200-0000-0000-0000-000000000000");
-
-        dbContext.SystemRegions.AddRange(
-            new SystemRegion(gansuId, null, "620000", "甘肃省", 1, 1, true),
-            new SystemRegion(dingxiId, gansuId, "621100", "定西市", 2, 1, true),
-            new SystemRegion(longxiId, dingxiId, "621122", "陇西县", 3, 1, true));
-        dbContext.SaveChanges();
     }
 
     private static void EnsureCrmHerbBaseLegacyTables(AppDbContext dbContext)

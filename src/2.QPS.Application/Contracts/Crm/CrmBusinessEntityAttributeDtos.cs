@@ -17,6 +17,13 @@ public class CrmBusinessEntityAttributeDto
     public string Remark { get; set; } = string.Empty;
 }
 
+public class AttributeOptionDto
+{
+    public string Label { get; set; } = string.Empty;
+
+    public string Value { get; set; } = string.Empty;
+}
+
 public class CrmBusinessEntityAttributeSaveRequest
 {
     public string EntityType { get; set; } = string.Empty;

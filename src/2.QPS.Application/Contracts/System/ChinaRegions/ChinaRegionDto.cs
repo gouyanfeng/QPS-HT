@@ -10,6 +10,7 @@ public class ChinaRegionDto
     public string? ProvinceCode { get; set; }
     public string? CityCode { get; set; }
     public int SortOrder { get; set; }
+    public bool IsActive { get; set; }
 }
 
 

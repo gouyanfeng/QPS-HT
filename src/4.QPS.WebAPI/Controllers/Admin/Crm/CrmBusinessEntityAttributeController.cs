@@ -16,6 +16,25 @@ public class CrmBusinessEntityAttributeController : ControllerBase
         _mediator = mediator;
     }
 
+    [HttpGet("options")]
+    public async Task<ActionResult<List<AttributeOptionDto>>> GetAttributeOptions(
+        [FromQuery] string entityType,
+        [FromQuery] string attributeCode,
+        [FromQuery] string? keyword = null,
+        [FromQuery] int pageSize = 100)
+    {
+        var query = new GetCrmBusinessEntityAttributeOptionsQuery
+        {
+            EntityType = entityType,
+            AttributeCode = attributeCode,
+            Keyword = keyword,
+            PageSize = pageSize
+        };
+
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
     [HttpGet]
     public async Task<ActionResult<List<CrmBusinessEntityAttributeDto>>> GetAttributes(
         [FromQuery] string entityType,

@@ -43,7 +43,8 @@ public class GetChinaRegionsQueryHandler : IRequestHandler<GetChinaRegionsQuery,
                 ParentCode = region.ParentCode,
                 ProvinceCode = region.ProvinceCode,
                 CityCode = region.CityCode,
-                SortOrder = region.SortOrder
+                SortOrder = region.SortOrder,
+                IsActive = region.IsActive
             })
             .ToListAsync(cancellationToken);
     }
