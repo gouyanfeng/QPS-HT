@@ -83,7 +83,6 @@ public static class CrmHerbBaseSubjectScoreService
                 bases.Any(item => !string.IsNullOrWhiteSpace(item.Remark))
         };
 
-        var result = CrmHerbBaseSubjectScoreRule.Calculate(input);
-        subject.UpdateScoreGrade(result.Score, result.Grade);
+        subject.RecalculateScoreGrade(input);
     }
 }
