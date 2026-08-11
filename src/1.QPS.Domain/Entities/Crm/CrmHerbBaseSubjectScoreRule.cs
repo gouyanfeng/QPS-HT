@@ -28,7 +28,7 @@ public class CrmHerbBaseSubjectScoreInput
 
     public bool HasAddress { get; init; }
 
-    public bool HasSource { get; init; }
+    public IReadOnlyCollection<string> SourcePlatforms { get; init; } = [];
 
     public bool HasRemark { get; init; }
 }
@@ -60,6 +60,7 @@ public static class CrmHerbBaseSubjectScoreRule
             MainProductScore(input.MainProductCount) +
             ContactScore(input) +
             FollowScore(input) +
+            SourceScore(input.SourcePlatforms) +
             DataScore(input);
 
         if (InterestedStatuses.Contains(input.Status))
@@ -134,11 +135,34 @@ public static class CrmHerbBaseSubjectScoreRule
     private static int DataScore(CrmHerbBaseSubjectScoreInput input)
     {
         var score = 0;
-        if (input.HasRegion) score += 4;
-        if (input.HasAddress) score += 3;
-        if (input.HasSource) score += 2;
+        if (input.HasRegion) score += 2;
+        if (input.HasAddress) score += 2;
         if (input.HasRemark) score += 1;
         return score;
+    }
+
+    private static int SourceScore(IReadOnlyCollection<string> sourcePlatforms)
+    {
+        return sourcePlatforms
+            .Select(SourcePlatformScore)
+            .DefaultIfEmpty(0)
+            .Max();
+    }
+
+    private static int SourcePlatformScore(string? sourcePlatform)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePlatform)) return 0;
+
+        var normalized = sourcePlatform.Trim().ToUpperInvariant();
+
+        return normalized switch
+        {
+            "MANUAL" or "人工录入" or "手工录入" => 5,
+            "GOV" or "GAP" or "GOV_HERB_BASE" or "政府网站" or "官方公示" => 5,
+            "HERB_PLATFORM" or "INDUSTRY_SITE" or "THIRD_PARTY" or "YT1998" or "ZYCTD" => 4,
+            "BAIDU_MAP" or "MAP_POI" or "百度地图" => 3,
+            _ => 2
+        };
     }
 
     private static int CapScore(int score, int maxScore) => Math.Min(score, maxScore);

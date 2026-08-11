@@ -74,7 +74,11 @@ public static class CrmHerbBaseSubjectScoreService
                 !string.IsNullOrWhiteSpace(item.City) ||
                 !string.IsNullOrWhiteSpace(item.Area)),
             HasAddress = bases.Any(item => !string.IsNullOrWhiteSpace(item.Address)),
-            HasSource = bases.Any(item => !string.IsNullOrWhiteSpace(item.SourcePlatform)),
+            SourcePlatforms = bases
+                .Select(item => item.SourcePlatform)
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .Distinct()
+                .ToList(),
             HasRemark = !string.IsNullOrWhiteSpace(subject.Remark) ||
                 bases.Any(item => !string.IsNullOrWhiteSpace(item.Remark))
         };
