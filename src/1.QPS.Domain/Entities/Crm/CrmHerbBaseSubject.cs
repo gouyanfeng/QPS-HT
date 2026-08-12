@@ -32,7 +32,7 @@ public class CrmHerbBaseSubject : BaseEntity
         SubjectType = subjectType;
         OwnerUserId = ownerUserId;
         Status = status;
-        Grade = grade;
+        Grade = CrmHerbBaseSubjectScorePolicy.NormalizeGrade(grade);
         Score = score;
         Scale = scale;
         Remark = remark;
@@ -51,7 +51,7 @@ public class CrmHerbBaseSubject : BaseEntity
         SubjectName = string.IsNullOrWhiteSpace(subjectName) ? SubjectName : subjectName.Trim();
         SubjectType = string.IsNullOrWhiteSpace(subjectType) ? SubjectType : subjectType;
         Status = string.IsNullOrWhiteSpace(status) ? Status : status;
-        Grade = string.IsNullOrWhiteSpace(grade) ? Grade : grade;
+        Grade = string.IsNullOrWhiteSpace(grade) ? Grade : CrmHerbBaseSubjectScorePolicy.NormalizeGrade(grade);
         Score = score;
         Remark = remark;
     }
@@ -69,7 +69,7 @@ public class CrmHerbBaseSubject : BaseEntity
 
     public void RecalculateScoreGrade(CrmHerbBaseSubjectScoreInput input)
     {
-        var result = CrmHerbBaseSubjectScoreRule.Calculate(input);
+        var result = CrmHerbBaseSubjectScorePolicy.Calculate(input);
         UpdateScoreGrade(result.Score, result.Grade);
     }
 

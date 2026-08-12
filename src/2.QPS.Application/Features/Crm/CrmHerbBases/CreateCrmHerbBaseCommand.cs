@@ -53,7 +53,11 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
         AddMainProducts(herbBase.Id, request.Request.MainProducts);
         
         await _dbContext.SaveChangesAsync(cancellationToken);
-        await CrmHerbBaseSubjectScoreService.RecalculateAsync(_dbContext, subject.Id, cancellationToken);
+        var scoreInput = await CrmHerbBaseSubjectScoreInputBuilder.BuildAsync(_dbContext, subject.Id, cancellationToken);
+        if (scoreInput != null)
+        {
+            subject.RecalculateScoreGrade(scoreInput);
+        }
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;

@@ -30,7 +30,7 @@ public class CrmHerbBaseDto
     public List<string> MainProducts { get; set; } = new();
 
     /// <summary>
-    /// 药材基地等级，例如A、B、C、无效。
+    /// 药材基地等级，例如高、中、低、无效。
     /// </summary>
     public string Grade { get; set; } = string.Empty;
 

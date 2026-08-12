@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Features.Crm;
@@ -49,7 +49,11 @@ public class UpdateCrmHerbBaseSubjectHandler : IRequestHandler<UpdateCrmHerbBase
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        await CrmHerbBaseSubjectScoreService.RecalculateAsync(_dbContext, subject.Id, cancellationToken);
+        var scoreInput = await CrmHerbBaseSubjectScoreInputBuilder.BuildAsync(_dbContext, subject.Id, cancellationToken);
+        if (scoreInput != null)
+        {
+            subject.RecalculateScoreGrade(scoreInput);
+        }
         await _dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }

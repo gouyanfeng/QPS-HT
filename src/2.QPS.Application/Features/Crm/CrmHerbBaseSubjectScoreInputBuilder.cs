@@ -4,15 +4,15 @@ using QPS.Domain.Entities.Crm;
 
 namespace QPS.Application.Features.Crm;
 
-public static class CrmHerbBaseSubjectScoreService
+public static class CrmHerbBaseSubjectScoreInputBuilder
 {
-    public static async Task RecalculateAsync(IDbContext dbContext, Guid subjectId, CancellationToken cancellationToken)
+    public static async Task<CrmHerbBaseSubjectScoreInput?> BuildAsync(IDbContext dbContext, Guid subjectId, CancellationToken cancellationToken)
     {
         var subject = await dbContext.CrmHerbBaseSubjects
             .FirstOrDefaultAsync(item => item.Id == subjectId, cancellationToken);
         if (subject == null)
         {
-            return;
+            return null;
         }
 
         var bases = await dbContext.CrmHerbBases
@@ -83,6 +83,6 @@ public static class CrmHerbBaseSubjectScoreService
                 bases.Any(item => !string.IsNullOrWhiteSpace(item.Remark))
         };
 
-        subject.RecalculateScoreGrade(input);
+        return input;
     }
 }

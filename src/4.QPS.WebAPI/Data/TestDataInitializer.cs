@@ -991,10 +991,10 @@ public static class TestDataInitializer
                 101,
                 new[]
                 {
-                    new DataDictionaryItemSeed("CRM_HERB_BASE_GRADE_A", "A", "A", "高优先级药材基地", 1, "crm_customer_grade_a"),
-                    new DataDictionaryItemSeed("CRM_HERB_BASE_GRADE_B", "B", "B", "中优先级药材基地", 2, "crm_customer_grade_b"),
-                    new DataDictionaryItemSeed("CRM_HERB_BASE_GRADE_C", "C", "C", "低优先级药材基地", 3, "crm_customer_grade_c"),
-                    new DataDictionaryItemSeed("CRM_HERB_BASE_GRADE_INVALID", "无效", "INVALID", "无效药材基地", 4, "crm_customer_grade_invalid")
+                    new DataDictionaryItemSeed("CRM_HERB_BASE_GRADE_A", "高", "高", "高优先级药材基地", 1, "crm_customer_grade_a"),
+                    new DataDictionaryItemSeed("CRM_HERB_BASE_GRADE_B", "中", "中", "中优先级药材基地", 2, "crm_customer_grade_b"),
+                    new DataDictionaryItemSeed("CRM_HERB_BASE_GRADE_C", "低", "低", "低优先级药材基地", 3, "crm_customer_grade_c"),
+                    new DataDictionaryItemSeed("CRM_HERB_BASE_GRADE_INVALID", "无效", "无效", "无效药材基地", 4, "crm_customer_grade_invalid")
                 },
                 "crm_customer_grade"),
             new(
@@ -1315,7 +1315,7 @@ public static class TestDataInitializer
         {
             CrmHerbBase.Create(
                 herbBaseName: "陇西黄芪种植合作社",
-                grade: "A",
+                grade: "高",
                 score: 92,
                 province: "甘肃省",
                 city: "定西市",
@@ -1331,7 +1331,7 @@ public static class TestDataInitializer
             ),
             CrmHerbBase.Create(
                 herbBaseName: "岷县当归基地",
-                grade: "B",
+                grade: "中",
                 score: 85,
                 province: "甘肃省",
                 city: "定西市",
@@ -1347,7 +1347,7 @@ public static class TestDataInitializer
             ),
             CrmHerbBase.Create(
                 herbBaseName: "亳州药材流通商",
-                grade: "B",
+                grade: "中",
                 score: 71,
                 province: "安徽省",
                 city: "亳州市",
@@ -1464,10 +1464,23 @@ public static class TestDataInitializer
     private static void NormalizeCrmBusinessValues(AppDbContext dbContext)
     {
         dbContext.Database.ExecuteSqlRaw("""
+            UPDATE [CrmHerbBaseSubjects]
+            SET [Grade] = CASE [Grade]
+                WHEN N'A' THEN N'高'
+                WHEN N'B' THEN N'中'
+                WHEN N'C' THEN N'低'
+                WHEN N'INVALID' THEN N'无效'
+                ELSE [Grade]
+            END;
+
             UPDATE [CrmHerbBases]
             SET
                 [Grade] = CASE [Grade]
-                    WHEN N'无效' THEN N'INVALID'
+                    WHEN N'A' THEN N'高'
+                    WHEN N'B' THEN N'中'
+                    WHEN N'C' THEN N'低'
+                    WHEN N'无效' THEN N'无效'
+                    WHEN N'INVALID' THEN N'无效'
                     ELSE [Grade]
                 END,
                 [SourcePlatform] = CASE [SourcePlatform]

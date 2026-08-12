@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
@@ -45,7 +45,15 @@ public class DeleteCrmHerbBaseHandler : IRequestHandler<DeleteCrmHerbBaseCommand
         await _dbContext.SaveChangesAsync(cancellationToken);
         if (customer.HerbBaseSubjectId.HasValue)
         {
-            await CrmHerbBaseSubjectScoreService.RecalculateAsync(_dbContext, customer.HerbBaseSubjectId.Value, cancellationToken);
+            var scoreInput = await CrmHerbBaseSubjectScoreInputBuilder.BuildAsync(_dbContext, customer.HerbBaseSubjectId.Value, cancellationToken);
+            if (scoreInput != null)
+            {
+                var subject = await _dbContext.CrmHerbBaseSubjects.FirstOrDefaultAsync(item => item.Id == customer.HerbBaseSubjectId.Value, cancellationToken);
+                if (subject != null)
+                {
+                    subject.RecalculateScoreGrade(scoreInput);
+                }
+            }
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 

@@ -1,4 +1,4 @@
-namespace QPS.Domain.Entities.Crm;
+﻿namespace QPS.Domain.Entities.Crm;
 
 public class CrmHerbBaseSubjectScoreInput
 {
@@ -35,17 +35,30 @@ public class CrmHerbBaseSubjectScoreInput
 
 public readonly record struct CrmHerbBaseSubjectScoreResult(int Score, string Grade);
 
-public static class CrmHerbBaseSubjectScoreRule
+public static class CrmHerbBaseSubjectScorePolicy
 {
-    private const string GradeA = "A";
-    private const string GradeB = "B";
-    private const string GradeC = "C";
-    private const string InvalidGrade = "INVALID";
+    private const string GradeA = "高";
+    private const string GradeB = "中";
+    private const string GradeC = "低";
+    private const string InvalidGrade = "无效";
     private static readonly string[] LostStatuses = ["LOST", "已流失"];
     private static readonly string[] InterestedStatuses = ["INTERESTED", "有意向"];
     private static readonly string[] DealStatuses = ["DEAL", "已成交"];
     private static readonly string[] FollowingStatuses = ["FOLLOWING", "跟进中"];
     private static readonly string[] EffectiveFollowResults = ["CONNECTED", "INTERESTED", "已接通", "有意向"];
+
+    public static string NormalizeGrade(string? grade)
+    {
+        return grade?.Trim() switch
+        {
+            "A" => GradeA,
+            "B" => GradeB,
+            "C" => GradeC,
+            "INVALID" => InvalidGrade,
+            "" or null => string.Empty,
+            var value => value
+        };
+    }
 
     public static CrmHerbBaseSubjectScoreResult Calculate(CrmHerbBaseSubjectScoreInput input)
     {

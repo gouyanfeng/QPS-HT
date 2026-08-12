@@ -31,7 +31,7 @@ public class CrmHerbBase : BaseEntity
     public string SubjectName { get; private set; } = string.Empty;
 
     /// <summary>
-    /// 药材基地等级，例如A、B、C、INVALID。
+    /// 药材基地等级，例如高、中、低、无效。
     /// </summary>
     public string Grade { get; private set; } = string.Empty;
 
@@ -131,7 +131,7 @@ public class CrmHerbBase : BaseEntity
     {
         BaseName = herbBaseName;
         SubjectName = subjectName;
-        Grade = grade;
+        Grade = CrmHerbBaseSubjectScorePolicy.NormalizeGrade(grade);
         Score = score;
         Province = province;
         City = city;
@@ -198,7 +198,7 @@ public class CrmHerbBase : BaseEntity
     {
         BaseName = herbBaseName;
         SubjectName = subjectName;
-        Grade = grade;
+        Grade = CrmHerbBaseSubjectScorePolicy.NormalizeGrade(grade);
         Score = score;
         Province = province;
         City = city;

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Features.Crm;
@@ -42,11 +42,8 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
         var customer = await GetCustomer(request.Id, cancellationToken);
 
         UpdateBasicInfo(customer, request.Request);
-
         ApplySource(customer, request.Request);
-
         ApplyPrimaryContact(customer, request.Request);
-
         ApplyStatus(customer, request.Request);
 
         await SyncMainProducts(customer.Id, request.Request.MainProducts, cancellationToken);
@@ -55,21 +52,24 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
         await _dbContext.SaveChangesAsync(cancellationToken);
         if (customer.HerbBaseSubjectId.HasValue)
         {
-            await CrmHerbBaseSubjectScoreService.RecalculateAsync(_dbContext, customer.HerbBaseSubjectId.Value, cancellationToken);
+            var scoreInput = await CrmHerbBaseSubjectScoreInputBuilder.BuildAsync(_dbContext, customer.HerbBaseSubjectId.Value, cancellationToken);
+            if (scoreInput != null)
+            {
+                var subject = await _dbContext.CrmHerbBaseSubjects.FirstOrDefaultAsync(item => item.Id == customer.HerbBaseSubjectId.Value, cancellationToken);
+                if (subject != null)
+                {
+                    subject.RecalculateScoreGrade(scoreInput);
+                }
+            }
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
         return true;
     }
 
-    /// <summary>
-    /// 获取要更新的药材基地客户。
-    /// </summary>
     private async Task<CrmHerbBase> GetCustomer(Guid customerId, CancellationToken cancellationToken)
     {
-        var customer = await _dbContext.CrmHerbBases
-            .FirstOrDefaultAsync(c => c.Id == customerId && !c.IsDeleted, cancellationToken);
-
+        var customer = await _dbContext.CrmHerbBases.FirstOrDefaultAsync(c => c.Id == customerId && !c.IsDeleted, cancellationToken);
         if (customer == null)
         {
             throw new BusinessException(404, "药材基地不存在");
@@ -78,13 +78,9 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
         return customer;
     }
 
-    /// <summary>
-    /// 更新药材基地基础资料。
-    /// </summary>
     private static void UpdateBasicInfo(CrmHerbBase customer, CrmHerbBaseUpdateRequest request)
     {
         var baseName = GetBaseName(request.BaseName, request.HerbBaseName);
-
         customer.UpdateBasicInfo(
             baseName,
             request.Grade,
@@ -100,9 +96,6 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
             request.SubjectName);
     }
 
-    /// <summary>
-    /// 取兼容旧字段后的基地名称。
-    /// </summary>
     private static string GetBaseName(string? baseName, string herbBaseName)
     {
         return string.IsNullOrWhiteSpace(baseName)
@@ -110,23 +103,15 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
             : baseName;
     }
 
-    /// <summary>
-    /// 来源变化时更新来源信息。
-    /// </summary>
     private static void ApplySource(CrmHerbBase customer, CrmHerbBaseUpdateRequest request)
     {
         if (customer.SourcePlatform != request.SourcePlatform ||
             customer.SourceId != request.SourceId)
         {
-            customer.UpdateSource(
-                request.SourcePlatform,
-                request.SourceId);
+            customer.UpdateSource(request.SourcePlatform, request.SourceId);
         }
     }
 
-    /// <summary>
-    /// 请求带主联系人时同步客户主联系人摘要。
-    /// </summary>
     private static void ApplyPrimaryContact(CrmHerbBase customer, CrmHerbBaseUpdateRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.PrimaryContactName) &&
@@ -145,9 +130,6 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
         customer.UpdatePrimaryContact(primaryContactName, primaryContactPhone);
     }
 
-    /// <summary>
-    /// 请求带状态且状态变化时更新客户状态。
-    /// </summary>
     private static void ApplyStatus(CrmHerbBase customer, CrmHerbBaseUpdateRequest request)
     {
         if (!string.IsNullOrEmpty(request.Status) && customer.Status != request.Status)
@@ -188,8 +170,7 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
             return;
         }
 
-        var subject = await _dbContext.CrmHerbBaseSubjects
-            .FirstOrDefaultAsync(item => item.Id == herbBase.HerbBaseSubjectId.Value, cancellationToken);
+        var subject = await _dbContext.CrmHerbBaseSubjects.FirstOrDefaultAsync(item => item.Id == herbBase.HerbBaseSubjectId.Value, cancellationToken);
         if (subject == null)
         {
             return;
@@ -204,6 +185,3 @@ public class UpdateCrmHerbBaseHandler : IRequestHandler<UpdateCrmHerbBaseCommand
         subject.UpdateScale(otherBaseScale + (herbBase.Scale ?? 0));
     }
 }
-
-
-

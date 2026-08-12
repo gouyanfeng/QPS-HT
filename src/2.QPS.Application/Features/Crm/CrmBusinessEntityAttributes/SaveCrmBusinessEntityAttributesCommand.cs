@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
 using QPS.Application.Features.Crm;
@@ -16,27 +16,16 @@ public class SaveCrmBusinessEntityAttributesHandler : IRequestHandler<SaveCrmBus
 {
     private readonly IDbContext _dbContext;
 
-    /// <summary>
-    /// 保存 CRM 业务实体属性处理器。
-    /// </summary>
     public SaveCrmBusinessEntityAttributesHandler(IDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
-    /// <summary>
-    /// 编排保存业务实体属性用例。
-    /// </summary>
     public async Task<bool> Handle(SaveCrmBusinessEntityAttributesCommand request, CancellationToken cancellationToken)
     {
-        // 编排保存业务实体属性用例：
-        // 规范化新值、删除旧值、按顺序写入新属性。
         var values = NormalizeValues(request.Request.Values);
-
         var oldAttributes = await GetOldAttributes(request.Request, cancellationToken);
-
         _dbContext.CrmBusinessEntityAttributes.RemoveRange(oldAttributes);
-
         AddNewAttributes(request.Request, values);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -45,9 +34,6 @@ public class SaveCrmBusinessEntityAttributesHandler : IRequestHandler<SaveCrmBus
         return true;
     }
 
-    /// <summary>
-    /// 规范化属性值列表。
-    /// </summary>
     private static List<string> NormalizeValues(IEnumerable<string> values)
     {
         return values
@@ -57,9 +43,6 @@ public class SaveCrmBusinessEntityAttributesHandler : IRequestHandler<SaveCrmBus
             .ToList();
     }
 
-    /// <summary>
-    /// 获取实体当前已有的同类属性。
-    /// </summary>
     private async Task<List<CrmBusinessEntityAttribute>> GetOldAttributes(
         CrmBusinessEntityAttributeSaveRequest request,
         CancellationToken cancellationToken)
@@ -72,9 +55,6 @@ public class SaveCrmBusinessEntityAttributesHandler : IRequestHandler<SaveCrmBus
             .ToListAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// 按请求顺序新增业务实体属性。
-    /// </summary>
     private void AddNewAttributes(CrmBusinessEntityAttributeSaveRequest request, List<string> values)
     {
         var sortOrder = 1;
@@ -109,7 +89,18 @@ public class SaveCrmBusinessEntityAttributesHandler : IRequestHandler<SaveCrmBus
             return;
         }
 
-        await CrmHerbBaseSubjectScoreService.RecalculateAsync(_dbContext, subjectId.Value, cancellationToken);
+        var subject = await _dbContext.CrmHerbBaseSubjects.FirstOrDefaultAsync(item => item.Id == subjectId.Value, cancellationToken);
+        if (subject == null)
+        {
+            return;
+        }
+
+        var scoreInput = await CrmHerbBaseSubjectScoreInputBuilder.BuildAsync(_dbContext, subject.Id, cancellationToken);
+        if (scoreInput != null)
+        {
+            subject.RecalculateScoreGrade(scoreInput);
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }
