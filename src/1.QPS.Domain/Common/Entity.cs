@@ -1,6 +1,4 @@
-﻿using MediatR;
 using System;
-using System.Collections.Generic;
 
 namespace QPS.Domain.Common;
 
@@ -12,7 +10,6 @@ public abstract class BaseEntity
     public DateTime UpdatedAt { get; set; }
     public string UpdatedBy { get; set; }
     public bool IsDeleted { get; set; }
-    private readonly List<DomainEvent> _domainEvents = new();
 
     protected BaseEntity()
     {
@@ -20,21 +17,6 @@ public abstract class BaseEntity
         CreatedAt = DateTime.Now;
         UpdatedAt = DateTime.Now;
         IsDeleted = false;
-    }
-
-    protected void AddDomainEvent(DomainEvent domainEvent)
-    {
-        _domainEvents.Add(domainEvent);
-    }
-
-    public IReadOnlyCollection<DomainEvent> GetDomainEvents()
-    {
-        return _domainEvents.AsReadOnly();
-    }
-
-    public void ClearDomainEvents()
-    {
-        _domainEvents.Clear();
     }
 
     public override bool Equals(object obj)
@@ -53,15 +35,3 @@ public abstract class BaseEntity
         return Id.GetHashCode();
     }
 }
-
-public abstract class DomainEvent : INotification
-{
-    public DateTime OccurredOn { get; }
-
-    protected DomainEvent()
-    {
-        OccurredOn = DateTime.Now;
-    }
-}
-
-

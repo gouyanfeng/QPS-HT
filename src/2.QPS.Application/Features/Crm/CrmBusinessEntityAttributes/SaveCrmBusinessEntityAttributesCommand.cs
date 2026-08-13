@@ -1,9 +1,9 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
-using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.Crm;
+using QPS.Domain.Events.Crm;
 
 namespace QPS.Application.Features.Crm.CrmBusinessEntityAttributes;
 
@@ -15,10 +15,12 @@ public class SaveCrmBusinessEntityAttributesCommand : IRequest<bool>
 public class SaveCrmBusinessEntityAttributesHandler : IRequestHandler<SaveCrmBusinessEntityAttributesCommand, bool>
 {
     private readonly IDbContext _dbContext;
+    private readonly IPublisher _publisher;
 
-    public SaveCrmBusinessEntityAttributesHandler(IDbContext dbContext)
+    public SaveCrmBusinessEntityAttributesHandler(IDbContext dbContext, IPublisher publisher)
     {
         _dbContext = dbContext;
+        _publisher = publisher;
     }
 
     public async Task<bool> Handle(SaveCrmBusinessEntityAttributesCommand request, CancellationToken cancellationToken)
@@ -29,7 +31,12 @@ public class SaveCrmBusinessEntityAttributesHandler : IRequestHandler<SaveCrmBus
         AddNewAttributes(request.Request, values);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        await RecalculateHerbBaseSubjectScore(request.Request, cancellationToken);
+
+        var subjectId = await GetSubjectIdIfNeeded(request.Request, cancellationToken);
+        if (subjectId.HasValue)
+        {
+            await _publisher.Publish(new CrmHerbBaseSubjectScoreAffectedEvent(subjectId.Value), cancellationToken);
+        }
 
         return true;
     }
@@ -70,37 +77,19 @@ public class SaveCrmBusinessEntityAttributesHandler : IRequestHandler<SaveCrmBus
         }
     }
 
-    private async Task RecalculateHerbBaseSubjectScore(
+    private async Task<Guid?> GetSubjectIdIfNeeded(
         CrmBusinessEntityAttributeSaveRequest request,
         CancellationToken cancellationToken)
     {
         if (request.EntityType != CrmCodes.HerbBaseEntityType ||
             request.AttributeCode != CrmCodes.MainProductAttributeCode)
         {
-            return;
+            return null;
         }
 
-        var subjectId = await _dbContext.CrmHerbBases
+        return await _dbContext.CrmHerbBases
             .Where(item => item.Id == request.EntityId && item.HerbBaseSubjectId.HasValue)
             .Select(item => item.HerbBaseSubjectId)
             .FirstOrDefaultAsync(cancellationToken);
-        if (!subjectId.HasValue)
-        {
-            return;
-        }
-
-        var subject = await _dbContext.CrmHerbBaseSubjects.FirstOrDefaultAsync(item => item.Id == subjectId.Value, cancellationToken);
-        if (subject == null)
-        {
-            return;
-        }
-
-        var scoreInput = await CrmHerbBaseSubjectScoreInputBuilder.BuildAsync(_dbContext, subject.Id, cancellationToken);
-        if (scoreInput != null)
-        {
-            subject.RecalculateScoreGrade(scoreInput);
-        }
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

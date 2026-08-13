@@ -23,7 +23,6 @@ public class AppDbContext : DbContext, IDbContext
     public DbSet<SystemErrorLog> SystemErrorLogs { get; set; }
     public DbSet<SystemOperationLog> SystemOperationLogs { get; set; }
 
-    // CRM 模块
     public DbSet<CrmHerbBaseSubject> CrmHerbBaseSubjects { get; set; }
     public DbSet<CrmHerbBase> CrmHerbBases { get; set; }
     public DbSet<CrmContact> CrmContacts { get; set; }
@@ -33,7 +32,9 @@ public class AppDbContext : DbContext, IDbContext
     public DbSet<CrmVendor> CrmVendors { get; set; }
     public DbSet<CrmVendorPurchasePlan> CrmVendorPurchasePlans { get; set; }
 
-    public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUserService currentUserService) : base(options)
+    public AppDbContext(
+        DbContextOptions<AppDbContext> options,
+        ICurrentUserService currentUserService) : base(options)
     {
         _currentUserService = currentUserService;
     }
@@ -167,7 +168,6 @@ public class AppDbContext : DbContext, IDbContext
 
     public override int SaveChanges()
     {
-        SetAuditFields();
         AddOperationLogs();
         SetAuditFields();
         return base.SaveChanges();
@@ -175,7 +175,6 @@ public class AppDbContext : DbContext, IDbContext
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        SetAuditFields();
         AddOperationLogs();
         SetAuditFields();
         return await base.SaveChangesAsync(cancellationToken);
@@ -332,7 +331,3 @@ public class AppDbContext : DbContext, IDbContext
         }
     }
 }
-
-
-
-

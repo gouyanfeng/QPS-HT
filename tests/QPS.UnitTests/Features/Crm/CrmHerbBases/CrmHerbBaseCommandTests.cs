@@ -13,7 +13,7 @@ public class CrmHerbBaseCommandTests
     public async Task Create_ShouldPersistMainProductAttributes()
     {
         await using var dbContext = TestDbContextFactory.Create();
-        var handler = new CreateCrmHerbBaseHandler(dbContext);
+        var handler = new CreateCrmHerbBaseHandler(dbContext, TestDbContextFactory.CreatePublisher());
 
         var result = await handler.Handle(new CreateCrmHerbBaseCommand
         {
@@ -55,7 +55,7 @@ public class CrmHerbBaseCommandTests
     public async Task GetList_ShouldFilterByBusinessEntityMainProductAttributes()
     {
         await using var dbContext = TestDbContextFactory.Create();
-        var createHandler = new CreateCrmHerbBaseHandler(dbContext);
+        var createHandler = new CreateCrmHerbBaseHandler(dbContext, TestDbContextFactory.CreatePublisher());
         await createHandler.Handle(new CreateCrmHerbBaseCommand
         {
             Request = CreateCustomerRequest("Dang Gui Customer")
@@ -107,7 +107,7 @@ public class CrmHerbBaseCommandTests
         dbContext.CrmHerbBases.Add(customer);
         await dbContext.SaveChangesAsync();
 
-        var deleteHandler = new DeleteCrmHerbBaseHandler(dbContext);
+        var deleteHandler = new DeleteCrmHerbBaseHandler(dbContext, TestDbContextFactory.CreatePublisher());
         await deleteHandler.Handle(new DeleteCrmHerbBaseCommand { Id = customer.Id }, CancellationToken.None);
 
         var list = await new GetCrmHerbBasesHandler(dbContext).Handle(new GetCrmHerbBasesQuery
@@ -136,6 +136,3 @@ public class CrmHerbBaseCommandTests
         };
     }
 }
-
-
-

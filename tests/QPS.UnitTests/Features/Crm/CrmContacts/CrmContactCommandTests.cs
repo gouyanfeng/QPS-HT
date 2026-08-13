@@ -17,7 +17,7 @@ public class CrmContactCommandTests
         dbContext.CrmHerbBaseSubjects.Add(subject);
         await dbContext.SaveChangesAsync();
 
-        var handler = new CreateCrmContactHandler(dbContext);
+        var handler = new CreateCrmContactHandler(dbContext, TestDbContextFactory.CreatePublisher());
 
         var result = await handler.Handle(new CreateCrmContactCommand
         {
@@ -72,7 +72,7 @@ public class CrmContactCommandTests
         dbContext.CrmContacts.AddRange(primary, replacement);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateCrmContactStatusHandler(dbContext);
+        var handler = new UpdateCrmContactStatusHandler(dbContext, TestDbContextFactory.CreatePublisher());
 
         await handler.Handle(new UpdateCrmContactStatusCommand
         {
@@ -102,7 +102,3 @@ public class CrmContactCommandTests
             80,
             "Remark");
 }
-
-
-
-

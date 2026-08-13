@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QPS.Application.Interfaces;
 using QPS.Infrastructure.Database;
 
@@ -14,6 +15,11 @@ internal static class TestDbContextFactory
 
         return new AppDbContext(options, currentUserService ?? new TestCurrentUserService());
     }
+
+    public static IPublisher CreatePublisher()
+    {
+        return new TestPublisher();
+    }
 }
 
 internal sealed class TestCurrentUserService : ICurrentUserService
@@ -28,6 +34,3 @@ internal sealed class TestCurrentUserService : ICurrentUserService
 
     public string? Username { get; }
 }
-
-
-

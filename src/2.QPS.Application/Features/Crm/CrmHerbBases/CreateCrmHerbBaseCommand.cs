@@ -1,43 +1,31 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
-using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.Crm;
+using QPS.Domain.Events.Crm;
 using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.Crm.CrmHerbBases;
 
-/// <summary>
-/// 创建药材基地命令
-/// </summary>
 public class CreateCrmHerbBaseCommand : IRequest<bool>
 {
     public CrmHerbBaseCreateRequest Request { get; set; } = null!;
 }
 
-/// <summary>
-/// 创建药材基地处理器
-/// </summary>
 public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand, bool>
 {
     private readonly IDbContext _dbContext;
+    private readonly IPublisher _publisher;
 
-    /// <summary>
-    /// 创建药材基地处理器。
-    /// </summary>
-    public CreateCrmHerbBaseHandler(IDbContext dbContext)
+    public CreateCrmHerbBaseHandler(IDbContext dbContext, IPublisher publisher)
     {
         _dbContext = dbContext;
+        _publisher = publisher;
     }
 
-    /// <summary>
-    /// 编排创建药材基地用例。
-    /// </summary>
     public async Task<bool> Handle(CreateCrmHerbBaseCommand request, CancellationToken cancellationToken)
     {
-        // 编排创建药材基地用例：
-        // 创建主体和基地、同步主体主联系人摘要。
         var herbBase = CreateHerbBase(request.Request);
         var (subject, isNewSubject) = await ResolveSubjectAsync(request.Request, herbBase.BaseName, cancellationToken);
         herbBase.SetHerbBaseSubject(subject.Id);
@@ -53,12 +41,10 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
         AddMainProducts(herbBase.Id, request.Request.MainProducts);
         
         await _dbContext.SaveChangesAsync(cancellationToken);
-        var scoreInput = await CrmHerbBaseSubjectScoreInputBuilder.BuildAsync(_dbContext, subject.Id, cancellationToken);
-        if (scoreInput != null)
+        if (herbBase.HerbBaseSubjectId.HasValue)
         {
-            subject.RecalculateScoreGrade(scoreInput);
+            await _publisher.Publish(new CrmHerbBaseSubjectScoreAffectedEvent(herbBase.HerbBaseSubjectId.Value), cancellationToken);
         }
-        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
     }
@@ -80,9 +66,6 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
         }
     }
 
-    /// <summary>
-    /// 根据请求创建药材基地实体。
-    /// </summary>
     private static CrmHerbBase CreateHerbBase(CrmHerbBaseCreateRequest request)
     {
         var baseName = GetBaseName(request.BaseName, request.HerbBaseName);
@@ -105,9 +88,6 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
             scale: request.Scale);
     }
 
-    /// <summary>
-    /// 根据基地信息创建或承接基地主体。
-    /// </summary>
     private static CrmHerbBaseSubject CreateSubject(CrmHerbBaseCreateRequest request, string baseName)
     {
         var hasSubjectName = !string.IsNullOrWhiteSpace(request.SubjectName);
@@ -123,9 +103,6 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
             request.Scale);
     }
 
-    /// <summary>
-    /// 有主体名称时复用现有主体；没有主体名称时为基地创建独立主体。
-    /// </summary>
     private async Task<(CrmHerbBaseSubject Subject, bool IsNew)> ResolveSubjectAsync(
         CrmHerbBaseCreateRequest request,
         string baseName,
@@ -154,9 +131,6 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
             : (existingSubject, false);
     }
 
-    /// <summary>
-    /// 取兼容旧字段后的基地名称。
-    /// </summary>
     private static string GetBaseName(string? baseName, string herbBaseName)
     {
         return string.IsNullOrWhiteSpace(baseName)
@@ -164,9 +138,6 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
             : baseName;
     }
 
-    /// <summary>
-    /// 请求带主联系人时同步主体主联系人摘要。
-    /// </summary>
     private static void ApplyPrimaryContact(CrmHerbBaseSubject subject, CrmHerbBaseCreateRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.PrimaryContactName) &&
@@ -194,8 +165,4 @@ public class CreateCrmHerbBaseHandler : IRequestHandler<CreateCrmHerbBaseCommand
 
         subject.UpdateScale(existingScale + newBaseScale);
     }
-
 }
-
-
-

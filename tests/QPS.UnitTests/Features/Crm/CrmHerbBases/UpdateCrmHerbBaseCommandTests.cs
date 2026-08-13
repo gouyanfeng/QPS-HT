@@ -30,7 +30,7 @@ public class UpdateCrmHerbBaseCommandTests
         dbContext.CrmHerbBases.Add(customer);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateCrmHerbBaseHandler(dbContext);
+        var handler = new UpdateCrmHerbBaseHandler(dbContext, TestDbContextFactory.CreatePublisher());
 
         var result = await handler.Handle(new UpdateCrmHerbBaseCommand
         {

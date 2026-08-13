@@ -49,7 +49,8 @@ public class CrmFollowRecordCommandTests
         var nextFollowAt = DateTime.Now.AddDays(3);
         var handler = new CreateCrmFollowRecordHandler(
             dbContext,
-            new TestCurrentUserService(operatorUserId.ToString()));
+            new TestCurrentUserService(operatorUserId.ToString()),
+            TestDbContextFactory.CreatePublisher());
 
         var result = await handler.Handle(new CreateCrmFollowRecordCommand
         {
@@ -100,7 +101,8 @@ public class CrmFollowRecordCommandTests
 
         var handler = new CreateCrmFollowRecordHandler(
             dbContext,
-            new TestCurrentUserService(operatorUserId.ToString()));
+            new TestCurrentUserService(operatorUserId.ToString()),
+            TestDbContextFactory.CreatePublisher());
 
         await Assert.ThrowsAsync<BusinessException>(() => handler.Handle(new CreateCrmFollowRecordCommand
         {

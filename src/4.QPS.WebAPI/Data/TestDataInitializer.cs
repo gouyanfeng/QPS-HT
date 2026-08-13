@@ -1479,7 +1479,6 @@ public static class TestDataInitializer
                     WHEN N'A' THEN N'高'
                     WHEN N'B' THEN N'中'
                     WHEN N'C' THEN N'低'
-                    WHEN N'无效' THEN N'无效'
                     WHEN N'INVALID' THEN N'无效'
                     ELSE [Grade]
                 END,

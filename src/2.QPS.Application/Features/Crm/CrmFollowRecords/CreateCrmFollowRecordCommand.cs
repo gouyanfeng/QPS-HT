@@ -1,9 +1,9 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
-using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.Crm;
+using QPS.Domain.Events.Crm;
 using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.Crm.CrmFollowRecords;
@@ -21,11 +21,13 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
 
     private readonly IDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IPublisher _publisher;
 
-    public CreateCrmFollowRecordHandler(IDbContext dbContext, ICurrentUserService currentUserService)
+    public CreateCrmFollowRecordHandler(IDbContext dbContext, ICurrentUserService currentUserService, IPublisher publisher)
     {
         _dbContext = dbContext;
         _currentUserService = currentUserService;
+        _publisher = publisher;
     }
 
     public async Task<bool> Handle(CreateCrmFollowRecordCommand request, CancellationToken cancellationToken)
@@ -42,12 +44,7 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
         subject.UpdateFollowSummary(DateTime.Now, request.Request.FollowResult, request.Request.NextFollowAt);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        var scoreInput = await CrmHerbBaseSubjectScoreInputBuilder.BuildAsync(_dbContext, subject.Id, cancellationToken);
-        if (scoreInput != null)
-        {
-            subject.RecalculateScoreGrade(scoreInput);
-        }
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _publisher.Publish(new CrmHerbBaseSubjectScoreAffectedEvent(subject.Id), cancellationToken);
 
         return true;
     }

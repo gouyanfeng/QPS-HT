@@ -100,4 +100,5 @@ public class CrmHerbBaseSubject : BaseEntity
             Status = FollowingStatus;
         }
     }
+
 }

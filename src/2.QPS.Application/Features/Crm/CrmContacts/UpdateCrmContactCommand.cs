@@ -1,9 +1,9 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QPS.Application.Contracts.Crm;
-using QPS.Application.Features.Crm;
 using QPS.Application.Interfaces;
 using QPS.Domain.Entities.Crm;
+using QPS.Domain.Events.Crm;
 using QPS.Domain.Exceptions;
 
 namespace QPS.Application.Features.Crm.CrmContacts;
@@ -21,10 +21,12 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
     private const string InvalidStatus = "INVALID";
 
     private readonly IDbContext _dbContext;
+    private readonly IPublisher _publisher;
 
-    public UpdateCrmContactHandler(IDbContext dbContext)
+    public UpdateCrmContactHandler(IDbContext dbContext, IPublisher publisher)
     {
         _dbContext = dbContext;
+        _publisher = publisher;
     }
 
     public async Task<bool> Handle(UpdateCrmContactCommand request, CancellationToken cancellationToken)
@@ -39,12 +41,7 @@ public class UpdateCrmContactHandler : IRequestHandler<UpdateCrmContactCommand, 
         await ApplyPrimaryContactChange(subject, contact, wasPrimary, cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        var scoreInput = await CrmHerbBaseSubjectScoreInputBuilder.BuildAsync(_dbContext, subject.Id, cancellationToken);
-        if (scoreInput != null)
-        {
-            subject.RecalculateScoreGrade(scoreInput);
-        }
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _publisher.Publish(new CrmHerbBaseSubjectScoreAffectedEvent(subject.Id), cancellationToken);
 
         return true;
     }
