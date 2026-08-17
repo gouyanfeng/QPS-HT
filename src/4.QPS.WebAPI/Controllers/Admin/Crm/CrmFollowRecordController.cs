@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QPS.Application.Contracts.Crm;
+using QPS.Application.Features.Crm;
 using QPS.Application.Features.Crm.CrmFollowRecords;
 
 namespace QPS.WebAPI.Controllers.Admin.Crm;
@@ -19,7 +20,11 @@ public class CrmFollowRecordController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<CrmFollowRecordDto>>> GetFollowRecords(Guid herbBaseSubjectId)
     {
-        var query = new GetCrmFollowRecordsQuery { HerbBaseSubjectId = herbBaseSubjectId };
+        var query = new GetCrmFollowRecordsQuery
+        {
+            EntityType = CrmCodes.HerbBaseSubjectEntityType,
+            EntityId = herbBaseSubjectId
+        };
         var result = await _mediator.Send(query);
         return Ok(result);
     }
@@ -29,7 +34,12 @@ public class CrmFollowRecordController : ControllerBase
         Guid herbBaseSubjectId,
         [FromBody] CrmFollowRecordCreateRequest request)
     {
-        var command = new CreateCrmFollowRecordCommand { HerbBaseSubjectId = herbBaseSubjectId, Request = request };
+        var command = new CreateCrmFollowRecordCommand
+        {
+            EntityType = CrmCodes.HerbBaseSubjectEntityType,
+            EntityId = herbBaseSubjectId,
+            Request = request
+        };
         var result = await _mediator.Send(command);
         return Ok(result);
     }

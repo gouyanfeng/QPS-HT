@@ -72,14 +72,8 @@ public class AppDbContext : DbContext, IDbContext
 
         modelBuilder.Entity<CrmFollowRecord>(entity =>
         {
-            entity.HasOne(record => record.HerbBaseSubject)
-                .WithMany(subject => subject.FollowRecords)
-                .HasForeignKey(record => record.HerbBaseSubjectId)
-                .OnDelete(DeleteBehavior.Restrict);
-            entity.HasOne(record => record.HerbBase)
-                .WithMany()
-                .HasForeignKey(record => record.HerbBaseId)
-                .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(record => record.EntityType).HasMaxLength(64);
+            entity.HasIndex(record => new { record.EntityType, record.EntityId, record.CreatedAt });
         });
 
         modelBuilder.Entity<CrmBusinessEntityAttribute>(entity =>

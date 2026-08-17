@@ -22,6 +22,7 @@ public class GetCrmVendorsHandler : IRequestHandler<GetCrmVendorsQuery, Paginati
 {
     private const string VendorEntityType = CrmCodes.VendorEntityType;
     private const string PurchaseProductAttributeCode = "PURCHASE_PRODUCT";
+    private const string InvalidContactStatus = "INVALID";
 
     private readonly IDbContext _dbContext;
 
@@ -109,7 +110,8 @@ public class GetCrmVendorsHandler : IRequestHandler<GetCrmVendorsQuery, Paginati
                 .Where(contact =>
                     !contact.IsDeleted &&
                     contact.EntityType == VendorEntityType &&
-                    contact.EntityId == vendor.Id)
+                    contact.EntityId == vendor.Id &&
+                    contact.Status != InvalidContactStatus)
                 .OrderByDescending(contact => contact.IsPrimary)
                 .ThenBy(contact => contact.CreatedAt)
                 .Select(contact => contact.ContactName)
@@ -118,7 +120,8 @@ public class GetCrmVendorsHandler : IRequestHandler<GetCrmVendorsQuery, Paginati
                 .Where(contact =>
                     !contact.IsDeleted &&
                     contact.EntityType == VendorEntityType &&
-                    contact.EntityId == vendor.Id)
+                    contact.EntityId == vendor.Id &&
+                    contact.Status != InvalidContactStatus)
                 .OrderByDescending(contact => contact.IsPrimary)
                 .ThenBy(contact => contact.CreatedAt)
                 .Select(contact => contact.Phone)

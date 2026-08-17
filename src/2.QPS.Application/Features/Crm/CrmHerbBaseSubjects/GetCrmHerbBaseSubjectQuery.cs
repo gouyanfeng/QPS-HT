@@ -157,13 +157,13 @@ public class GetCrmHerbBaseSubjectHandler : IRequestHandler<GetCrmHerbBaseSubjec
     {
         return await _dbContext.CrmFollowRecords
             .Include(record => record.Contact)
-            .Where(record => record.HerbBaseSubjectId == subjectId)
+            .Where(record => record.EntityType == CrmCodes.HerbBaseSubjectEntityType && record.EntityId == subjectId)
             .OrderByDescending(record => record.CreatedAt)
             .Select(record => new CrmFollowRecordDto
             {
                 Id = record.Id,
-                HerbBaseSubjectId = record.HerbBaseSubjectId,
-                HerbBaseId = record.HerbBaseId,
+                EntityType = record.EntityType,
+                EntityId = record.EntityId,
                 ContactId = record.ContactId,
                 ContactName = record.Contact == null ? null : record.Contact.ContactName,
                 FollowType = record.FollowType,

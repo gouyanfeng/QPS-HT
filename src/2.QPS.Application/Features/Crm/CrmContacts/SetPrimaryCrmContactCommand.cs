@@ -16,6 +16,7 @@ public class SetPrimaryCrmContactCommand : IRequest<bool>
 public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactCommand, bool>
 {
     private const string HerbBaseSubjectEntityType = CrmCodes.HerbBaseSubjectEntityType;
+    private const string VendorEntityType = CrmCodes.VendorEntityType;
     private const string InvalidStatus = "INVALID";
 
     private readonly IDbContext _dbContext;
@@ -31,14 +32,27 @@ public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactC
     {
         var contact = await GetContact(request.Id, cancellationToken);
         EnsureContactCanBePrimary(contact);
-        var subject = await GetSubject(contact, cancellationToken);
+        var subject = contact.EntityType == HerbBaseSubjectEntityType
+            ? await GetSubject(contact, cancellationToken)
+            : null;
+        if (contact.EntityType == VendorEntityType)
+        {
+            await EnsureVendorExists(contact.EntityId, cancellationToken);
+        }
+        else if (subject == null)
+        {
+            throw new BusinessException(400, "不支持的联系人类型");
+        }
 
         await UnmarkSiblingPrimaryContacts(contact, cancellationToken);
         contact.MarkPrimary();
-        subject.UpdatePrimaryContact(contact.ContactName, contact.Phone);
+        subject?.UpdatePrimaryContact(contact.ContactName, contact.Phone);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        await _publisher.Publish(new CrmHerbBaseSubjectScoreAffectedEvent(subject.Id), cancellationToken);
+        if (subject != null)
+        {
+            await _publisher.Publish(new CrmHerbBaseSubjectScoreAffectedEvent(subject.Id), cancellationToken);
+        }
 
         return true;
     }
@@ -75,6 +89,18 @@ public class SetPrimaryCrmContactHandler : IRequestHandler<SetPrimaryCrmContactC
         }
 
         return subject;
+    }
+
+    private async Task EnsureVendorExists(Guid vendorId, CancellationToken cancellationToken)
+    {
+        var exists = await _dbContext.CrmVendors.AnyAsync(
+            item => item.Id == vendorId && !item.IsDeleted,
+            cancellationToken);
+
+        if (!exists)
+        {
+            throw new BusinessException(404, "厂商不存在");
+        }
     }
 
     private async Task UnmarkSiblingPrimaryContacts(CrmContact contact, CancellationToken cancellationToken)

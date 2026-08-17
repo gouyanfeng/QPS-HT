@@ -10,7 +10,9 @@ namespace QPS.Application.Features.Crm.CrmFollowRecords;
 
 public class CreateCrmFollowRecordCommand : IRequest<bool>
 {
-    public Guid HerbBaseSubjectId { get; set; }
+    public string EntityType { get; set; } = string.Empty;
+
+    public Guid EntityId { get; set; }
 
     public CrmFollowRecordCreateRequest Request { get; set; } = null!;
 }
@@ -33,10 +35,10 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
     public async Task<bool> Handle(CreateCrmFollowRecordCommand request, CancellationToken cancellationToken)
     {
         EnsureFollowResult(request.Request.FollowResult);
-        var subject = await GetSubject(request.HerbBaseSubjectId, cancellationToken);
+        EnsureSupportedEntityType(request.EntityType);
+        var subject = await GetSubject(request.EntityId, cancellationToken);
 
         await EnsureContactBelongsToSubject(request, cancellationToken);
-        await EnsureHerbBaseBelongsToSubject(request, cancellationToken);
 
         var record = CreateFollowRecord(request);
         _dbContext.CrmFollowRecords.Add(record);
@@ -47,6 +49,14 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
         await _publisher.Publish(new CrmHerbBaseSubjectScoreAffectedEvent(subject.Id), cancellationToken);
 
         return true;
+    }
+
+    private static void EnsureSupportedEntityType(string entityType)
+    {
+        if (entityType != HerbBaseSubjectEntityType)
+        {
+            throw new BusinessException(400, "不支持的沟通记录对象类型");
+        }
     }
 
     private static void EnsureFollowResult(string followResult)
@@ -77,28 +87,10 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
 
         var contact = await _dbContext.CrmContacts.FirstOrDefaultAsync(c => c.Id == command.Request.ContactId.Value, cancellationToken);
         if (contact == null ||
-            contact.EntityType != HerbBaseSubjectEntityType ||
-            contact.EntityId != command.HerbBaseSubjectId)
+            contact.EntityType != command.EntityType ||
+            contact.EntityId != command.EntityId)
         {
             throw new BusinessException(404, "联系人不存在");
-        }
-    }
-
-    private async Task EnsureHerbBaseBelongsToSubject(CreateCrmFollowRecordCommand command, CancellationToken cancellationToken)
-    {
-        if (!command.Request.HerbBaseId.HasValue)
-        {
-            return;
-        }
-
-        var belongsToSubject = await _dbContext.CrmHerbBases.AnyAsync(
-            herbBase => herbBase.Id == command.Request.HerbBaseId.Value &&
-                        herbBase.HerbBaseSubjectId == command.HerbBaseSubjectId,
-            cancellationToken);
-
-        if (!belongsToSubject)
-        {
-            throw new BusinessException(400, "基地不属于当前主体");
         }
     }
 
@@ -107,8 +99,8 @@ public class CreateCrmFollowRecordHandler : IRequestHandler<CreateCrmFollowRecor
         var operatorUserId = GetOperatorUserId();
 
         return CrmFollowRecord.Create(
-            command.HerbBaseSubjectId,
-            command.Request.HerbBaseId,
+            command.EntityType,
+            command.EntityId,
             command.Request.ContactId,
             command.Request.FollowType,
             command.Request.FollowResult,

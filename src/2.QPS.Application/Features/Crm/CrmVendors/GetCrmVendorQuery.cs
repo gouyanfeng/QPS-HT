@@ -16,6 +16,7 @@ public class GetCrmVendorHandler : IRequestHandler<GetCrmVendorQuery, CrmVendorD
 {
     private const string VendorEntityType = CrmCodes.VendorEntityType;
     private const string PurchaseProductAttributeCode = "PURCHASE_PRODUCT";
+    private const string InvalidContactStatus = "INVALID";
 
     private readonly IDbContext _dbContext;
 
@@ -87,8 +88,8 @@ public class GetCrmVendorHandler : IRequestHandler<GetCrmVendorQuery, CrmVendorD
             LatestPurchasePlanName = vendor.LatestPurchasePlanName,
             Remark = vendor.Remark,
             OwnerUserId = vendor.OwnerUserId,
-            PrimaryContactName = contacts.FirstOrDefault()?.ContactName ?? string.Empty,
-            PrimaryContactPhone = contacts.FirstOrDefault()?.Phone ?? string.Empty,
+            PrimaryContactName = contacts.FirstOrDefault(contact => contact.Status != InvalidContactStatus)?.ContactName ?? string.Empty,
+            PrimaryContactPhone = contacts.FirstOrDefault(contact => contact.Status != InvalidContactStatus)?.Phone ?? string.Empty,
             PurchasePlanCount = await _dbContext.CrmVendorPurchasePlans.CountAsync(plan => !plan.IsDeleted && plan.VendorId == vendor.Id, cancellationToken),
             ProductCount = await _dbContext.CrmBusinessEntityAttributes.CountAsync(attribute =>
                 !attribute.IsDeleted &&

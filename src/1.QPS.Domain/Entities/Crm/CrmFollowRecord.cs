@@ -4,8 +4,8 @@ namespace QPS.Domain.Entities.Crm;
 
 public class CrmFollowRecord : BaseEntity
 {
-    public Guid? HerbBaseSubjectId { get; private set; }
-    public Guid? HerbBaseId { get; private set; }
+    public string EntityType { get; private set; } = string.Empty;
+    public Guid EntityId { get; private set; }
     public Guid? ContactId { get; private set; }
     public string FollowType { get; private set; } = string.Empty;
     public string FollowResult { get; private set; } = string.Empty;
@@ -13,15 +13,13 @@ public class CrmFollowRecord : BaseEntity
     public string Content { get; private set; } = string.Empty;
     public DateTime? NextFollowAt { get; private set; }
     public Guid? OperatorUserId { get; private set; }
-    public virtual CrmHerbBaseSubject? HerbBaseSubject { get; private set; }
-    public virtual CrmHerbBase? HerbBase { get; private set; }
     public virtual CrmContact? Contact { get; private set; }
 
     private CrmFollowRecord() { }
 
     private CrmFollowRecord(
-        Guid? herbBaseSubjectId,
-        Guid? herbBaseId,
+        string entityType,
+        Guid entityId,
         Guid? contactId,
         string followType,
         string followResult,
@@ -30,8 +28,8 @@ public class CrmFollowRecord : BaseEntity
         DateTime? nextFollowAt,
         Guid? operatorUserId)
     {
-        HerbBaseSubjectId = herbBaseSubjectId;
-        HerbBaseId = herbBaseId;
+        EntityType = entityType;
+        EntityId = entityId;
         ContactId = contactId;
         FollowType = followType;
         FollowResult = followResult;
@@ -42,8 +40,8 @@ public class CrmFollowRecord : BaseEntity
     }
 
     public static CrmFollowRecord Create(
-        Guid? herbBaseSubjectId,
-        Guid? herbBaseId,
+        string entityType,
+        Guid entityId,
         Guid? contactId,
         string followType,
         string followResult,
@@ -53,8 +51,8 @@ public class CrmFollowRecord : BaseEntity
         Guid? operatorUserId)
     {
         return new CrmFollowRecord(
-            herbBaseSubjectId,
-            herbBaseId,
+            entityType,
+            entityId,
             contactId,
             followType,
             followResult,

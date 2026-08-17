@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QPS.Domain.Entities.System;
+using QPS.Application.Features.Crm;
 using QPS.Domain.Entities.Crm;
 using QPS.Infrastructure.Database;
 
@@ -17,6 +18,7 @@ public static class TestDataInitializer
         EnsureCrmBusinessEntityAttributesTable(dbContext);
         EnsureCrmTransferRecordsTable(dbContext);
         EnsureCrmContactsEntityColumns(dbContext);
+        EnsureCrmFollowRecordsEntityColumns(dbContext);
         EnsureCrmVendorsTable(dbContext);
         EnsureCrmVendorPurchasePlansTable(dbContext);
         EnsureCrmHerbBasesBaseNameColumn(dbContext);
@@ -667,6 +669,102 @@ public static class TestDataInitializer
                 )
                 BEGIN
                     EXEC(N'CREATE INDEX [IX_CrmContacts_Entity_Phone] ON [CrmContacts]([EntityType], [EntityId], [Phone]);');
+                END;
+            END;
+            """);
+    }
+
+    private static void EnsureCrmFollowRecordsEntityColumns(AppDbContext dbContext)
+    {
+        dbContext.Database.ExecuteSqlRaw("""
+            IF OBJECT_ID(N'[CrmFollowRecords]', N'U') IS NOT NULL
+            BEGIN
+                IF COL_LENGTH(N'dbo.CrmFollowRecords', N'EntityType') IS NULL
+                BEGIN
+                    ALTER TABLE [CrmFollowRecords] ADD [EntityType] nvarchar(64) NULL;
+                END;
+
+                IF COL_LENGTH(N'dbo.CrmFollowRecords', N'EntityId') IS NULL
+                BEGIN
+                    ALTER TABLE [CrmFollowRecords] ADD [EntityId] uniqueidentifier NULL;
+                END;
+
+                IF COL_LENGTH(N'dbo.CrmFollowRecords', N'HerbBaseSubjectId') IS NOT NULL
+                BEGIN
+                    EXEC(N'
+                        UPDATE [CrmFollowRecords]
+                        SET [EntityType] = N''CRM_HERB_BASE_SUBJECT'',
+                            [EntityId] = [HerbBaseSubjectId]
+                        WHERE [EntityId] IS NULL AND [HerbBaseSubjectId] IS NOT NULL;
+                    ');
+                END;
+
+                IF COL_LENGTH(N'dbo.CrmFollowRecords', N'VendorId') IS NOT NULL
+                BEGIN
+                    EXEC(N'
+                        UPDATE [CrmFollowRecords]
+                        SET [EntityType] = N''CRM_VENDOR'',
+                            [EntityId] = [VendorId]
+                        WHERE [EntityId] IS NULL AND [VendorId] IS NOT NULL;
+                    ');
+                END;
+
+                EXEC(N'DELETE FROM [CrmFollowRecords] WHERE [EntityId] IS NULL;');
+
+                EXEC(N'ALTER TABLE [CrmFollowRecords] ALTER COLUMN [EntityType] nvarchar(64) NOT NULL;');
+                EXEC(N'ALTER TABLE [CrmFollowRecords] ALTER COLUMN [EntityId] uniqueidentifier NOT NULL;');
+
+                DECLARE @foreignKeyName sysname;
+                WHILE 1 = 1
+                BEGIN
+                    SELECT TOP 1 @foreignKeyName = [fk].[name]
+                    FROM [sys].[foreign_keys] AS [fk]
+                    INNER JOIN [sys].[foreign_key_columns] AS [fkc]
+                        ON [fk].[object_id] = [fkc].[constraint_object_id]
+                    INNER JOIN [sys].[columns] AS [c]
+                        ON [c].[object_id] = [fkc].[parent_object_id]
+                        AND [c].[column_id] = [fkc].[parent_column_id]
+                    WHERE [fk].[parent_object_id] = OBJECT_ID(N'[CrmFollowRecords]')
+                        AND [c].[name] IN (N'HerbBaseSubjectId', N'HerbBaseId', N'VendorId');
+
+                    IF @foreignKeyName IS NULL BREAK;
+                    EXEC(N'ALTER TABLE [CrmFollowRecords] DROP CONSTRAINT [' + @foreignKeyName + N']');
+                    SET @foreignKeyName = NULL;
+                END;
+
+                DECLARE @CrmFollowRecordDropIndexSql nvarchar(max) = N'';
+                SELECT @CrmFollowRecordDropIndexSql = @CrmFollowRecordDropIndexSql
+                    + N'DROP INDEX ' + QUOTENAME([Index].[name]) + N' ON [CrmFollowRecords];'
+                FROM sys.indexes AS [Index]
+                INNER JOIN sys.index_columns AS [IndexColumn]
+                    ON [Index].[object_id] = [IndexColumn].[object_id]
+                    AND [Index].[index_id] = [IndexColumn].[index_id]
+                INNER JOIN sys.columns AS [Column]
+                    ON [Column].[object_id] = [IndexColumn].[object_id]
+                    AND [Column].[column_id] = [IndexColumn].[column_id]
+                WHERE [Index].[object_id] = OBJECT_ID(N'[CrmFollowRecords]')
+                    AND [Column].[name] IN (N'HerbBaseSubjectId', N'HerbBaseId', N'VendorId')
+                    AND [Index].[name] IS NOT NULL
+                    AND [Index].[is_primary_key] = 0;
+
+                IF LEN(@CrmFollowRecordDropIndexSql) > 0
+                    EXEC(@CrmFollowRecordDropIndexSql);
+
+                IF COL_LENGTH(N'dbo.CrmFollowRecords', N'HerbBaseSubjectId') IS NOT NULL
+                    ALTER TABLE [CrmFollowRecords] DROP COLUMN [HerbBaseSubjectId];
+                IF COL_LENGTH(N'dbo.CrmFollowRecords', N'HerbBaseId') IS NOT NULL
+                    ALTER TABLE [CrmFollowRecords] DROP COLUMN [HerbBaseId];
+                IF COL_LENGTH(N'dbo.CrmFollowRecords', N'VendorId') IS NOT NULL
+                    ALTER TABLE [CrmFollowRecords] DROP COLUMN [VendorId];
+
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.indexes
+                    WHERE [name] = N'IX_CrmFollowRecords_Entity_CreatedAt'
+                        AND [object_id] = OBJECT_ID(N'[CrmFollowRecords]')
+                )
+                BEGIN
+                    EXEC(N'CREATE INDEX [IX_CrmFollowRecords_Entity_CreatedAt]
+                    ON [CrmFollowRecords]([EntityType], [EntityId], [CreatedAt]);');
                 END;
             END;
             """);
@@ -1435,8 +1533,8 @@ public static class TestDataInitializer
         var followRecords = new List<CrmFollowRecord>
         {
             CrmFollowRecord.Create(
-                herbBaseSubjectId: subjects[0].Id,
-                herbBaseId: customers[0].Id,
+                entityType: CrmCodes.HerbBaseSubjectEntityType,
+                entityId: subjects[0].Id,
                 contactId: contacts[0].Id,
                 followType: "PHONE",
                 followResult: "CONNECTED",
@@ -1445,8 +1543,8 @@ public static class TestDataInitializer
                 nextFollowAt: DateTime.Now.Date.AddDays(1).AddHours(15),
                 operatorUserId: null),
             CrmFollowRecord.Create(
-                herbBaseSubjectId: subjects[0].Id,
-                herbBaseId: customers[0].Id,
+                entityType: CrmCodes.HerbBaseSubjectEntityType,
+                entityId: subjects[0].Id,
                 contactId: contacts[0].Id,
                 followType: "WECHAT",
                 followResult: "INTERESTED",

@@ -4,9 +4,9 @@ public class CrmFollowRecordDto
 {
     public Guid Id { get; set; }
 
-    public Guid? HerbBaseSubjectId { get; set; }
+    public string EntityType { get; set; } = string.Empty;
 
-    public Guid? HerbBaseId { get; set; }
+    public Guid EntityId { get; set; }
 
     public Guid? ContactId { get; set; }
 

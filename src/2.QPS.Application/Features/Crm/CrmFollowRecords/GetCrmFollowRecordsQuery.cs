@@ -7,7 +7,9 @@ namespace QPS.Application.Features.Crm.CrmFollowRecords;
 
 public class GetCrmFollowRecordsQuery : IRequest<List<CrmFollowRecordDto>>
 {
-    public Guid HerbBaseSubjectId { get; set; }
+    public string EntityType { get; set; } = string.Empty;
+
+    public Guid EntityId { get; set; }
 }
 
 public class GetCrmFollowRecordsHandler : IRequestHandler<GetCrmFollowRecordsQuery, List<CrmFollowRecordDto>>
@@ -28,16 +30,16 @@ public class GetCrmFollowRecordsHandler : IRequestHandler<GetCrmFollowRecordsQue
     public async Task<List<CrmFollowRecordDto>> Handle(GetCrmFollowRecordsQuery request, CancellationToken cancellationToken)
     {
         // 编排查询客户沟通记录用例：
-        // 按基地主体编号过滤、加载联系人、按创建时间倒序映射 DTO。
+        // 按业务对象过滤、加载联系人、按创建时间倒序映射 DTO。
         return await _dbContext.CrmFollowRecords
             .Include(r => r.Contact)
-            .Where(r => r.HerbBaseSubjectId == request.HerbBaseSubjectId)
+            .Where(r => r.EntityType == request.EntityType && r.EntityId == request.EntityId)
             .OrderByDescending(r => r.CreatedAt)
             .Select(r => new CrmFollowRecordDto
             {
                 Id = r.Id,
-                HerbBaseSubjectId = r.HerbBaseSubjectId,
-                HerbBaseId = r.HerbBaseId,
+                EntityType = r.EntityType,
+                EntityId = r.EntityId,
                 ContactId = r.ContactId,
                 ContactName = r.Contact != null ? r.Contact.ContactName : null,
                 FollowType = r.FollowType,

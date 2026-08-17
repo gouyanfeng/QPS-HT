@@ -54,10 +54,10 @@ public class CrmFollowRecordCommandTests
 
         var result = await handler.Handle(new CreateCrmFollowRecordCommand
         {
-            HerbBaseSubjectId = subject.Id,
+            EntityType = "CRM_HERB_BASE_SUBJECT",
+            EntityId = subject.Id,
             Request = new CrmFollowRecordCreateRequest
             {
-                HerbBaseId = herbBase.Id,
                 ContactId = contact.Id,
                 FollowType = "PHONE",
                 FollowResult = "INTERESTED",
@@ -71,8 +71,8 @@ public class CrmFollowRecordCommandTests
         Assert.True(result);
         Assert.Equal(contact.Id, persistedRecord.ContactId);
         Assert.Equal(operatorUserId, persistedRecord.OperatorUserId);
-        Assert.Equal(subject.Id, persistedRecord.HerbBaseSubjectId);
-        Assert.Equal(herbBase.Id, persistedRecord.HerbBaseId);
+        Assert.Equal("CRM_HERB_BASE_SUBJECT", persistedRecord.EntityType);
+        Assert.Equal(subject.Id, persistedRecord.EntityId);
         Assert.Equal("INTERESTED", subject.LastFollowResult);
         Assert.Equal(nextFollowAt, subject.NextFollowAt);
         Assert.Equal("INTERESTED", subject.Status);
@@ -106,7 +106,8 @@ public class CrmFollowRecordCommandTests
 
         await Assert.ThrowsAsync<BusinessException>(() => handler.Handle(new CreateCrmFollowRecordCommand
         {
-            HerbBaseSubjectId = subject.Id,
+            EntityType = "CRM_HERB_BASE_SUBJECT",
+            EntityId = subject.Id,
             Request = new CrmFollowRecordCreateRequest
             {
                 ContactId = contact.Id,

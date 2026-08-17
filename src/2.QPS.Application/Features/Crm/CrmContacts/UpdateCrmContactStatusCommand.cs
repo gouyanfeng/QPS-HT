@@ -18,6 +18,7 @@ public class UpdateCrmContactStatusCommand : IRequest<bool>
 public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactStatusCommand, bool>
 {
     private const string HerbBaseSubjectEntityType = CrmCodes.HerbBaseSubjectEntityType;
+    private const string VendorEntityType = CrmCodes.VendorEntityType;
     private const string InvalidStatus = "INVALID";
 
     private readonly IDbContext _dbContext;
@@ -32,14 +33,35 @@ public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactSta
     public async Task<bool> Handle(UpdateCrmContactStatusCommand request, CancellationToken cancellationToken)
     {
         var contact = await GetContact(request.Id, cancellationToken);
-        var subject = await GetSubject(contact, cancellationToken);
+        var subject = contact.EntityType == HerbBaseSubjectEntityType
+            ? await GetSubject(contact, cancellationToken)
+            : null;
+        if (contact.EntityType == VendorEntityType)
+        {
+            await EnsureVendorExists(contact.EntityId, cancellationToken);
+        }
+        else if (subject == null)
+        {
+            throw new BusinessException(400, "不支持的联系人类型");
+        }
+
         var wasPrimary = contact.IsPrimary;
 
         contact.MarkStatus(request.Request.Status, request.Request.Remark);
-        await ApplyInvalidPrimaryContact(wasPrimary, contact, subject, cancellationToken);
+        if (subject != null)
+        {
+            await ApplyInvalidPrimaryContact(wasPrimary, contact, subject, cancellationToken);
+        }
+        else
+        {
+            await ApplyInvalidVendorPrimaryContact(wasPrimary, contact, cancellationToken);
+        }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        await _publisher.Publish(new CrmHerbBaseSubjectScoreAffectedEvent(subject.Id), cancellationToken);
+        if (subject != null)
+        {
+            await _publisher.Publish(new CrmHerbBaseSubjectScoreAffectedEvent(subject.Id), cancellationToken);
+        }
 
         return true;
     }
@@ -68,6 +90,18 @@ public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactSta
         }
 
         return subject;
+    }
+
+    private async Task EnsureVendorExists(Guid vendorId, CancellationToken cancellationToken)
+    {
+        var exists = await _dbContext.CrmVendors.AnyAsync(
+            item => item.Id == vendorId && !item.IsDeleted,
+            cancellationToken);
+
+        if (!exists)
+        {
+            throw new BusinessException(404, "厂商不存在");
+        }
     }
 
     private async Task ApplyInvalidPrimaryContact(
@@ -105,5 +139,29 @@ public class UpdateCrmContactStatusHandler : IRequestHandler<UpdateCrmContactSta
 
         replacement.MarkPrimary();
         subject.UpdatePrimaryContact(replacement.ContactName, replacement.Phone);
+    }
+
+    private async Task ApplyInvalidVendorPrimaryContact(
+        bool wasPrimary,
+        CrmContact contact,
+        CancellationToken cancellationToken)
+    {
+        if (!wasPrimary || contact.Status != InvalidStatus)
+        {
+            return;
+        }
+
+        contact.UnmarkPrimary();
+
+        var replacement = await _dbContext.CrmContacts
+            .Where(c =>
+                c.EntityType == VendorEntityType &&
+                c.EntityId == contact.EntityId &&
+                c.Id != contact.Id &&
+                c.Status != InvalidStatus)
+            .OrderBy(c => c.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        replacement?.MarkPrimary();
     }
 }

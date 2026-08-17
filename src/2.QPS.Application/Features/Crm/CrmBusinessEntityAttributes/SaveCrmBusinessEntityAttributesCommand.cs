@@ -27,7 +27,9 @@ public class SaveCrmBusinessEntityAttributesHandler : IRequestHandler<SaveCrmBus
     {
         var values = NormalizeValues(request.Request.Values);
         var oldAttributes = await GetOldAttributes(request.Request, cancellationToken);
+
         _dbContext.CrmBusinessEntityAttributes.RemoveRange(oldAttributes);
+        
         AddNewAttributes(request.Request, values);
 
         await _dbContext.SaveChangesAsync(cancellationToken);

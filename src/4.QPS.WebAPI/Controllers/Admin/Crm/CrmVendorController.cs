@@ -76,6 +76,57 @@ public class CrmVendorController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("{id}/contacts")]
+    public async Task<ActionResult<bool>> CreateContact(Guid id, [FromBody] CrmContactCreateRequest request)
+    {
+        var command = new CreateCrmVendorContactCommand { VendorId = id, Request = request };
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/purchase-plans")]
+    public async Task<ActionResult<bool>> CreateVendorPurchasePlan(Guid id, [FromBody] CrmVendorPurchasePlanCreateRequest request)
+    {
+        var command = new CreateCrmVendorPurchasePlanCommand { VendorId = id, Request = request };
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpPut("{id}/purchase-plans/{planId}")]
+    public async Task<ActionResult<bool>> UpdateVendorPurchasePlan(
+        Guid id,
+        Guid planId,
+        [FromBody] CrmVendorPurchasePlanCreateRequest request)
+    {
+        var command = new UpdateCrmVendorPurchasePlanCommand { VendorId = id, Id = planId, Request = request };
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id}/purchase-plans/{planId}")]
+    public async Task<ActionResult<bool>> DeleteVendorPurchasePlan(Guid id, Guid planId)
+    {
+        var command = new DeleteCrmVendorPurchasePlanCommand { VendorId = id, Id = planId };
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpGet("{id}/follow-records")]
+    public async Task<ActionResult<List<CrmFollowRecordDto>>> GetVendorFollowRecords(Guid id)
+    {
+        var query = new GetCrmVendorFollowRecordsQuery { VendorId = id };
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/follow-records")]
+    public async Task<ActionResult<bool>> CreateVendorFollowRecord(Guid id, [FromBody] CrmFollowRecordCreateRequest request)
+    {
+        var command = new CreateCrmVendorFollowRecordCommand { VendorId = id, Request = request };
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
     [HttpGet("{id}/purchase-plans")]
     public async Task<ActionResult<PaginationResponse<CrmVendorPurchasePlanDto>>> GetVendorPurchasePlans(
         Guid id,

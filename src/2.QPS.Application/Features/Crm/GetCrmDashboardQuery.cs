@@ -66,8 +66,8 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
 
         var recentFollowRecords = await (
                 from record in _dbContext.CrmFollowRecords
-                join subject in mySubjects on record.HerbBaseSubjectId equals subject.Id
-                where !record.IsDeleted
+                join subject in mySubjects on record.EntityId equals subject.Id
+                where !record.IsDeleted && record.EntityType == CrmCodes.HerbBaseSubjectEntityType
                 orderby record.CreatedAt descending
                 select new CrmDashboardRecentFollowRecordDto
                 {
@@ -130,8 +130,11 @@ public class GetCrmDashboardHandler : IRequestHandler<GetCrmDashboardQuery, CrmD
 
         var trendRecords = await (
                 from record in _dbContext.CrmFollowRecords
-                join subject in mySubjects on record.HerbBaseSubjectId equals subject.Id
-                where !record.IsDeleted && record.CreatedAt >= trendStart && record.CreatedAt < tomorrowStart
+                join subject in mySubjects on record.EntityId equals subject.Id
+                where !record.IsDeleted &&
+                    record.EntityType == CrmCodes.HerbBaseSubjectEntityType &&
+                    record.CreatedAt >= trendStart &&
+                    record.CreatedAt < tomorrowStart
                 select new { record.CreatedAt, record.FollowResult })
             .ToListAsync(cancellationToken);
         var followTrend = Enumerable.Range(0, 7)

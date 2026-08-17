@@ -22,7 +22,6 @@ public class CrmHerbBaseSubject : BaseEntity
     public DateTime? NextFollowAt { get; private set; }
     public string? Remark { get; private set; }
     public ICollection<CrmHerbBase> HerbBases { get; private set; } = new List<CrmHerbBase>();
-    public ICollection<CrmFollowRecord> FollowRecords { get; private set; } = new List<CrmFollowRecord>();
 
     private CrmHerbBaseSubject() { }
 
